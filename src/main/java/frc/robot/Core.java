@@ -4,7 +4,9 @@
 
 package frc.robot;
 
-/** Add your docs here. */
+/** 
+ * Add your docs here. 
+ */
 public class Core {
     public double maxSpeed;
     public double maxSpeedTurbo;
