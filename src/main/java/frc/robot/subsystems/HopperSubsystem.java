@@ -12,32 +12,32 @@ import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class HopperSubsystem extends SubsystemBase {
-  /** Creates a new HopperSubsystem. */
   // private final motorName feedMotor;
   private boolean feeding;
+
+  
   public HopperSubsystem() {
     feeding = false;
   }
-
+  /** stops feeding & updates boolean var */
   private void haltFeed() {
     feeding = false;
     // feedMotor.stopMotor();
   }
-
+  /** moves feed motor backwards and updates boolean */
   private void purgeFeed(double speed){
     feeding = false;
     // feedMotor.set(-speed);
   }
-
+  /** starts feeding into shooter and updates boolean var */
   private void startFeed(){
     feeding = true;
     // feedMotor.set(speed);
   }
-
+  /** getter command to get feedstate */
   public boolean getFeeding(){
     return feeding;
   }
-
   // public Command Feed(){
 
   // }
@@ -49,7 +49,7 @@ public class HopperSubsystem extends SubsystemBase {
   // public Command Stop(){
 
   // }
-  
+
   @Override
   public void periodic() {
     // This method will be called once per scheduler run
