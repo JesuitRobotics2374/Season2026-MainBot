@@ -19,25 +19,39 @@ public class HopperSubsystem extends SubsystemBase {
   public HopperSubsystem() {
     feeding = false;
   }
-  /** stops feeding & updates boolean var */
+
+  /**
+   * stops feeding & updates boolean var
+   */
   private void haltFeed() {
     feeding = false;
     // feedMotor.stopMotor();
   }
-  /** moves feed motor backwards and updates boolean */
+
+  /**
+   * moves feed motor backwards and updates boolean
+   * @param speed speed that hopper purges
+   */
   private void purgeFeed(double speed){
     feeding = false;
     // feedMotor.set(-speed);
   }
-  /** starts feeding into shooter and updates boolean var */
+
+  /**
+   * starts feeding into shooter and updates boolean var
+   */
   private void startFeed(){
     feeding = true;
     // feedMotor.set(speed);
   }
-  /** getter command to get feedstate */
+
+  /**
+   * getter command to get feedstate
+   */
   public boolean getFeeding(){
     return feeding;
   }
+
   // public Command Feed(){
 
   // }
@@ -47,7 +61,7 @@ public class HopperSubsystem extends SubsystemBase {
   // }
 
   // public Command Stop(){
-
+  
   // }
 
   @Override
