@@ -32,7 +32,7 @@ public class HopperSubsystem extends SubsystemBase {
    * moves feed motor backwards and updates boolean
    * @param speed speed that hopper purges
    */
-  private void purgeFeed(double speed){
+  private void purgeFeed(double speed) {
     feeding = false;
     // feedMotor.set(-speed);
   }
@@ -40,7 +40,7 @@ public class HopperSubsystem extends SubsystemBase {
   /**
    * starts feeding into shooter and updates boolean var
    */
-  private void startFeed(){
+  private void startFeed() {
     feeding = true;
     // feedMotor.set(speed);
   }
@@ -48,21 +48,24 @@ public class HopperSubsystem extends SubsystemBase {
   /**
    * getter command to get feedstate
    */
-  public boolean getFeeding(){
+  public boolean getFeeding() {
     return feeding;
   }
 
-  // public Command Feed(){
+  public Command feed() {
+    return null;
+    // key binds for feed
+  }
 
-  // }
+  public Command purge() {
+    return null;
+    // key binds for purging
+  }
 
-  // public Command Purge(){
-
-  // }
-
-  // public Command Stop(){
-  
-  // }
+  public Command stop() {
+    return null;
+    // key binds for stopping hopper motors
+  }
 
   @Override
   public void periodic() {
