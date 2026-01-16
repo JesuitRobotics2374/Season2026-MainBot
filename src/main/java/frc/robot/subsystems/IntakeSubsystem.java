@@ -55,19 +55,20 @@ public class IntakeSubsystem extends SubsystemBase {
     return intaking;
   }
 
-  // public Command Intake() {
+  public Command intake() {
+    return null;
+    // key binds for turning on intake motor
+  }
 
-  // }
+  public Command purge() {
+    return null;
+    // key binds for purging (reversing intake motors) intake
+  }
 
-  // public Command Purge() {
-    
-  // }
-
-  // public Command Stop() {
-
-  // }
-
-  // ^ Commands for keybinds (functional commands and instant commands) 
+  public Command stop() {
+    return null;
+    // keybinds for stopping intake motors
+  }
 
   @Override
   public void periodic() {
