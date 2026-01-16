@@ -14,7 +14,7 @@ public class ClimberSubsystem extends SubsystemBase {
 
   private TalonFX climberMotor;
   private final double minRotations = 0;
-  private final double maxRotations = 10;
+  private final double maxRotations = -31;
 
   /** Creates a new Climber. */
   public ClimberSubsystem() {
@@ -40,7 +40,7 @@ public class ClimberSubsystem extends SubsystemBase {
 
     return new FunctionalCommand(
       //init
-      () -> {setMotorSpeed(1);},
+      () -> {setMotorSpeed(0.5);},
       //execute
       () -> {},
       //interrupt
@@ -61,7 +61,7 @@ public class ClimberSubsystem extends SubsystemBase {
     // new InstantCommand(() -> setClimberMotorSpeed(-1));
     return new FunctionalCommand(
       //init
-      () -> {setMotorSpeed(-1);},
+      () -> {setMotorSpeed(-0.5);},
       //execute
       () -> {},
       //interrupt
@@ -79,7 +79,7 @@ public class ClimberSubsystem extends SubsystemBase {
    * @return boolean
    */
   public boolean hasReachedMax() {
-    if (climberMotor.getPosition().getValueAsDouble() >= maxRotations) {
+    if (climberMotor.getPosition().getValueAsDouble() <= maxRotations) {
       return true;
     }
     return false;
@@ -90,7 +90,7 @@ public class ClimberSubsystem extends SubsystemBase {
    * @return
    */
   public boolean hasReachedMin() {
-    if (climberMotor.getPosition().getValueAsDouble() <= minRotations) {
+    if (climberMotor.getPosition().getValueAsDouble() >= minRotations) {
       return true;
     }
     return false;
