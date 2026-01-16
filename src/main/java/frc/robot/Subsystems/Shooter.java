@@ -4,11 +4,42 @@
 
 package frc.robot.Subsystems;
 
+import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class Shooter extends SubsystemBase {
+double speed; 
+//private final (motor name) shooterMotor;
+//private final (something) velocityController;
+//private final relativeEncoder encoder; 
   /** Creates a new Shooter. */
-  public Shooter() {}
+  public Shooter() {
+
+  }
+/** Starts the shooter when ready to shoot
+ * @param speed
+ */
+  public Command startShoot(double speed) {
+    speed = 1; //placeholder value
+    return null; 
+    
+  }
+/** Stops the shooter when needed
+ * @param speed
+ */
+  public Command stopShoot(double speed) {
+    speed = 0;
+    return null;
+  }
+/** Purges the shooter if balls get stuck
+ * @param speed
+ * @return
+ */
+  public Command purgeShooter(double speed) {
+    speed = -1; //Placeholder value
+    return null;
+    //
+  }
 
   @Override
   public void periodic() {
