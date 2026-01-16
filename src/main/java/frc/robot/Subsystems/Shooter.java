@@ -20,7 +20,6 @@ double speed;
  * @param speed
  */
   public Command startShoot(double speed) {
-    speed = 1; //placeholder value
     return null; 
     
   }
@@ -28,7 +27,6 @@ double speed;
  * @param speed
  */
   public Command stopShoot(double speed) {
-    speed = 0;
     return null;
   }
 /** Purges the shooter if balls get stuck
@@ -36,7 +34,6 @@ double speed;
  * @return
  */
   public Command purgeShooter(double speed) {
-    speed = -1; //Placeholder value
     return null;
     //
   }
