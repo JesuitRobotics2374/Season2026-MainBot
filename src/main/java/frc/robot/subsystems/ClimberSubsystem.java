@@ -10,42 +10,43 @@ import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import com.ctre.phoenix6.hardware.TalonFX;
 
-public class Climber extends SubsystemBase {
+public class ClimberSubsystem extends SubsystemBase {
 
   private TalonFX climberMotor;
-  private double rotations;
+  private final double minRotations = 0;
+  private final double maxRotations = 10;
 
   /** Creates a new Climber. */
-  public Climber() {
+  public ClimberSubsystem() {
     this.climberMotor = new TalonFX(1);
-    this.rotations = 100; //FIX
+    climberMotor.setPosition(0);
   }
   
   /**
    * Sets the speed of the motor to extend or retract the arm
    * @param speed
    */
-  public void setClimberMotorSpeed(double speed) {
+  private void setMotorSpeed(double speed) {
     climberMotor.set(speed);
 
   }
 
   /**
    * Extends the arm
-   * @return Instant Command to extend arm.
+   * @return Functio Command to extend arm.
    */
   public Command extendArm() {
     //return new InstantCommand(() -> setClimberMotorSpeed(1));
 
     return new FunctionalCommand(
       //init
-      () -> {setClimberMotorSpeed(1);},
+      () -> {setMotorSpeed(1);},
       //execute
       () -> {},
       //interrupt
-      interrupted -> {setClimberMotorSpeed(0);},
+      interrupted -> {setMotorSpeed(0);},
       //isFinished
-      () -> isFinished(),
+      () -> hasReachedMax(),
       //requirements
       this
     );
@@ -60,28 +61,41 @@ public class Climber extends SubsystemBase {
     // new InstantCommand(() -> setClimberMotorSpeed(-1));
     return new FunctionalCommand(
       //init
-      () -> {setClimberMotorSpeed(-1);},
+      () -> {setMotorSpeed(-1);},
       //execute
       () -> {},
       //interrupt
-      interrupted -> {setClimberMotorSpeed(0);},
+      interrupted -> {setMotorSpeed(0);},
       //isFinished
-      () -> isFinished(),
+      () -> hasReachedMin(),
       //requirements
       this
     );
 
   }
+
   /**
    * Checks the position of the motor and stops it
-   * @return
+   * @return boolean
    */
-  public boolean isFinished() {
-    if (climberMotor.getPosition().getValueAsDouble() <= rotations) {
+  public boolean hasReachedMax() {
+    if (climberMotor.getPosition().getValueAsDouble() >= maxRotations) {
       return true;
     }
     return false;
   }
+
+  /**
+   * Checks the position of the motor and stops it
+   * @return
+   */
+  public boolean hasReachedMin() {
+    if (climberMotor.getPosition().getValueAsDouble() <= minRotations) {
+      return true;
+    }
+    return false;
+  }
+
   @Override
   public void periodic() {
     // This method will be called once per scheduler run
