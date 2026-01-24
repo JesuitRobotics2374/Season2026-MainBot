@@ -9,6 +9,7 @@ import edu.wpi.first.wpilibj2.command.FunctionalCommand;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.NeutralModeValue;
 
 public class ClimberSubsystem extends SubsystemBase {
 
@@ -20,6 +21,7 @@ public class ClimberSubsystem extends SubsystemBase {
   public ClimberSubsystem() {
     this.climberMotor = new TalonFX(1);
     climberMotor.setPosition(0);
+    climberMotor.setNeutralMode(NeutralModeValue.Brake);
   }
   
   /**
@@ -33,7 +35,7 @@ public class ClimberSubsystem extends SubsystemBase {
 
   /**
    * Extends the arm
-   * @return Functio Command to extend arm.
+   * @return Functional Command to extend arm.
    */
   public Command extendArm() {
     //return new InstantCommand(() -> setClimberMotorSpeed(1));
