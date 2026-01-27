@@ -12,47 +12,47 @@ import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class HopperSubsystem extends SubsystemBase {
-  // private final motorName feedMotor;
-  private boolean feeding;
+  // private final motorName funnelMotor;
+  private boolean funnelling;
 
   
   public HopperSubsystem() {
-    feeding = false;
+    funnelling = false;
   }
 
   /**
-   * stops feeding & updates boolean var
+   * stops funnelling & updates boolean var
    */
-  private void haltFeed() {
-    feeding = false;
-    // feedMotor.stopMotor();
+  private void haltFunnel() {
+    funnelling = false;
+    // funnelMotor.stopMotor();
   }
 
   /**
    * moves feed motor backwards and updates boolean
    * @param speed speed that hopper purges
    */
-  private void purgeFeed(double speed) {
-    feeding = false;
-    // feedMotor.set(-speed);
+  private void purgeFunnel(double speed) {
+    funnelling = false;
+    // funnelMotor.set(-speed);
   }
 
   /**
-   * starts feeding into shooter and updates boolean var
+   * starts funnelling into shooter and updates boolean var
    */
-  private void startFeed() {
-    feeding = true;
-    // feedMotor.set(speed);
+  private void startFunnel() {
+    funnelling = true;
+    // funnelMotor.set(speed);
   }
 
   /**
    * getter command to get feedstate
    */
-  public boolean getFeeding() {
-    return feeding;
+  public boolean getfunnelling() {
+    return funnelling;
   }
 
-  public Command feed() {
+  public Command funnel() {
     return null;
     // key binds for feed
   }
