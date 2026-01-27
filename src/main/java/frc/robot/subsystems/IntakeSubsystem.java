@@ -11,13 +11,17 @@ import edu.wpi.first.wpilibj2.command.FunctionalCommand;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
+import com.ctre.phoenix6.hardware.TalonFX;
+import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
+
+
 public class IntakeSubsystem extends SubsystemBase {
   
   private boolean intaking;
+  private TalonFX intakeMotor;
 
   public IntakeSubsystem() {
-    // intakeMotor = ;
-
+    this.intakeMotor = new TalonFX(38, "FastFD"); 
     intaking = false;
   }
 
@@ -26,7 +30,7 @@ public class IntakeSubsystem extends SubsystemBase {
    */
   private void stopIntake() {
     intaking = false;
-    // intakeMotor.stopMotor();
+    intakeMotor.stopMotor();
   }
 
   /**
@@ -35,7 +39,7 @@ public class IntakeSubsystem extends SubsystemBase {
    */
   private void purge(double speed) {
     intaking = false;
-    // intakeMotor.set(-speed);
+    intakeMotor.set(speed);
   }
 
   /**
@@ -44,7 +48,7 @@ public class IntakeSubsystem extends SubsystemBase {
    */
   private void intakeFuel(double speed) {
     intaking = true;
-    // intakeMotor.set(speed);
+    intakeMotor.set(speed);
   }
 
   /**
@@ -56,18 +60,15 @@ public class IntakeSubsystem extends SubsystemBase {
   }
 
   public Command intake() {
-    return null;
-    // key binds for turning on intake motor
+    return new InstantCommand(() -> intakeFuel(-0.5));
   }
 
   public Command purge() {
-    return null;
-    // key binds for purging (reversing intake motors) intake
+    return new InstantCommand(() -> purge(0.5));
   }
 
   public Command stop() {
-    return null;
-    // keybinds for stopping intake motors
+    return new InstantCommand(() -> stopIntake());
   }
 
   @Override
