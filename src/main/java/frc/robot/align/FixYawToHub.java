@@ -1,5 +1,7 @@
 package frc.robot.align;
 
+import com.ctre.phoenix6.Utils;
+
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -49,14 +51,22 @@ public class FixYawToHub extends Command {
         double delta_x = absoluteTargetTranslation.getX() - robotPose.getX();
         double delta_y = absoluteTargetTranslation.getY() - robotPose.getY();
 
-        // System.out.println("dx =" + delta_x);
-        // System.out.println("dy ="+delta_y);
+        double dt = Utils.getCurrentTimeSeconds() - drivetrain.getTimeSinceLastEstimatorUpdate();
+
+        double error_x = drivetrain.getCurrentRobotChassisSpeeds().vxMetersPerSecond * dt;
+        double error_y = drivetrain.getCurrentRobotChassisSpeeds().vyMetersPerSecond * dt;
+
+        System.out.println("errorx = " + error_x);
+        System.out.println("errory = " + error_y);
+
+        delta_x += error_x;
+        delta_y += error_y;
 
         Rotation2d rotation = new Rotation2d(Math.atan2(delta_y, delta_x));
+        
         tempA = rotation.getRadians();
-        // System.out.println("ang= " + tempA);
-        return robotPose.getRotation().minus(rotation)
-        .getRadians();
+
+        return robotPose.getRotation().minus(rotation).getRadians();
     }
 
     public FixYawToHub(DriveSubsystem drivetrain, boolean isRed) {
@@ -126,7 +136,7 @@ public class FixYawToHub extends Command {
     @Override
     public void end(boolean interrupted) {
         finishedOverride = true;
-        
+
         if (interrupted) {
             System.out.println("YAW LOCK INTERRUPTED");
         } else {

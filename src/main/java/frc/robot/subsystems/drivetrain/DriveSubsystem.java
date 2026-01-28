@@ -16,6 +16,7 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
+import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -45,6 +46,8 @@ public class DriveSubsystem extends TunerSwerveDrivetrain implements Subsystem {
     private final SwerveDrivePoseEstimator estimator;
     private List<PoseEstimateValues> estimates = new ArrayList<>();
     Field2d field = new Field2d();
+
+    private double timeSinceLastEstimatorUpdate;
 
     /**
      * Constructs a CTRE SwerveDrivetrain using the specified constants.
@@ -136,11 +139,16 @@ public class DriveSubsystem extends TunerSwerveDrivetrain implements Subsystem {
 
         estimator.update(getGyroscopeRotation(), getSwerveModulePositions());
 
+        timeSinceLastEstimatorUpdate = Utils.getCurrentTimeSeconds();
+
         for (int i = 0; i < estimates.size(); i++) {
             PoseEstimateValues estimate = estimates.get(i);
             if (estimate != null) {
-                addVisionMeasurement(estimate.estimatedPose.toPose2d(), estimate.timestampSeconds, estimate.standardDeviations);
-                estimator.addVisionMeasurement(estimate.estimatedPose.toPose2d(), estimate.timestampSeconds, estimate.standardDeviations);
+                addVisionMeasurement(estimate.estimatedPose.toPose2d(), estimate.timestampSeconds,
+                        estimate.standardDeviations);
+                estimator.addVisionMeasurement(estimate.estimatedPose.toPose2d(), estimate.timestampSeconds,
+                        estimate.standardDeviations);
+                timeSinceLastEstimatorUpdate = Utils.getCurrentTimeSeconds();
             } else {
                 // System.out.println("Estimated pose NULL");
             }
@@ -162,6 +170,8 @@ public class DriveSubsystem extends TunerSwerveDrivetrain implements Subsystem {
     @Override
     public void addVisionMeasurement(Pose2d visionRobotPoseMeters, double timestampSeconds) {
         super.addVisionMeasurement(visionRobotPoseMeters, Utils.fpgaToCurrentTime(timestampSeconds));
+
+        timeSinceLastEstimatorUpdate = Utils.getCurrentTimeSeconds();
     }
 
     /**
@@ -189,6 +199,8 @@ public class DriveSubsystem extends TunerSwerveDrivetrain implements Subsystem {
             Matrix<N3, N1> visionMeasurementStdDevs) {
         super.addVisionMeasurement(visionRobotPoseMeters, Utils.fpgaToCurrentTime(timestampSeconds),
                 visionMeasurementStdDevs);
+
+        timeSinceLastEstimatorUpdate = Utils.getCurrentTimeSeconds();
     }
 
     public ChassisSpeeds getCurrentRobotChassisSpeeds() {
@@ -239,5 +251,9 @@ public class DriveSubsystem extends TunerSwerveDrivetrain implements Subsystem {
 
     public void passGlobalEstimates(List<PoseEstimateValues> estimates) {
         this.estimates = estimates;
+    }
+
+    public double getTimeSinceLastEstimatorUpdate() {
+        return timeSinceLastEstimatorUpdate;
     }
 }

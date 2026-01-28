@@ -22,9 +22,11 @@ public class VisionSubsystem extends SubsystemBase {
     private Camera[] cameras; // An array holding the PhotonCamera instances
 
     private int numCams = Constants.numberOfCams; // The number of cameras on the robot
-    private Transform3d[] cameraTransforms = { new Transform3d(0.41, 0.08, 0.285, new Rotation3d(0, 40 * Math.PI / 180, 0))
+    private Transform3d[] cameraTransforms = {
+            new Transform3d(0.41, 0.08, 0.285, new Rotation3d(0, 40 * Math.PI / 180, 0)),
+            new Transform3d(-0.41, -0.08, 0.285, new Rotation3d(0, 40 * Math.PI / 180, 0))
     };
-    private Camera.Type[] types = { Type.APRIL_TAG };
+    private Camera.Type[] types = { Type.APRIL_TAG, Type.DISCONNECTED };
 
     /*
      * =====================================================
@@ -43,6 +45,8 @@ public class VisionSubsystem extends SubsystemBase {
 
             cameras[i] = new Camera(types[i].toString() + "Camera" + i, cameraTransforms[i], types[i]);
         }
+
+        System.out.println("Vision Subsystem Initialized!");
     }
 
     /*
