@@ -7,13 +7,13 @@ package frc.robot.subsystems;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
-public class Shooter extends SubsystemBase {
+public class ShooterSubsystem extends SubsystemBase {
 double speed; 
 //private final (motor name) shooterMotor;
 //private final (something) velocityController;
 //private final relativeEncoder encoder; 
   /** Creates a new Shooter. */
-  public Shooter() {
+  public ShooterSubsystem() {
 
   }
 /** Starts the shooter when ready to shoot
