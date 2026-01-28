@@ -5,6 +5,9 @@
 package frc.robot.subsystems;
 
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+
+import javax.naming.ldap.StartTlsResponse;
+
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.FunctionalCommand;
@@ -40,7 +43,7 @@ public class HopperSubsystem extends SubsystemBase {
   /**
    * starts funnelling into shooter and updates boolean var
    */
-  private void startFunnel() {
+  private void startFunnel(double speed) {
     funnelling = true;
     // funnelMotor.set(speed);
   }
@@ -52,19 +55,16 @@ public class HopperSubsystem extends SubsystemBase {
     return funnelling;
   }
 
-  public Command funnel() {
-    return null;
-    // key binds for feed
+  public Command funnel(double speed) {
+    return new InstantCommand(() -> startFunnel(speed));
   }
 
-  public Command purge() {
-    return null;
-    // key binds for purging
+  public Command purge(double speed) {
+    return new InstantCommand(() -> purgeFunnel(speed));
   }
 
   public Command stop() {
-    return null;
-    // key binds for stopping hopper motors
+    return new InstantCommand(() -> haltFunnel());
   }
 
   @Override
