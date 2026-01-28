@@ -17,8 +17,17 @@ public class Robot extends TimedRobot {
 
   private final Core m_robotContainer;
 
+  // private AutoFactory autoFactory;
+
   public Robot() {
     m_robotContainer = new Core();
+
+    // autoFactory = new AutoFactory(
+    // m_robotContainer.drivetrain::getPose,
+    // m_robotContainer.drivetrain::resetOdometry,
+    // m_robotContainer.drivetrain::followTrajectory,
+    // true,
+    // m_robotContainer.drivetrain);
   }
 
   @Override

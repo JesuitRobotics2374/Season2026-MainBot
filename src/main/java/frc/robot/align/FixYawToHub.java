@@ -24,7 +24,7 @@ public class FixYawToHub extends Command {
     // Maximum output values
     private static final double MAX_ANGULAR_SPEED = 2;
 
-    private static final double THETA_SPEED_MODIFIER = 1;
+    private static final double THETA_SPEED_MODIFIER = 1.25;
 
     // Minimum output to overcome static friction
     private static final double MIN_ANGULAR_COMMAND = 0.25;
@@ -56,9 +56,6 @@ public class FixYawToHub extends Command {
         double error_x = drivetrain.getCurrentRobotChassisSpeeds().vxMetersPerSecond * dt;
         double error_y = drivetrain.getCurrentRobotChassisSpeeds().vyMetersPerSecond * dt;
 
-        System.out.println("errorx = " + error_x);
-        System.out.println("errory = " + error_y);
-
         delta_x += error_x;
         delta_y += error_y;
 
@@ -78,7 +75,7 @@ public class FixYawToHub extends Command {
         this.absoluteTargetTranslation = getAbsoluteTranslation(isRed);
 
         // Yaw PID coefficients
-        yawController = new PIDController(5, 0.7, 2);
+        yawController = new PIDController(5, 0.7, 2.5);
         yawController.setTolerance(YAW_TOLERANCE);
         yawController.enableContinuousInput(-Math.PI, Math.PI);
     }
