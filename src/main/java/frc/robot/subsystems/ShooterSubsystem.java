@@ -15,7 +15,9 @@ public class ShooterSubsystem extends SubsystemBase {
 
   private static final double MAX_RPM = 6000.0;
   private static final double RPM_TO_RPS = 1.0 / 60.0;
-  private static final double CURRENT_LIMIT = 40.0; // Amps
+
+  //private static final double CURRENT_LIMIT = 40.0; // Amps
+  // motors MIGHT be 2 Kraken x60? 
   // private final (motor name) shooterMotor;
   // private final (something) velocityController;
   // private final relativeEncoder encoder;
@@ -64,6 +66,21 @@ public class ShooterSubsystem extends SubsystemBase {
    */
   public Command purgeShooter(double speed) {
     return new InstantCommand(() -> startPurge(speed));
+  }
+
+  /**
+   * @return The current supplied to this motor in amps
+   */
+  public double getShooterSupplyCurrent() {
+    return 0; //FOR NOW
+  }
+
+   /**
+   * Sets the current limit of this motor
+   * -1 means default
+   */
+  public void setShooterCurrentLimit(double currentLimit) {
+    return; //FOR NOW
   }
 
   @Override

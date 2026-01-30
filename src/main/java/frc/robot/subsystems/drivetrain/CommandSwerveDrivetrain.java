@@ -7,6 +7,7 @@ import java.util.function.Supplier;
 
 import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.Utils;
+import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.swerve.SwerveDrivetrainConstants;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants;
 import com.ctre.phoenix6.swerve.SwerveRequest;
@@ -33,6 +34,7 @@ import frc.robot.subsystems.drivetrain.TunerConstants.TunerSwerveDrivetrain;
  * https://v6.docs.ctr-electronics.com/en/stable/docs/tuner/tuner-swerve/index.html
  */
 public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Subsystem {
+
     private static final double kSimLoopPeriod = 0.004; // 4 ms
     private Notifier m_simNotifier = null;
     private double m_lastSimTime;
@@ -298,5 +300,55 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     @Override
     public Optional<Pose2d> samplePoseAt(double timestampSeconds) {
         return super.samplePoseAt(Utils.fpgaToCurrentTime(timestampSeconds));
+    }
+
+    /**
+     * @return The total current supplied to the drivetrain
+     */
+    public double getTotalDriveSupplyCurrent() {
+        double totalCurrent = 0;
+        for (int i = 0; i < 4; i++) {
+            // Access each module's drive motor and get its stator current
+            totalCurrent += this.getModule(i).getDriveMotor().getSupplyCurrent().getValueAsDouble();
+        }
+        for (int i = 0; i < 4; i++) {
+            // Access each module's drive motor and get its stator current
+            totalCurrent += this.getModule(i).getSteerMotor().getSupplyCurrent().getValueAsDouble();
+        }
+        return totalCurrent;
+    }
+
+    /**
+     * Sets a current limit for the drive motors
+     * @param current In amps to supply to each drive motor. -1 for default
+     */
+    public void setDriveCurrentLimit(double current) {
+        if (current == -1) {
+            return;
+        }
+
+        CurrentLimitsConfigs configs = new CurrentLimitsConfigs().withSupplyCurrentLimit(current).withSupplyCurrentLimitEnable(true);
+        
+        for (int i = 0; i < 4; i++) {
+            // Access each module's drive motor and get its stator current
+            this.getModule(i).getDriveMotor().getConfigurator().apply(configs);
+        }
+    }
+
+    /**
+     * Sets a current limit for the steer motors
+     * @param current In amps to supply to each steer motor. -1 for default
+     */
+    public void setSteerCurrentLimit(double current) {
+        if (current == -1) {
+            return;
+        }
+        
+        CurrentLimitsConfigs configs = new CurrentLimitsConfigs().withSupplyCurrentLimit(current).withSupplyCurrentLimitEnable(true);
+        
+        for (int i = 0; i < 4; i++) {
+            // Access each module's drive motor and get its stator current
+            this.getModule(i).getSteerMotor().getConfigurator().apply(configs);
+        }
     }
 }

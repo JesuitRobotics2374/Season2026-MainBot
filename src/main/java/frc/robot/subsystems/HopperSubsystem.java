@@ -67,8 +67,29 @@ public class HopperSubsystem extends SubsystemBase {
     return new InstantCommand(() -> haltFunnel());
   }
 
+ /**
+   * @return The current supplied to this motor in amps
+   */
+  public double getHopperSupplyCurrent() {
+    return 0; //FOR NOW
+  }
+
+   /**
+   * Sets the current limit of this motor
+   * currentLimit at -1 means default
+   */
+  public void setHopperCurrentLimit(double currentLimit) {
+    if (currentLimit == -1) {
+      return;
+    }
+
+    //configure motor current limit
+  }
+
   @Override
   public void periodic() {
     // This method will be called once per scheduler run
+
+    
   }
 }

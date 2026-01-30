@@ -8,12 +8,16 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.FunctionalCommand;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+
+import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
+import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.configs.TalonFXConfigurator;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
 public class ClimberSubsystem extends SubsystemBase {
 
-  private TalonFX climberMotor;
+  private final TalonFX climberMotor;
   private final double minRotations = 0;
   private final double maxRotations = -31;
 
@@ -98,9 +102,27 @@ public class ClimberSubsystem extends SubsystemBase {
     return false;
   }
 
+  /**
+   * @return The current supplied to this motor in amps
+   */
+  public double getClimberSupplyCurrent() {
+    return climberMotor.getSupplyCurrent().getValueAsDouble();
+  }
+
+  /**
+   * Sets the current limit of this motor
+   * current limit at -1 means default
+   */
+  public void setClimberCurrentLimit(double currentLimit) {
+    if (currentLimit == -1) {
+      return;
+    }
+    CurrentLimitsConfigs configs = new CurrentLimitsConfigs().withSupplyCurrentLimit(currentLimit).withSupplyCurrentLimitEnable(true);
+    climberMotor.getConfigurator().apply(configs);
+  }
+
   @Override
   public void periodic() {
     // This method will be called once per scheduler run
   }
-  
 }
