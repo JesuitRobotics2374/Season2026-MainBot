@@ -24,9 +24,9 @@ public class VisionSubsystem extends SubsystemBase {
     private int numCams = Constants.numberOfCams; // The number of cameras on the robot
     private Transform3d[] cameraTransforms = {
             new Transform3d(0.41, 0.08, 0.285, new Rotation3d(0, 40 * Math.PI / 180, 0)),
-            new Transform3d(-0.41, -0.08, 0.285, new Rotation3d(0, 40 * Math.PI / 180, 0))
+            new Transform3d(-0.41, -0.08, 0.285, new Rotation3d(0, 0, 180))
     };
-    private Camera.Type[] types = { Type.APRIL_TAG, Type.DISCONNECTED };
+    private Camera.Type[] types = { Type.APRIL_TAG, Type.APRIL_TAG };
 
     /*
      * =====================================================

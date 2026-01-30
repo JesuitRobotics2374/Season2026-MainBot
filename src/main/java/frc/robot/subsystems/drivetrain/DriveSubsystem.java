@@ -9,6 +9,10 @@ import com.ctre.phoenix6.swerve.SwerveDrivetrainConstants;
 import com.ctre.phoenix6.swerve.SwerveModule;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants;
 import com.ctre.phoenix6.swerve.SwerveRequest;
+import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.config.PIDConstants;
+import com.pathplanner.lib.config.RobotConfig;
+import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
@@ -25,6 +29,7 @@ import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Subsystem;
+import frc.robot.Robot;
 import frc.robot.subsystems.drivetrain.TunerConstants.TunerSwerveDrivetrain;
 import frc.robot.subsystems.vision.PoseEstimateValues;
 
@@ -45,34 +50,13 @@ public class DriveSubsystem extends TunerSwerveDrivetrain implements Subsystem {
 
     private final SwerveDrivePoseEstimator estimator;
     private List<PoseEstimateValues> estimates = new ArrayList<>();
+
     Field2d field = new Field2d();
 
+    private RobotConfig config;
+    private final SwerveRequest.ApplyRobotSpeeds autoRequest = new SwerveRequest.ApplyRobotSpeeds();
+
     private double timeSinceLastEstimatorUpdate;
-
-    /**
-     * Constructs a CTRE SwerveDrivetrain using the specified constants.
-     * <p>
-     * This constructs the underlying hardware devices, so users should not
-     * construct
-     * the devices themselves. If they need the devices, they can access them
-     * through
-     * getters in the classes.
-     *
-     * @param drivetrainConstants Drivetrain-wide constants for the swerve drive
-     * @param modules             Constants for each specific module
-     */
-    public DriveSubsystem(
-            SwerveDrivetrainConstants drivetrainConstants,
-            SwerveModuleConstants<?, ?, ?>... modules) {
-        super(drivetrainConstants, modules);
-
-        estimator = new SwerveDrivePoseEstimator(getKinematics(), getGyroscopeRotation(), getSwerveModulePositions(),
-                new Pose2d());
-
-        SmartDashboard.putData("Field", field);
-
-        System.out.println("DriveSubsystem constructed");
-    }
 
     /**
      * Constructs a CTRE SwerveDrivetrain using the specified constants.
@@ -91,7 +75,6 @@ public class DriveSubsystem extends TunerSwerveDrivetrain implements Subsystem {
      */
     public DriveSubsystem(
             SwerveDrivetrainConstants drivetrainConstants,
-            double odometryUpdateFrequency,
             SwerveModuleConstants<?, ?, ?>... modules) {
         super(drivetrainConstants, modules);
 
@@ -99,6 +82,43 @@ public class DriveSubsystem extends TunerSwerveDrivetrain implements Subsystem {
                 new Pose2d());
 
         SmartDashboard.putData("Field", field);
+
+        try {
+            config = RobotConfig.fromGUISettings(); // TODO UPDATE BEFORE COMP
+        } catch (Exception e) {
+            System.out.println("Failed to initialize robot configs!");
+        }
+
+        AutoBuilder.configure(
+                this::getEstimator, // Robot pose supplier
+                this::resetPose, // Method to reset odometry (will be called if your auto has a starting pose)
+                this::getCurrentRobotChassisSpeeds, // ChassisSpeeds supplier. MUST BE ROBOT RELATIVE
+                (speeds, feedforwards) -> this.setControl(autoRequest.withSpeeds(speeds)), // Method that will drive the
+                                                                                           // robot given ROBOT RELATIVE
+                                                                                           // ChassisSpeeds. Also
+                                                                                           // optionally outputs
+                                                                                           // individual module
+                                                                                           // feedforwards
+                new PPHolonomicDriveController( // PPHolonomicController is the built in path following controller for
+                                                // holonomic drive trains
+                        new PIDConstants(5.0, 0.0, 0.0), // Translation PID constants
+                        new PIDConstants(5.0, 0.0, 0.0) // Rotation PID constants
+                ),
+                config, // The robot configuration
+                () -> {
+                    // Boolean supplier that controls when the path will be mirrored for the red
+                    // alliance
+                    // This will flip the path being followed to the red side of the field.
+                    // THE ORIGIN WILL REMAIN ON THE BLUE SIDE
+
+                    var alliance = DriverStation.getAlliance();
+                    if (alliance.isPresent()) {
+                        return alliance.get() == DriverStation.Alliance.Red;
+                    }
+                    return false;
+                },
+                this // Reference to this subsystem to set requirements
+        );
 
         System.out.println("DriveSubsystem constructed");
     }

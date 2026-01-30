@@ -41,6 +41,7 @@ public class Camera {
     // Global field estimate constants
     private static final Matrix<N3, N1> kSingleTagStdDevs = VecBuilder.fill(0.9, 0.9, 12);
     private static final Matrix<N3, N1> kMultiTagStdDevs = VecBuilder.fill(0.25, 0.25, 4);
+    private static final Matrix<N3, N1> kReversedYawStdDevs = VecBuilder.fill(1, 1, 10000);
     private static final double GLOBAL_DISTANCE_SCALAR = 25.0;
 
     // Camera constants - FOR THE COLOR CAM ONLY
@@ -234,6 +235,10 @@ public class Camera {
             estStdDevs = kMultiTagStdDevs;
         }
 
+        if (Math.abs(robotToCameraTransform.getRotation().getZ()) > 90) {
+            estStdDevs = kReversedYawStdDevs;
+        }
+
         // Hard reject bad single-tag solves far away
         if (numTags == 1 && avgDist > 4.0) {
             return VecBuilder.fill(
@@ -399,54 +404,34 @@ public class Camera {
      * @param rawPose - The raw Pose3d obtained from the camera.
      * @return Adjusted Pose3d representing the robot's pose on the field.
      */
-    private Pose3d adjustPose(Transform3d rawPose) {
-        if (rawPose == null) { // If the raw pose is null, return null
+    private Pose3d adjustPose(Transform3d cameraToTarget) {
+        if (cameraToTarget == null) {
             return null;
         }
 
-        if (type == Type.APRIL_TAG) { // if it is an aprilTag value, normalize the yaw
-            rawPose = normalizeYaw(rawPose);
-        }
+        /*
+         * Photon gives camera → target in CAMERA frame.
+         * We must rotate that transform into ROBOT frame
+         * using the camera's mounting rotation.
+         */
 
-        if (robotToCameraTransform.getRotation().getY() != 0) {
-            double pitch = robotToCameraTransform.getRotation().getY(); // get the pitch
-            double hypotenuse = rawPose.getTranslation().getX();
+        Rotation3d cameraRotation = robotToCameraTransform.getRotation();
 
-            double XPitchFix = hypotenuse * Math.cos(pitch); // fix the forward distance
-            double YPitchFix = rawPose.getTranslation().getY(); // no need to fix anything
-            double ZPitchFix = hypotenuse * Math.sin(pitch); // fix the vertical distance
+        // Rotate the translation AND rotation into robot frame
+        Transform3d cameraToTargetRobotFrame = new Transform3d(
+                cameraToTarget.getTranslation().rotateBy(cameraRotation),
+                cameraToTarget.getRotation().rotateBy(cameraRotation));
 
-            rawPose = new Transform3d(XPitchFix, YPitchFix, ZPitchFix, rawPose.getRotation());
-        }
+        /*
+         * Now shift from camera origin to robot origin
+         */
+        Transform3d robotToTarget = new Transform3d(
+                robotToCameraTransform.getTranslation(),
+                new Rotation3d()).plus(cameraToTargetRobotFrame);
 
-        Transform3d adjustedPose = rawPose.plus(robotToCameraTransform); // Adjust the raw pose by adding the
-                                                                         // robot-to-camera transform, TODO: CHECK IF
-                                                                         // THIS NEEDS TO BE SUBTRACTED
-
-        return new Pose3d(adjustedPose.getTranslation(), adjustedPose.getRotation()); // Return the adjusted pose as a
-                                                                                      // Pose3d
-    }
-
-    /**
-     * Normalizes the yaw of the given transform3d so that the April Tag values
-     * given by Photon do not have 180° as centered
-     * 
-     * @param rawTransform - The raw, not normalized transform3d
-     * @return The normalized transform3d
-     */
-    private Transform3d normalizeYaw(Transform3d rawTransform) {
-        double yawValue = rawTransform.getRotation().getZ();
-
-        if (Math.abs(yawValue) > 90 * Math.PI / 180) {
-            yawValue = Math.PI - Math.abs(yawValue) * -1 * (yawValue / Math.abs(yawValue));
-        } else {
-            return rawTransform;
-        }
-
-        Rotation3d rotation = rawTransform.getRotation();
-
-        return new Transform3d(rawTransform.getTranslation(),
-                new Rotation3d(rotation.getX(), rotation.getY(), yawValue));
+        return new Pose3d(
+                robotToTarget.getTranslation(),
+                robotToTarget.getRotation());
     }
 
     /*

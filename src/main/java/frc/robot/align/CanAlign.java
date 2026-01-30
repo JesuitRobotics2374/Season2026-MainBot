@@ -25,13 +25,13 @@ public class CanAlign extends Command {
     private boolean goRight = true;
     private final double yFromOriginBeforeSlow = .3;
 
-    public CanAlign(DriveSubsystem drive, VisionSubsystem vision, int tagToUse, boolean goRight) {
+    public CanAlign(DriveSubsystem drive, VisionSubsystem vision, int tagToUse, boolean goToRightPost) {
         System.out.println("CanAlign created");
 
         this.drive = drive;
         this.vision = vision;
         this.tagToUse = tagToUse;
-        this.goRight = goRight;
+        this.goRight = goToRightPost;
 
         initialRange = range.getDistance().getValueAsDouble();
 
@@ -48,9 +48,9 @@ public class CanAlign extends Command {
         double ySpeedMod = 1;
 
         if (goRight) {
-            ySpeedMod *= -1;
-        } else {
             ySpeedMod *= 1;
+        } else {
+            ySpeedMod *= -1;
         }
 
         Pose3d poseToTag = vision.getTagRelativeToBot(tagToUse);
@@ -75,7 +75,7 @@ public class CanAlign extends Command {
 
     @Override
     public boolean isFinished() {
-        return range.getDistance().getValueAsDouble() <= initialRange/2;
+        return range.getDistance().getValueAsDouble() <= initialRange / 2;
     }
 
     @Override

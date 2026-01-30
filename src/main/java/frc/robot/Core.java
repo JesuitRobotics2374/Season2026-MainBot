@@ -14,20 +14,24 @@ import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.align.CanAlign;
-import frc.robot.align.DirectAlign;
+import frc.robot.align.ClimbAlign;
 import frc.robot.align.FixYawToHub;
 import frc.robot.align.Target;
 import frc.robot.subsystems.drivetrain.TunerConstants;
 import frc.robot.subsystems.drivetrain.DriveSubsystem;
 import frc.robot.subsystems.vision.VisionSubsystem;
+import com.pathplanner.lib.auto.AutoBuilder;
 
 public class Core {
+    //Swerve Stuff
     private double MaxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond) * 1.00; // kSpeedAt12Volts desired top speed
     private double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond); // 3/4 of a rotation per second
                                                                                       // max angular velocity
@@ -39,23 +43,33 @@ public class Core {
 
     private final Telemetry logger = new Telemetry(MaxSpeed);
 
+    //Controllers
+
     private final CommandXboxController driveController = new CommandXboxController(0);
+
+    //Subsystems
 
     public final DriveSubsystem drivetrain = TunerConstants.createDrivetrain();
 
     public final VisionSubsystem vision = new VisionSubsystem();
 
-    private final Target testTarget = new Target(31, new Transform3d(1.69, 0.1, 0, new Rotation3d()));
+    //Auto
 
+     private final SendableChooser<Command> autoChooser;
+
+    //Driver assist
+    
     private final FixYawToHub fixYawToHub = new FixYawToHub(drivetrain, false);
 
+    private final Target testTarget = new Target(31, new Transform3d(-2, -0.1, 0, new Rotation3d(0, 0, 180)));
+
     private final SequentialCommandGroup climbAlign = new SequentialCommandGroup(
-            new DirectAlign(drivetrain, vision, testTarget),
+            new ClimbAlign(drivetrain, vision, testTarget),
             new CanAlign(drivetrain, vision, testTarget.requestFiducialID().get(), false));
 
     private boolean hubYawAlign = false;
 
-     private static final double TranslationalAccelerationLimit = 10; // meters per second^2
+    private static final double TranslationalAccelerationLimit = 10; // meters per second^2
     private static final double RotationalAccelerationLimit = Math.PI * 5.5; // radians per second^2
 
     private final SlewRateLimiter xRateLimiter = new SlewRateLimiter(TranslationalAccelerationLimit);
@@ -64,11 +78,20 @@ public class Core {
 
     public Core() {
         configureBindings();
-        // configureShuffleBoard();
+
+        autoChooser = AutoBuilder.buildAutoChooser();
+        
+        configureShuffleBoard();
     }
 
     public void configureShuffleBoard() {
         ShuffleboardTab tab = Shuffleboard.getTab("Test");
+
+        SmartDashboard.putData("Auto Chooser", autoChooser);
+    }
+
+     public Command getAutonomousCommand() {
+        return autoChooser.getSelected();
     }
 
     private void configureBindings() {
@@ -102,7 +125,7 @@ public class Core {
         // reset the field-centric heading on left bumper press
         driveController.back().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
 
-        driveController.a().onTrue(new DirectAlign(drivetrain, vision, testTarget));
+        driveController.a().onTrue(new ClimbAlign(drivetrain, vision, testTarget));
         driveController.b().onTrue(new CanAlign(drivetrain, vision, testTarget.requestFiducialID().get(), false));
 
         driveController.x().onTrue(climbAlign);
@@ -116,10 +139,6 @@ public class Core {
             hubYawAlign = false;}));
 
         drivetrain.registerTelemetry(logger::telemeterize);
-    }
-
-    public Command getAutonomousCommand() {
-        return Commands.print("No autonomous command configured");
     }
 
     public double getAxisMovementScale() {

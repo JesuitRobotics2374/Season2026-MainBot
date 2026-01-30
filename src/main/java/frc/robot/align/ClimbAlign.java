@@ -16,7 +16,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.subsystems.drivetrain.DriveSubsystem;
 import frc.robot.subsystems.vision.VisionSubsystem;
 
-public class DirectAlign extends Command {
+public class ClimbAlign extends Command {
 
     private final SwerveRequest.RobotCentric driveRequest = new SwerveRequest.RobotCentric()
             .withDriveRequestType(DriveRequestType.OpenLoopVoltage);
@@ -40,8 +40,8 @@ public class DirectAlign extends Command {
     private static final double MAX_LINEAR_SPEED = 2.4;
     private static final double MAX_ANGULAR_SPEED = 0.5;
 
-    private static final double X_SPEED_MODIFIER = 2;
-    private static final double Y_SPEED_MODIFIER = 0.75;
+    private static final double X_SPEED_MODIFIER = 2 / 4;
+    private static final double Y_SPEED_MODIFIER = 0.75 / 2;
     private static final double THETA_SPEED_MODIFIER = 0.75;
 
     // Minimum output to overcome static friction
@@ -73,7 +73,7 @@ public class DirectAlign extends Command {
 
     boolean finishedOverride;
 
-    public DirectAlign(DriveSubsystem drivetrain, VisionSubsystem visionSubsystem) {
+    public ClimbAlign(DriveSubsystem drivetrain, VisionSubsystem visionSubsystem) {
         System.out.println("DirectAlign created");
         finishedOverride = false;
 
@@ -99,7 +99,7 @@ public class DirectAlign extends Command {
         yawController.enableContinuousInput(-Math.PI, Math.PI);
     }
 
-    public DirectAlign(DriveSubsystem drivetrain, VisionSubsystem visionSubsystem, Target target) {
+    public ClimbAlign(DriveSubsystem drivetrain, VisionSubsystem visionSubsystem, Target target) {
         System.out.println("DirectAlign created");
         finishedOverride = false;
 

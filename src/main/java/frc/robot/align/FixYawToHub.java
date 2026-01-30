@@ -27,7 +27,7 @@ public class FixYawToHub extends Command {
     private static final double THETA_SPEED_MODIFIER = 1.25;
 
     // Minimum output to overcome static friction
-    private static final double MIN_ANGULAR_COMMAND = 0.25;
+    private static final double MIN_ANGULAR_COMMAND = 0.08;
 
     private final DriveSubsystem drivetrain;
 
@@ -113,16 +113,16 @@ public class FixYawToHub extends Command {
         // Apply rate limiting for smoother motion
         dtheta = yawRateLimiter.calculate(dtheta);
 
-        logClock++;
-        if (logClock == 10) {
-            System.out.println("DVE: " + drivetrain.getState().Pose);
-            System.out.println("PER: " + tempA);
-            System.out.println("ERR: " + error_yaw);
-            System.out.println("OTP: " + dtheta);
-            // SmartDashboard.putNumber("DVE", drivetrain.getEstimator());
+        // logClock++;
+        // if (logClock == 10) {
+        //     System.out.println("DVE: " + drivetrain.getState().Pose);
+        //     System.out.println("PER: " + tempA);
+        //     System.out.println("ERR: " + error_yaw);
+        //     System.out.println("OTP: " + dtheta);
+        //     // SmartDashboard.putNumber("DVE", drivetrain.getEstimator());
 
-            logClock = 0;
-        }
+        //     logClock = 0;
+        // }
     }
 
     @Override
