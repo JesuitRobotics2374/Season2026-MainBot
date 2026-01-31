@@ -17,7 +17,6 @@ import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
@@ -61,7 +60,7 @@ public class Core {
     
     private final FixYawToHub fixYawToHub = new FixYawToHub(drivetrain, false);
 
-    private final Target testTarget = new Target(31, new Transform3d(-2, -0.1, 0, new Rotation3d(0, 0, 180)));
+    private final Target testTarget = new Target(31, new Transform3d(1.55, 0.1, 0, new Rotation3d(0, 0, 0)));
 
     private final SequentialCommandGroup climbAlign = new SequentialCommandGroup(
             new ClimbAlign(drivetrain, vision, testTarget),
@@ -127,6 +126,8 @@ public class Core {
 
         driveController.a().onTrue(new ClimbAlign(drivetrain, vision, testTarget));
         driveController.b().onTrue(new CanAlign(drivetrain, vision, testTarget.requestFiducialID().get(), false));
+
+        driveController.y().onTrue(vision.runOnce(() -> vision.getTagRelativeToBot(26)));
 
         driveController.x().onTrue(climbAlign);
 

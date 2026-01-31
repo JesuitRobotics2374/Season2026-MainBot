@@ -40,8 +40,8 @@ public class ClimbAlign extends Command {
     private static final double MAX_LINEAR_SPEED = 2.4;
     private static final double MAX_ANGULAR_SPEED = 0.5;
 
-    private static final double X_SPEED_MODIFIER = 2 / 4;
-    private static final double Y_SPEED_MODIFIER = 0.75 / 2;
+    private static final double X_SPEED_MODIFIER = 2;
+    private static final double Y_SPEED_MODIFIER = 0.75;
     private static final double THETA_SPEED_MODIFIER = 0.75;
 
     // Minimum output to overcome static friction
@@ -74,7 +74,7 @@ public class ClimbAlign extends Command {
     boolean finishedOverride;
 
     public ClimbAlign(DriveSubsystem drivetrain, VisionSubsystem visionSubsystem) {
-        System.out.println("DirectAlign created");
+        System.out.println("ClimbAlign created");
         finishedOverride = false;
 
         this.drivetrain = drivetrain;
@@ -100,7 +100,7 @@ public class ClimbAlign extends Command {
     }
 
     public ClimbAlign(DriveSubsystem drivetrain, VisionSubsystem visionSubsystem, Target target) {
-        System.out.println("DirectAlign created");
+        System.out.println("ClimbAlign created");
         finishedOverride = false;
 
         this.drivetrain = drivetrain;
@@ -135,7 +135,7 @@ public class ClimbAlign extends Command {
 
     @Override
     public void initialize() {
-        System.out.println("DirectAlign STARTED");
+        System.out.println("ClimbAlign STARTED");
         System.out.println("Tag ID: " + tagId);
 
         finishedOverride = false;
@@ -181,7 +181,7 @@ public class ClimbAlign extends Command {
         drivetrain.setControl(driveRequest
                 .withVelocityX(-dx)
                 .withVelocityY(-dy)
-                .withRotationalRate(-dtheta)
+                .withRotationalRate(dtheta)
                 );
 
         // Average pose from each camera
@@ -319,9 +319,9 @@ public class ClimbAlign extends Command {
         drivetrain.setControl(new SwerveRequest.SwerveDriveBrake());
         
         if (interrupted) {
-            System.out.println("DirectAlign INTERRUPTED");
+            System.out.println("ClimbAlign INTERRUPTED");
         } else {
-            System.out.println("DirectAlign FINISHED");
+            System.out.println("ClimbAlign FINISHED");
         }
     }
 

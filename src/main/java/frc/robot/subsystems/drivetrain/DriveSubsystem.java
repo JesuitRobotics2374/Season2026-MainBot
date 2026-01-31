@@ -20,7 +20,6 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
-import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -29,7 +28,6 @@ import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Subsystem;
-import frc.robot.Robot;
 import frc.robot.subsystems.drivetrain.TunerConstants.TunerSwerveDrivetrain;
 import frc.robot.subsystems.vision.PoseEstimateValues;
 
@@ -161,17 +159,37 @@ public class DriveSubsystem extends TunerSwerveDrivetrain implements Subsystem {
 
         timeSinceLastEstimatorUpdate = Utils.getCurrentTimeSeconds();
 
-        for (int i = 0; i < estimates.size(); i++) {
-            PoseEstimateValues estimate = estimates.get(i);
-            if (estimate != null) {
-                addVisionMeasurement(estimate.estimatedPose.toPose2d(), estimate.timestampSeconds,
-                        estimate.standardDeviations);
-                estimator.addVisionMeasurement(estimate.estimatedPose.toPose2d(), estimate.timestampSeconds,
-                        estimate.standardDeviations);
-                timeSinceLastEstimatorUpdate = Utils.getCurrentTimeSeconds();
-            } else {
-                // System.out.println("Estimated pose NULL");
+        PoseEstimateValues bestEstimate = null;
+        double lowestScore = Double.MAX_VALUE;
+
+        for (PoseEstimateValues estimate : estimates) {
+            if (estimate == null) {
+                continue;
             }
+            
+            Matrix<N3, N1> s = estimate.standardDeviations;
+
+            double score = s.get(0, 0) * s.get(0, 0) + // x
+                    s.get(1, 0) * s.get(1, 0) + // y
+                    0.5 * s.get(2, 0) * s.get(2, 0); // theta (less important)
+
+            if (score < lowestScore) {
+                lowestScore = score;
+                bestEstimate = estimate;
+            }
+        }
+
+        if (bestEstimate != null) {
+            addVisionMeasurement(
+                    bestEstimate.estimatedPose.toPose2d(),
+                    bestEstimate.timestampSeconds,
+                    bestEstimate.standardDeviations);
+            estimator.addVisionMeasurement(
+                    bestEstimate.estimatedPose.toPose2d(),
+                    bestEstimate.timestampSeconds,
+                    bestEstimate.standardDeviations);
+
+            timeSinceLastEstimatorUpdate = Utils.getCurrentTimeSeconds();
         }
 
         field.setRobotPose(getState().Pose);

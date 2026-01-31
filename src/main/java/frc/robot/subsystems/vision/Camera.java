@@ -41,7 +41,6 @@ public class Camera {
     // Global field estimate constants
     private static final Matrix<N3, N1> kSingleTagStdDevs = VecBuilder.fill(0.9, 0.9, 12);
     private static final Matrix<N3, N1> kMultiTagStdDevs = VecBuilder.fill(0.25, 0.25, 4);
-    private static final Matrix<N3, N1> kReversedYawStdDevs = VecBuilder.fill(1, 1, 10000);
     private static final double GLOBAL_DISTANCE_SCALAR = 25.0;
 
     // Camera constants - FOR THE COLOR CAM ONLY
@@ -184,6 +183,10 @@ public class Camera {
         // pose using the latest
         // result
 
+        if (robotToCameraTransform.getRotation().getZ() > 90) { // do not consider backwards facing cameras
+            return null;
+        }
+
         if (estimatedRobotPose.isPresent()) { // If a valid pose is estimated, return it
             EstimatedRobotPose e = estimatedRobotPose.get();
 
@@ -233,10 +236,6 @@ public class Camera {
         // Prefer multi-tag baseline when available
         if (numTags > 1) {
             estStdDevs = kMultiTagStdDevs;
-        }
-
-        if (Math.abs(robotToCameraTransform.getRotation().getZ()) > 90) {
-            estStdDevs = kReversedYawStdDevs;
         }
 
         // Hard reject bad single-tag solves far away
@@ -404,34 +403,22 @@ public class Camera {
      * @param rawPose - The raw Pose3d obtained from the camera.
      * @return Adjusted Pose3d representing the robot's pose on the field.
      */
-    private Pose3d adjustPose(Transform3d cameraToTarget) {
-        if (cameraToTarget == null) {
+    private Pose3d adjustPose(Transform3d rawPose) {
+        if (rawPose == null) { // If the raw pose is null, return null
             return null;
         }
 
-        /*
-         * Photon gives camera → target in CAMERA frame.
-         * We must rotate that transform into ROBOT frame
-         * using the camera's mounting rotation.
-         */
+        Transform3d adjustedPose = new Transform3d(
+                new Translation3d(rawPose.getX() + robotToCameraTransform.getX(),
+                        rawPose.getY() + robotToCameraTransform.getY(),
+                        rawPose.getZ() + robotToCameraTransform.getZ()),
+                rawPose.getRotation().plus(robotToCameraTransform.getRotation())); // Adjust the raw pose by adding the
+                                                                                   // robot-to-camera transform, TODO:
+                                                                                   // CHECK IF
+                                                                                   // THIS NEEDS TO BE SUBTRACTED
 
-        Rotation3d cameraRotation = robotToCameraTransform.getRotation();
-
-        // Rotate the translation AND rotation into robot frame
-        Transform3d cameraToTargetRobotFrame = new Transform3d(
-                cameraToTarget.getTranslation().rotateBy(cameraRotation),
-                cameraToTarget.getRotation().rotateBy(cameraRotation));
-
-        /*
-         * Now shift from camera origin to robot origin
-         */
-        Transform3d robotToTarget = new Transform3d(
-                robotToCameraTransform.getTranslation(),
-                new Rotation3d()).plus(cameraToTargetRobotFrame);
-
-        return new Pose3d(
-                robotToTarget.getTranslation(),
-                robotToTarget.getRotation());
+        return new Pose3d(adjustedPose.getTranslation(), adjustedPose.getRotation()); // Return the adjusted pose as a
+                                                                                      // Pose3d
     }
 
     /*

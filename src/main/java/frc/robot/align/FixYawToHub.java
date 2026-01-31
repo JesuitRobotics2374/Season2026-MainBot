@@ -45,7 +45,7 @@ public class FixYawToHub extends Command {
         }
     }
 
-    private double tempA = 0;
+    //private double tempA = 0;
 
     private double calculateRelativeTheta(Pose2d robotPose) {
         double delta_x = absoluteTargetTranslation.getX() - robotPose.getX();
@@ -61,7 +61,7 @@ public class FixYawToHub extends Command {
 
         Rotation2d rotation = new Rotation2d(Math.atan2(delta_y, delta_x));
         
-        tempA = rotation.getRadians();
+        //tempA = rotation.getRadians();
 
         return robotPose.getRotation().minus(rotation).getRadians();
     }
@@ -113,16 +113,16 @@ public class FixYawToHub extends Command {
         // Apply rate limiting for smoother motion
         dtheta = yawRateLimiter.calculate(dtheta);
 
-        // logClock++;
-        // if (logClock == 10) {
+        logClock++;
+        if (logClock == 10) {
         //     System.out.println("DVE: " + drivetrain.getState().Pose);
         //     System.out.println("PER: " + tempA);
         //     System.out.println("ERR: " + error_yaw);
         //     System.out.println("OTP: " + dtheta);
         //     // SmartDashboard.putNumber("DVE", drivetrain.getEstimator());
 
-        //     logClock = 0;
-        // }
+            logClock = 0;
+        }
     }
 
     @Override

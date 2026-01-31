@@ -183,7 +183,7 @@ public class ExactAlign extends Command {
         drivetrain.setControl(driveRequest
                 .withVelocityX(-dx)
                 .withVelocityY(-dy)
-                .withRotationalRate(-dtheta)
+                .withRotationalRate(dtheta)
                 );
 
         // Average pose from each camera
