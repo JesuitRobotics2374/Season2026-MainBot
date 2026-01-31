@@ -32,9 +32,9 @@ public class ClimbAlign extends Command {
     private final SlewRateLimiter yawRateLimiter = new SlewRateLimiter(100.0);
 
     // Position tolerance thresholds
-    private static final double X_TOLERANCE = 0.04; // meters
+    private static final double X_TOLERANCE = 0.05; // meters
     private static final double Y_TOLERANCE = 0.05; // meters
-    private static final double YAW_TOLERANCE = 5 * Math.PI / 180; // radians
+    private static final double YAW_TOLERANCE = 3 * Math.PI / 180; // radians
 
     // Maximum output valuess
     private static final double MAX_LINEAR_SPEED = 2.4;
@@ -71,6 +71,8 @@ public class ClimbAlign extends Command {
 
     private ArrayList<Pose3d> recentPoses;
 
+    private double maxOutTimer;
+
     boolean finishedOverride;
 
     public ClimbAlign(DriveSubsystem drivetrain, VisionSubsystem visionSubsystem) {
@@ -97,6 +99,8 @@ public class ClimbAlign extends Command {
         yawController = new PIDController(2.2, 0.1, 0.2);
         yawController.setTolerance(YAW_TOLERANCE);
         yawController.enableContinuousInput(-Math.PI, Math.PI);
+
+        maxOutTimer = 0;
     }
 
     public ClimbAlign(DriveSubsystem drivetrain, VisionSubsystem visionSubsystem, Target target) {
@@ -131,6 +135,8 @@ public class ClimbAlign extends Command {
         yawController = new PIDController(2.2, 0.1, 0.2);
         yawController.setTolerance(YAW_TOLERANCE);
         yawController.enableContinuousInput(-Math.PI, Math.PI);
+
+        maxOutTimer = 0;
     }
 
     @Override
@@ -170,6 +176,8 @@ public class ClimbAlign extends Command {
             this.y_offset = tagRelativePose.getY();
             this.yaw_offset = tagRelativePose.getRotation().getZ();
         }
+
+        maxOutTimer = 0;
     }
 
     @Override
@@ -286,14 +294,13 @@ public class ClimbAlign extends Command {
         dtheta = yawRateLimiter.calculate(dtheta);
 
         if (Math.abs(error_yaw) > 90 * Math.PI/180) {  
-            System.out.println("fixing yaw");
             error_yaw = Math.PI - Math.abs(error_yaw);
         }
 
         // Zero out commands if we're within tolerance
         boolean xTollerenace = Math.abs(error_x) < X_TOLERANCE;
         boolean yTollerenace = Math.abs(error_y) < Y_TOLERANCE;
-        boolean thetaTollerenace = Math.abs(error_yaw) + (0.5 * Math.PI / 180) < YAW_TOLERANCE;
+        boolean thetaTollerenace = Math.abs(error_yaw) - (0.5 * Math.PI / 180) < YAW_TOLERANCE;
 
         if (xTollerenace)
             dx = 0;
@@ -304,6 +311,14 @@ public class ClimbAlign extends Command {
 
         if (xTollerenace && yTollerenace && thetaTollerenace) {
             finishedOverride = true;
+            end(true);
+        }
+
+        maxOutTimer++;
+
+        if (maxOutTimer > 5 * 50) {
+            finishedOverride = true;
+            maxOutTimer = 0;
             end(true);
         }
     }

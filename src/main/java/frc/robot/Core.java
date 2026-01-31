@@ -31,7 +31,7 @@ import com.pathplanner.lib.auto.AutoBuilder;
 
 public class Core {
     //Swerve Stuff
-    private double MaxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond) * 1.00; // kSpeedAt12Volts desired top speed
+    private double MaxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond) * 0.75; // kSpeedAt12Volts desired top speed
     private double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond); // 3/4 of a rotation per second
                                                                                       // max angular velocity
 
@@ -60,11 +60,11 @@ public class Core {
     
     private final FixYawToHub fixYawToHub = new FixYawToHub(drivetrain, false);
 
-    private final Target testTarget = new Target(31, new Transform3d(1.55, 0.1, 0, new Rotation3d(0, 0, 0)));
+    private final Target testTarget = new Target(31, new Transform3d(1.575, 0.0, 0, new Rotation3d(0, 0, 0)));
 
     private final SequentialCommandGroup climbAlign = new SequentialCommandGroup(
             new ClimbAlign(drivetrain, vision, testTarget),
-            new CanAlign(drivetrain, vision, testTarget.requestFiducialID().get(), false));
+            new CanAlign(drivetrain, vision, testTarget.requestFiducialID().get(), true));
 
     private boolean hubYawAlign = false;
 
