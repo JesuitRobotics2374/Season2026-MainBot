@@ -1,105 +1,89 @@
+// Copyright (c) FIRST and other WPILib contributors.
+// Open Source Software; you can modify and/or share it under the terms of
+// the WPILib BSD license file in the root directory of this project.
 
 package frc.robot.subsystems;
 
+import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
+
+import java.lang.annotation.Retention;
+
+import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
-import com.ctre.phoenix6.controls.Follower;
-import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
-import com.ctre.phoenix6.signals.MotorAlignmentValue;
-import com.ctre.phoenix6.signals.NeutralModeValue;
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class ShooterSubsystem extends SubsystemBase {
 
-    private final TalonFX control;
-    private final TalonFX follower;
-    
-    // Request object to avoid allocation in loops
-    private final VelocityVoltage velocityRequest = new VelocityVoltage(0).withSlot(0);
+  private TalonFX shooterLeft;
+  private TalonFX shooterRight;
 
-    private double targetRpm = 0.0;
-    
-    // Constants
-    private static final double MAX_RPM = 6000.0; 
-    private static final double RPM_TO_RPS = 1.0 / 60.0;
-    private static final double CURRENT_LIMIT = 40.0; // Amps
+  private double currentSpeed = 0.0;
+  private double targetRpm = 0.0;
 
-    public ShooterSubsystem() {
+  // Constants
+  private static final double MAX_RPM = 6000.0;
+  private static final double RPM_TO_RPS = 1.0 / 60.0;
+  private static final double CURRENT_LIMIT = 40.0; // Amps
 
-        control = new TalonFX(11);
-        follower = new TalonFX(12);
+  /** Creates a new Shooter. */
+  public ShooterSubsystem() {
+    this.shooterLeft = new TalonFX(0); // change device ID
+    this.shooterRight = new TalonFX(1); // change device ID
 
-        TalonFXConfiguration controlCfg = new TalonFXConfiguration();
-        controlCfg.MotorOutput.NeutralMode = NeutralModeValue.Brake;
-        controlCfg.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
-        
-        // Current Limits
-        controlCfg.CurrentLimits.SupplyCurrentLimitEnable = true;
-        controlCfg.CurrentLimits.SupplyCurrentLimit = CURRENT_LIMIT;
+    TalonFXConfiguration leftConfig = new TalonFXConfiguration();
+    TalonFXConfiguration rightConfig = new TalonFXConfiguration();
 
-        controlCfg.Slot0.kP = 0.11;
-        controlCfg.Slot0.kI = 0.5;
-        controlCfg.Slot0.kD = 0.0001;
-        controlCfg.Slot0.kV = 0.12; // ~12V
+    leftConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
+    leftConfig.CurrentLimits.SupplyCurrentLimit = CURRENT_LIMIT;
+    leftConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
 
-        control.getConfigurator().apply(controlCfg);
-        
-        TalonFXConfiguration followerCfg = new TalonFXConfiguration();
-        followerCfg.MotorOutput.NeutralMode = NeutralModeValue.Brake;
-        // Apply same current limits to follower
-        followerCfg.CurrentLimits = controlCfg.CurrentLimits;
-        
-        follower.getConfigurator().apply(followerCfg);
+    rightConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
+    rightConfig.CurrentLimits.SupplyCurrentLimit = CURRENT_LIMIT;
+    rightConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
 
-        follower.setControl(new Follower(control.getDeviceID(), MotorAlignmentValue.Opposed));
+    shooterLeft.getConfigurator().apply(leftConfig);
+    shooterRight.getConfigurator().apply(rightConfig);
 
-        control.setNeutralMode(NeutralModeValue.Brake);
-    }
+  }
 
-    public void setTargetRpm(double rpm) {
-        if (rpm > MAX_RPM) rpm = MAX_RPM;
-        if (rpm < -MAX_RPM) rpm = -MAX_RPM;
-        targetRpm = rpm;
-    }
+  private void setSpeed(double speed) {
+    shooterLeft.set(speed);
+    shooterRight.set(speed);
+  }
 
-    public double getTargetRpm() {
-        return targetRpm;
-    }
+  /**
+   * Starts the shooter when ready to shoot
+   * 
+   * @param speed
+   */
+  public Command shoot(double speed) {
+    return new InstantCommand(() -> setSpeed(Math.abs(speed)), this);
+  }
 
-    public void increaseTargetRpm(double deltaRpm) {
-        setTargetRpm(targetRpm + deltaRpm);
-    }
+  /**
+   * Stops the shooter when needed
+   * 
+   * @param speed
+   */
+  public Command stopShoot() {
+    return new InstantCommand(() -> setSpeed(0), this);
+  }
 
-    public void decreaseTargetRpm(double deltaRpm) {
-        setTargetRpm(targetRpm - deltaRpm);
-    }
+  /**
+   * Purges the shooter if balls get stuck
+   * 
+   * @param speed output speed
+   * @return
+   */
+  public Command purgeShooter(double speed) {
+    return new InstantCommand(() -> setSpeed(-Math.abs(speed)), this);
+  }
 
-    /**
-     * Runs the motor at the specified RPM using closed-loop control.
-     * @param rpm Target RPM
-     */
-    public void rotate(double rpm) {
-        // Convert RPM to RPS
-        control.setControl(velocityRequest.withVelocity(rpm * RPM_TO_RPS));
-    }
-
-    public void rotateAtCached() {
-        rotate(targetRpm);
-    }
-
-    public void stop() {
-        control.stopMotor();
-    }
-
-    /**
-     * @return Current velocity in RPM
-     */
-    public double getSpeedRpm() {
-        return control.getRotorVelocity().getValueAsDouble() * 60.0;
-    }
-
-    @Override
-    public void periodic() {
-    }
+  @Override
+  public void periodic() {
+    // This method will be called once per scheduler run
+  }
 }
