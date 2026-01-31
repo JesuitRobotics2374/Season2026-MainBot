@@ -4,80 +4,90 @@
 
 package frc.robot;
 
-import com.ctre.phoenix6.HootAutoReplay;
-
+import edu.wpi.first.math.geometry.Rotation3d;
+import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
+import frc.robot.align.CanAlign;
+import frc.robot.align.ClimbAlign;
+import frc.robot.align.Target;
 
 public class Robot extends TimedRobot {
-    private Command m_autonomousCommand;
+  private Command m_autonomousCommand;
 
-    private final Core m_robotContainer;
+  private final Core m_core;
 
-    /* log and replay timestamp and joystick data */
-    private final HootAutoReplay m_timeAndJoystickReplay = new HootAutoReplay()
-        .withTimestampReplay()
-        .withJoystickReplay();
+  private final Target testTarget = new Target(31, new Transform3d(1.575, 0.0, 0, new Rotation3d(0, 0, 0)));
 
-    public Robot() {
-        m_robotContainer = new Core();
+   private final SequentialCommandGroup climbAlign;
+
+  public Robot() {
+    m_core = new Core();
+
+    climbAlign = new SequentialCommandGroup(
+            new ClimbAlign(m_core.drivetrain, m_core.vision, testTarget),
+            new CanAlign(m_core.drivetrain, m_core.vision, testTarget.requestFiducialID().get(), true));
+  }
+
+  @Override
+  public void robotPeriodic() {
+     CommandScheduler.getInstance().run(); 
+
+    m_core.drivetrain.passGlobalEstimates(m_core.vision.getGlobalFieldPoses());
+  }
+
+  @Override
+  public void disabledInit() {}
+
+  @Override
+  public void disabledPeriodic() {}
+
+  @Override
+  public void disabledExit() {}
+
+  @Override
+  public void autonomousInit() {
+    m_autonomousCommand = m_core.getAutonomousCommand();
+
+    if (m_autonomousCommand != null) {
+      CommandScheduler.getInstance().schedule(new SequentialCommandGroup(m_autonomousCommand, climbAlign));
     }
 
-    @Override
-    public void robotPeriodic() {
-        m_timeAndJoystickReplay.update();
-        CommandScheduler.getInstance().run(); 
+
+  }
+
+  @Override
+  public void autonomousPeriodic() {}
+
+  @Override
+  public void autonomousExit() {}
+
+  @Override
+  public void teleopInit() {
+    if (m_autonomousCommand != null) {
+      m_autonomousCommand.cancel();
     }
+  }
 
-    @Override
-    public void disabledInit() {}
+  @Override
+  public void teleopPeriodic() {
+  }
 
-    @Override
-    public void disabledPeriodic() {}
+  @Override
+  public void teleopExit() {}
 
-    @Override
-    public void disabledExit() {}
+  @Override
+  public void testInit() {
+  }
 
-    @Override
-    public void autonomousInit() {
-        m_autonomousCommand = m_robotContainer.getAutonomousCommand();
+  @Override
+  public void testPeriodic() {}
 
-        if (m_autonomousCommand != null) {
-            CommandScheduler.getInstance().schedule(m_autonomousCommand);
-        }
-    }
+  @Override
+  public void testExit() {}
 
-    @Override
-    public void autonomousPeriodic() {}
-
-    @Override
-    public void autonomousExit() {}
-
-    @Override
-    public void teleopInit() {
-        if (m_autonomousCommand != null) {
-            CommandScheduler.getInstance().cancel(m_autonomousCommand);
-        }
-    }
-
-    @Override
-    public void teleopPeriodic() {}
-
-    @Override
-    public void teleopExit() {}
-
-    @Override
-    public void testInit() {
-        CommandScheduler.getInstance().cancelAll();
-    }
-
-    @Override
-    public void testPeriodic() {}
-
-    @Override
-    public void testExit() {}
-
-    @Override
-    public void simulationPeriodic() {}
+  @Override
+  public void simulationPeriodic() {}
 }
