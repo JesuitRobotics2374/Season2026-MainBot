@@ -1,4 +1,4 @@
-package frc.robot.align;
+package frc.robot.align.preciseAligning;
 
 import com.ctre.phoenix6.hardware.CANrange;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
