@@ -8,8 +8,8 @@ import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.Constants;
 import frc.robot.subsystems.vision.Camera.Type;
+import frc.robot.utils.Constants;
 
 public class VisionSubsystem extends SubsystemBase {
 

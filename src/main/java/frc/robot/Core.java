@@ -20,13 +20,15 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
-import frc.robot.align.CanAlign;
-import frc.robot.align.ClimbAlign;
-import frc.robot.align.FixYawToHub;
-import frc.robot.align.Target;
+import frc.robot.align.alignUtils.Target;
+import frc.robot.align.driverAssist.FixYawToHub;
+import frc.robot.align.preciseAligning.CanAlign;
+import frc.robot.align.preciseAligning.ClimbAlign;
 import frc.robot.subsystems.drivetrain.TunerConstants;
 import frc.robot.subsystems.drivetrain.DriveSubsystem;
 import frc.robot.subsystems.vision.VisionSubsystem;
+import frc.robot.utils.Telemetry;
+
 import com.pathplanner.lib.auto.AutoBuilder;
 
 public class Core {
