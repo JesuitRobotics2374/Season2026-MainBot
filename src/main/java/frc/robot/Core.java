@@ -9,34 +9,90 @@ import static edu.wpi.first.units.Units.*;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 
-import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.filter.SlewRateLimiter;
+import edu.wpi.first.math.geometry.Rotation3d;
+import edu.wpi.first.math.geometry.Transform3d;
+import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
+import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
-import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
-import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
-import frc.robot.subsystems.drivetrain.CommandSwerveDrivetrain;
+import frc.robot.align.alignUtils.Target;
+import frc.robot.align.driverAssist.FixYawToHub;
+import frc.robot.align.preciseAligning.CanAlign;
+import frc.robot.align.preciseAligning.ClimbAlign;
 import frc.robot.subsystems.drivetrain.TunerConstants;
+import frc.robot.subsystems.drivetrain.DriveSubsystem;
+import frc.robot.subsystems.vision.VisionSubsystem;
+import frc.robot.utils.Telemetry;
+
+import com.pathplanner.lib.auto.AutoBuilder;
 
 public class Core {
-    private double MaxSpeed = 1.0 * TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
-    private double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond); // 3/4 of a rotation per second max angular velocity
+    //Swerve Stuff
+    private double MaxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond) * 0.75; // kSpeedAt12Volts desired top speed
+    private double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond); // 3/4 of a rotation per second
+                                                                                      // max angular velocity
 
     /* Setting up bindings for necessary control of the swerve drive platform */
     private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
             .withDeadband(MaxSpeed * 0.1).withRotationalDeadband(MaxAngularRate * 0.1) // Add a 10% deadband
             .withDriveRequestType(DriveRequestType.OpenLoopVoltage); // Use open-loop control for drive motors
-    private final SwerveRequest.SwerveDriveBrake brake = new SwerveRequest.SwerveDriveBrake();
-    private final SwerveRequest.PointWheelsAt point = new SwerveRequest.PointWheelsAt();
 
     private final Telemetry logger = new Telemetry(MaxSpeed);
 
-    private final CommandXboxController joystick = new CommandXboxController(0);
+    //Controllers
 
-    public final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
+    private final CommandXboxController driveController = new CommandXboxController(0);
+
+    //Subsystems
+
+    public final DriveSubsystem drivetrain = TunerConstants.createDrivetrain();
+
+    public final VisionSubsystem vision = new VisionSubsystem();
+
+    //Auto
+
+     private final SendableChooser<Command> autoChooser;
+
+    //Driver assist
+    
+    private final FixYawToHub fixYawToHub = new FixYawToHub(drivetrain, false);
+
+    private final Target testTarget = new Target(31, new Transform3d(1.575, 0.0, 0, new Rotation3d(0, 0, 0)));
+
+    private final SequentialCommandGroup climbAlign = new SequentialCommandGroup(
+            new ClimbAlign(drivetrain, vision, testTarget),
+            new CanAlign(drivetrain, vision, testTarget.requestFiducialID().get(), true));
+
+    private boolean hubYawAlign = false;
+
+    private static final double TranslationalAccelerationLimit = 10; // meters per second^2
+    private static final double RotationalAccelerationLimit = Math.PI * 5.5; // radians per second^2
+
+    private final SlewRateLimiter xRateLimiter = new SlewRateLimiter(TranslationalAccelerationLimit);
+    private final SlewRateLimiter yRateLimiter = new SlewRateLimiter(TranslationalAccelerationLimit);
+    private final SlewRateLimiter omegaRateLimiter = new SlewRateLimiter(RotationalAccelerationLimit);
 
     public Core() {
         configureBindings();
+
+        autoChooser = AutoBuilder.buildAutoChooser();
+        
+        configureShuffleBoard();
+    }
+
+    public void configureShuffleBoard() {
+        ShuffleboardTab tab = Shuffleboard.getTab("Test");
+
+        SmartDashboard.putData("Auto Chooser", autoChooser);
+    }
+
+     public Command getAutonomousCommand() {
+        return autoChooser.getSelected();
     }
 
     private void configureBindings() {
@@ -44,54 +100,55 @@ public class Core {
         // and Y is defined as to the left according to WPILib convention.
         drivetrain.setDefaultCommand(
             // Drivetrain will execute this command periodically
-            drivetrain.applyRequest(() ->
-                drive.withVelocityX(-joystick.getLeftY() * MaxSpeed) // Drive forward with negative Y (forward)
-                    .withVelocityY(-joystick.getLeftX() * MaxSpeed) // Drive left with negative X (left)
-                    .withRotationalRate(-joystick.getRightX() * MaxAngularRate) // Drive counterclockwise with negative X (left)
-            )
+            drivetrain.applyRequest(() -> {
+                double axisScale = getAxisMovementScale();
+
+                double driverVelocityX = driveController.getLeftY() * MaxSpeed * axisScale;
+                double driverVelocityY = driveController.getLeftX() * MaxSpeed * axisScale;
+                double driverRotationalRate = -driveController.getRightX() * MaxAngularRate * axisScale;
+
+                // Determine which controller is active
+                // boolean driverActive =
+                //     Math.abs(driverVelocityX) > 0.05 ||
+                //     Math.abs(driverVelocityY) > 0.05 ||
+                //     Math.abs(driverRotationalRate) > 0.05;
+                boolean driverActive = Math.abs(driveController.getRightX()) > 0.1 || !hubYawAlign;
+
+                double desiredRotationalRate = driverActive ? driverRotationalRate : calculateRotationalRate();
+
+                    return drive
+                        .withVelocityX(xRateLimiter.calculate(-driverVelocityX)) // Limit translational acceleration forward/backward
+                        .withVelocityY(yRateLimiter.calculate(-driverVelocityY)) // Limit translational acceleration left/right
+                        .withRotationalRate(omegaRateLimiter.calculate(desiredRotationalRate));
+            })
         );
 
-        // Idle while the robot is disabled. This ensures the configured
-        // neutral mode is applied to the drive motors while disabled.
-        final var idle = new SwerveRequest.Idle();
-        RobotModeTriggers.disabled().whileTrue(
-            drivetrain.applyRequest(() -> idle).ignoringDisable(true)
-        );
+        // reset the field-centric heading on left bumper press
+        driveController.back().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
 
-        joystick.a().whileTrue(drivetrain.applyRequest(() -> brake));
-        joystick.b().whileTrue(drivetrain.applyRequest(() ->
-            point.withModuleDirection(new Rotation2d(-joystick.getLeftY(), -joystick.getLeftX()))
-        ));
+        driveController.a().onTrue(new ClimbAlign(drivetrain, vision, testTarget));
+        driveController.b().onTrue(new CanAlign(drivetrain, vision, testTarget.requestFiducialID().get(), false));
 
-        // Run SysId routines when holding back/start and X/Y.
-        // Note that each routine should be run exactly once in a single log.
-        joystick.back().and(joystick.y()).whileTrue(drivetrain.sysIdDynamic(Direction.kForward));
-        joystick.back().and(joystick.x()).whileTrue(drivetrain.sysIdDynamic(Direction.kReverse));
-        joystick.start().and(joystick.y()).whileTrue(drivetrain.sysIdQuasistatic(Direction.kForward));
-        joystick.start().and(joystick.x()).whileTrue(drivetrain.sysIdQuasistatic(Direction.kReverse));
+        driveController.y().onTrue(vision.runOnce(() -> vision.getTagRelativeToBot(26)));
 
-        // Reset the field-centric heading on left bumper press.
-        joystick.leftBumper().onTrue(drivetrain.runOnce(drivetrain::seedFieldCentric));
+        driveController.x().onTrue(climbAlign);
+
+        driveController.povUp().onTrue(new InstantCommand(() -> {
+            fixYawToHub.schedule();
+            hubYawAlign = true;}));
+
+        driveController.povDown().onTrue(new InstantCommand(() -> {
+            fixYawToHub.cancel(); 
+            hubYawAlign = false;}));
 
         drivetrain.registerTelemetry(logger::telemeterize);
     }
 
-    public Command getAutonomousCommand() {
-        // Simple drive forward auton
-        final var idle = new SwerveRequest.Idle();
-        return Commands.sequence(
-            // Reset our field centric heading to match the robot
-            // facing away from our alliance station wall (0 deg).
-            drivetrain.runOnce(() -> drivetrain.seedFieldCentric(Rotation2d.kZero)),
-            // Then slowly drive forward (away from us) for 5 seconds.
-            drivetrain.applyRequest(() ->
-                drive.withVelocityX(0.5)
-                    .withVelocityY(0)
-                    .withRotationalRate(0)
-            )
-            .withTimeout(5.0),
-            // Finally idle for the rest of auton
-            drivetrain.applyRequest(() -> idle)
-        );
+    public double getAxisMovementScale() {
+        return (1 - (driveController.getRightTriggerAxis() * 0.75));
+    }
+
+    private double calculateRotationalRate() {
+        return fixYawToHub.getRotationalRate();
     }
 }
