@@ -9,6 +9,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.subsystems.drivetrain.DriveSubsystem;
+import frc.robot.utils.Ballistics;
 
 public class FixYawToHub extends Command {
 
@@ -48,13 +49,16 @@ public class FixYawToHub extends Command {
     //private double tempA = 0;
 
     private double calculateRelativeTheta(Pose2d robotPose) {
+        double vRobotX = drivetrain.getCurrentRobotChassisSpeeds().vxMetersPerSecond;
+        double vRobotY = drivetrain.getCurrentRobotChassisSpeeds().vyMetersPerSecond;
+
         double delta_x = absoluteTargetTranslation.getX() - robotPose.getX();
-        double delta_y = absoluteTargetTranslation.getY() - robotPose.getY();
+        double delta_y = absoluteTargetTranslation.getY() - robotPose.getY() - Ballistics.calculateY(Ballistics.CalculateNeededShooterSpeed(delta_x, vRobotX, vRobotY), vRobotX, vRobotY);
 
         double dt = Utils.getCurrentTimeSeconds() - drivetrain.getTimeSinceLastEstimatorUpdate();
 
-        double error_x = drivetrain.getCurrentRobotChassisSpeeds().vxMetersPerSecond * dt;
-        double error_y = drivetrain.getCurrentRobotChassisSpeeds().vyMetersPerSecond * dt;
+        double error_x = vRobotX * dt;
+        double error_y = vRobotY * dt;
 
         delta_x += error_x;
         delta_y += error_y;

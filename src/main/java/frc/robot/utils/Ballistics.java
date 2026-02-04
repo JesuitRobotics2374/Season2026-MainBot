@@ -35,7 +35,7 @@ public class Ballistics {
 
     private static final double dt = 0.001; // seconds (s)
 
-    private static double calculateX(double Vi, double ViRobotX, double ViRobotY) {
+    public static double calculateX(double Vi, double ViRobotX, double ViRobotY) {
         boolean hasReachedPeak = false;
 
         x = 0;
@@ -96,6 +96,67 @@ public class Ballistics {
         return x;
     }
 
+    public static double calculateY(double Vi, double ViRobotX, double ViRobotY) {
+        boolean hasReachedPeak = false;
+
+        x = 0;
+        y = 0;
+        z = 0;
+        theta = 0;
+
+        Vx = Vi * Math.cos(lambda) + ViRobotX;
+        Vy = ViRobotY;
+        Vz = Vi * Math.sin(lambda);
+
+        double Vel = Math.sqrt(Vx * Vx + Vy * Vy + Vz * Vz);
+
+        Ax = -(drag * Vel * Vx) / m;
+        Ay = -(drag * Vel * Vy) / m;
+        Az = g - (drag * Vel * Vz) / m;
+
+        time = 0;
+
+        while (!hasReachedPeak) {
+            time += dt;
+
+            Vx += Ax * dt;
+            Vy += Ay * dt;
+            Vz += Az * dt;
+
+            Vel = Math.sqrt(Vx * Vx + Vy * Vy + Vz * Vz);
+
+            Ax = -(drag * Vel * Vx) / m;
+            Ay = -(drag * Vel * Vy) / m;
+            Az = g - (drag * Vel * Vz) / m;
+
+            x += Vx * dt;
+            y += Vy * dt;
+            z += Vz * dt;
+
+            hasReachedPeak = Vz <= 0;
+        }
+
+        while (z > deltaH) {
+            time += dt;
+
+            Vx += Ax * dt;
+            Vy += Ay * dt;
+            Vz += Az * dt;
+
+            Vel = Math.sqrt(Vx * Vx + Vy * Vy + Vz * Vz);
+
+            Ax = -(drag * Vel * Vx) / m;
+            Ay = -(drag * Vel * Vy) / m;
+            Az = g - (drag * Vel * Vz) / m;
+
+            x += Vx * dt;
+            y += Vy * dt;
+            z += Vz * dt;
+        }
+
+        return y;
+    }
+
     public static double CalculateNeededShooterSpeed(double distanceX, double VRobotX, double VRobotY) {
         double low = 5.0; // minimum shooter speed
         double high = 20.0; // maximum shooter speed
@@ -118,13 +179,12 @@ public class Ballistics {
                 break; // within tolerance
             }
         }
-        System.out.println("iterations: " + iterations);
         return mid;
     }
 
     public static void main(String[] args) {
 
-        System.out.println(CalculateNeededShooterSpeed(5, 1, 2));
+        System.out.println(CalculateNeededShooterSpeed(5, 4, 2));
 
         // double ViMin = 5; // minimum initial velocity (m/s)
         // double ViMax = 15; // maximum initial velocity (m/s)
