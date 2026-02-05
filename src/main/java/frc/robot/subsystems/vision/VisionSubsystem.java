@@ -3,6 +3,8 @@ package frc.robot.subsystems.vision;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.opencv.core.Size;
+
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
@@ -26,7 +28,7 @@ public class VisionSubsystem extends SubsystemBase {
             new Transform3d(0.38, 0.08, 0.285, new Rotation3d(0, 0, 0)),
             new Transform3d(0.38, 0, 0.229, new Rotation3d(0, 0, 0))
     };
-    private Camera.Type[] types = { Type.APRIL_TAG, Type.APRIL_TAG };
+    private Camera.Type[] types = { Type.RELATIVE, Type.APRIL_TAG };
 
     /*
      * =====================================================
@@ -211,6 +213,43 @@ public class VisionSubsystem extends SubsystemBase {
             }
 
             tagPoses.add(cameras[i].getTagRelativeToBot(tagID)); // Add the tag pose from the camera to the list
+        }
+
+        return averagePoses(tagPoses); // Return the averaged tag pose
+    }
+
+    /**
+     * Gets the pose of a specific tag relative to the specified camera.
+     * 
+     * @param tagID - The ID of the tag to get the pose for.
+     * @return The averaged Pose3d of the tag relative to the camera.
+     */
+    public Pose3d getTagRelativeToCamera(int tagID, String camName) {
+        if (getConnection() == false || numCamsOfType(Camera.Type.APRIL_TAG) + numCamsOfType(Camera.Type.RELATIVE) == 0) { // If no cameras are connected or
+                                                                                     // no AprilTag or Relative cameras are present,
+                                                                                     // return null
+            return null;
+        }
+
+        ArrayList<Pose3d> tagPoses = new ArrayList<>(); // A list to hold the poses of the tag from each camera
+
+        for (int i = 0; i < numCams; i++) { // Iterate through each camera
+
+            Camera.Type type = cameras[i].getCameraType();
+
+            if (!(type == Camera.Type.APRIL_TAG || type == Camera.Type.RELATIVE)) { // Skip cameras that are not AprilTag cameras
+                continue;
+            }
+
+            if (!camName.equals(cameras[i].getCameraName())) {
+                continue;
+            }
+
+            tagPoses.add(cameras[i].getTagRelativeToCamera(tagID, camName)); // Add the tag pose from the camera to the list
+        }
+
+        if (tagPoses.size() == 0) {
+            return null;
         }
 
         return averagePoses(tagPoses); // Return the averaged tag pose

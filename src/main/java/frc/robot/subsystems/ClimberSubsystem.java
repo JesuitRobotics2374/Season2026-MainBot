@@ -14,12 +14,12 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 public class ClimberSubsystem extends SubsystemBase {
 
   private TalonFX climberMotor;
-  private final double minRotations = 0;
-  private final double maxRotations = -31;
+  private final double topRotations = 0;
+  private final double bottomRotations = 78;
 
   /** Creates a new Climber. */
   public ClimberSubsystem() {
-    this.climberMotor = new TalonFX(1);
+    this.climberMotor = new TalonFX(16);
     climberMotor.setPosition(0);
     climberMotor.setNeutralMode(NeutralModeValue.Brake);
   }
@@ -33,6 +33,10 @@ public class ClimberSubsystem extends SubsystemBase {
 
   }
 
+  public void rotations() {
+    System.out.println(climberMotor.getPosition().getValueAsDouble());
+  }
+
   /**
    * Extends the arm
    * @return Functional Command to extend arm.
@@ -42,7 +46,7 @@ public class ClimberSubsystem extends SubsystemBase {
 
     return new FunctionalCommand(
       //init
-      () -> {setMotorSpeed(0.5);},
+      () -> {setMotorSpeed(-0.5);},
       //execute
       () -> {},
       //interrupt
@@ -63,7 +67,7 @@ public class ClimberSubsystem extends SubsystemBase {
     // new InstantCommand(() -> setClimberMotorSpeed(-1));
     return new FunctionalCommand(
       //init
-      () -> {setMotorSpeed(-0.5);},
+      () -> {setMotorSpeed(0.5);},
       //execute
       () -> {},
       //interrupt
@@ -76,12 +80,21 @@ public class ClimberSubsystem extends SubsystemBase {
 
   }
 
+  public Command zeroClimber() {
+    return new InstantCommand(() -> climberMotor.setPosition(0));
+  }
+
+  public Command setSpeed(double speed) {
+    return new InstantCommand(() -> setMotorSpeed(speed));
+  }
+
   /**
    * Checks the position of the motor and stops it
    * @return boolean
    */
   public boolean hasReachedMax() {
-    if (climberMotor.getPosition().getValueAsDouble() <= maxRotations) {
+    if (Math.abs(climberMotor.getPosition().getValueAsDouble() - topRotations) < 0.1) {
+      System.out.println(true);
       return true;
     }
     return false;
@@ -92,7 +105,8 @@ public class ClimberSubsystem extends SubsystemBase {
    * @return
    */
   public boolean hasReachedMin() {
-    if (climberMotor.getPosition().getValueAsDouble() >= minRotations) {
+    if (Math.abs(climberMotor.getPosition().getValueAsDouble() - bottomRotations) < 0.1) {
+      System.out.println(true);
       return true;
     }
     return false;

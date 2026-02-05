@@ -25,6 +25,7 @@ import frc.robot.align.driverAssist.FixYawToHub;
 import frc.robot.align.preciseAligning.CanAlign;
 import frc.robot.align.preciseAligning.ClimbAlign;
 import frc.robot.subsystems.drivetrain.TunerConstants;
+import frc.robot.subsystems.ClimberSubsystem;
 import frc.robot.subsystems.drivetrain.DriveSubsystem;
 import frc.robot.subsystems.vision.VisionSubsystem;
 import frc.robot.utils.Telemetry;
@@ -53,6 +54,8 @@ public class Core {
     public final DriveSubsystem drivetrain = TunerConstants.createDrivetrain();
 
     public final VisionSubsystem vision = new VisionSubsystem();
+
+    public final ClimberSubsystem climber = new ClimberSubsystem();
 
     //Auto
 
@@ -83,6 +86,8 @@ public class Core {
         autoChooser = AutoBuilder.buildAutoChooser();
         
         configureShuffleBoard();
+
+        climber.runOnce(() -> climber.zeroClimber());
     }
 
     public void configureShuffleBoard() {
@@ -126,20 +131,27 @@ public class Core {
         // reset the field-centric heading on left bumper press
         driveController.back().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
 
-        driveController.a().onTrue(new ClimbAlign(drivetrain, vision, testTarget));
-        driveController.b().onTrue(new CanAlign(drivetrain, vision, testTarget.requestFiducialID().get(), false));
+        driveController.a().onTrue(climber.extendArm());
+        driveController.b().onTrue(climber.retractArm());
 
-        driveController.y().onTrue(vision.runOnce(() -> vision.getTagRelativeToBot(26)));
+        driveController.y().onTrue(climber.setSpeed(0));
+         driveController.x().onTrue(climber.runOnce(() -> climber.rotations()));
 
-        driveController.x().onTrue(climbAlign);
+        driveController.povRight().onTrue(climber.zeroClimber());
+        driveController.povLeft().onTrue(climber.runOnce(() -> climber.hasReachedMax()));
 
-        driveController.povUp().onTrue(new InstantCommand(() -> {
-            fixYawToHub.schedule();
-            hubYawAlign = true;}));
+        driveController.povUp().onTrue(climber.setSpeed(0.1));
+        driveController.povDown().onTrue(climber.setSpeed(-0.1));
 
-        driveController.povDown().onTrue(new InstantCommand(() -> {
-            fixYawToHub.cancel(); 
-            hubYawAlign = false;}));
+        //driveController.x().onTrue(climbAlign);
+
+        // driveController.povUp().onTrue(new InstantCommand(() -> {
+        //     fixYawToHub.schedule();
+        //     hubYawAlign = true;}));
+
+        // driveController.povDown().onTrue(new InstantCommand(() -> {
+        //     fixYawToHub.cancel(); 
+        //     hubYawAlign = false;}));
 
         drivetrain.registerTelemetry(logger::telemeterize);
     }

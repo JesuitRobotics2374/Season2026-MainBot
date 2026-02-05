@@ -66,6 +66,7 @@ public class Camera {
     public enum Type {
         APRIL_TAG,
         OBJECT,
+        RELATIVE, // Only runs relative commands
         DISCONNECTED // Skips the camera in all logic
     }
 
@@ -309,6 +310,35 @@ public class Camera {
         return null; // Return null if the specified tagID is not found
     }
 
+    /**
+     * Get the pose of a specific AprilTag relative to the specified camera.
+     * 
+     * @param tagID - The ID of the AprilTag to find.
+     * @return Transform3d of the specified tag relative to the camera, or null if
+     *         not found.
+     */
+    public Pose3d getTagRelativeToCamera(int tagID, String camName) {
+        if (!cameraName.equals(camName) || !isConnected()) { // If the type is not for an AprilTag, return null
+            return null;
+        }
+
+        if (latestResult == null || !latestResult.hasTargets()) { // If there are no targets in the latest result,
+                                                                  // return null
+            return null;
+        }
+
+        for (PhotonTrackedTarget target : latestResult.getTargets()) { // Iterate through each detected target
+            if (target.getFiducialId() == tagID) { // If the target's ID matches the requested tagID
+                Transform3d cameraToTarget = target.getBestCameraToTarget(); // Get the transform from the camera to the
+                                                                             // target
+
+                return new Pose3d(cameraToTarget.getTranslation(), cameraToTarget.getRotation()); // Return the pose of the tag
+            }
+        }
+
+        return null; // Return null if the specified tagID is not found
+    }
+
     /*
      * =====================================================
      * 5. OBJECT DETECTION
@@ -434,6 +464,15 @@ public class Camera {
      */
     public Type getCameraType() {
         return type;
+    }
+
+    /**
+     * Get the name of the camera.
+     * 
+     * @return The name of the camera.
+     */
+    public String getCameraName() {
+        return cameraName;
     }
 
     /**
