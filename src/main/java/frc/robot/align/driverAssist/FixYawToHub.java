@@ -53,7 +53,7 @@ public class FixYawToHub extends Command {
         double vRobotY = drivetrain.getCurrentRobotChassisSpeeds().vyMetersPerSecond;
 
         double delta_x = absoluteTargetTranslation.getX() - robotPose.getX();
-        double delta_y = absoluteTargetTranslation.getY() - robotPose.getY() - Ballistics.calculateY(Ballistics.CalculateNeededShooterSpeed(delta_x, vRobotX, vRobotY), vRobotX, vRobotY);
+        double delta_y = absoluteTargetTranslation.getY() - robotPose.getY();
 
         double dt = Utils.getCurrentTimeSeconds() - drivetrain.getTimeSinceLastEstimatorUpdate();
 

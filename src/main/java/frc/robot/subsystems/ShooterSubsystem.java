@@ -172,15 +172,17 @@ public class ShooterSubsystem extends SubsystemBase {
       double yawError = neededAngle - robotYaw;
       yawError = Math.atan2(Math.sin(yawError), Math.cos(yawError));
 
-      boolean facingHub = Math.abs(yawError) < Math.toRadians(2.5);
+      boolean facingHub = Math.abs(yawError) < Math.toRadians(5);
 
       if (facingHub) {
-        double neededX = Math.abs(absoluteHubTranslation.getY() - globalFieldPose.getY()); // this may need to be translation.getDistance() not sure, needs testing
+        double neededX = Math.abs(absoluteHubTranslation.getDistance(globalFieldPose.getTranslation()));
+
+        ChassisSpeeds robotRelSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(speeds, globalFieldPose.getRotation());
 
         double neededVel = Ballistics.CalculateNeededShooterSpeed(
             neededX,
-            speeds.vxMetersPerSecond,
-            speeds.vyMetersPerSecond);
+            robotRelSpeeds.vxMetersPerSecond,
+            robotRelSpeeds.vyMetersPerSecond);
 
         // useRPM = convertVelToRPM(neededVel);
       } else {

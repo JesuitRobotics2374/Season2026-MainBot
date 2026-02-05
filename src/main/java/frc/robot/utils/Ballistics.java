@@ -184,7 +184,7 @@ public class Ballistics {
 
     public static void main(String[] args) {
 
-        System.out.println(CalculateNeededShooterSpeed(5, 4, 2));
+        System.out.println(CalculateNeededShooterSpeed(5, 2, 3));
 
         // double ViMin = 5; // minimum initial velocity (m/s)
         // double ViMax = 15; // maximum initial velocity (m/s)
