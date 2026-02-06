@@ -7,12 +7,14 @@ package frc.robot;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.wpilibj.TimedRobot;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import frc.robot.align.alignUtils.Target;
 import frc.robot.align.preciseAligning.CanAlign;
 import frc.robot.align.preciseAligning.ClimbAlign;
+import frc.robot.utils.Elastic;
 
 public class Robot extends TimedRobot {
   private Command m_autonomousCommand;
@@ -33,7 +35,9 @@ public class Robot extends TimedRobot {
 
   @Override
   public void robotPeriodic() {
-     CommandScheduler.getInstance().run(); 
+     CommandScheduler.getInstance().run();
+
+    //ask if elastic widgets are to be made here - xan
 
     m_core.drivetrain.passGlobalEstimates(m_core.vision.getGlobalFieldPoses());
   }
@@ -50,10 +54,15 @@ public class Robot extends TimedRobot {
   @Override
   public void autonomousInit() {
     m_autonomousCommand = m_core.getAutonomousCommand();
+    
+    //Switches from Teleoperated tab to Autonomous tab in Elastic
+    Elastic.selectTab("Autonomous");
 
     if (m_autonomousCommand != null) {
       CommandScheduler.getInstance().schedule(new SequentialCommandGroup(m_autonomousCommand, climbAlign));
     }
+
+    
 
 
   }
