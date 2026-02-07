@@ -137,6 +137,7 @@ public class FixYawToHub extends Command {
     @Override
     public void end(boolean interrupted) {
         finishedOverride = true;
+        dtheta = 0.0;
 
         if (interrupted) {
             System.out.println("YAW LOCK INTERRUPTED");

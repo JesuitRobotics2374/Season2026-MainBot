@@ -4,14 +4,14 @@ import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.*;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
-import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.subsystems.drivetrain.DriveSubsystem;
 
 public class FixYawToHubPolar extends Command {
 
     private final DriveSubsystem drivetrain;
-    private final XboxController controller;
+    private final CommandXboxController controller;
     private final Translation2d hub;
 
     private final PIDController yawController =
@@ -28,7 +28,7 @@ public class FixYawToHubPolar extends Command {
 
     public FixYawToHubPolar(
             DriveSubsystem drivetrain,
-            XboxController controller,
+            CommandXboxController controller,
             boolean isRed) {
 
         this.drivetrain = drivetrain;

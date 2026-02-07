@@ -17,11 +17,14 @@ import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.align.alignUtils.Target;
 import frc.robot.align.driverAssist.FixYawToHub;
+import frc.robot.align.driverAssist.FixYawToHubPolar;
 import frc.robot.align.preciseAligning.CanAlign;
 import frc.robot.align.preciseAligning.ClimbAlign;
 import frc.robot.subsystems.drivetrain.TunerConstants;
@@ -61,6 +64,7 @@ public class Core {
     //Driver assist
     
     private final FixYawToHub fixYawToHub = new FixYawToHub(drivetrain, false);
+    private final FixYawToHubPolar fixYawToHubPolar = new FixYawToHubPolar(drivetrain, driveController, false);
 
     private final Target testTarget = new Target(31, new Transform3d(1.575, 0.0, 0, new Rotation3d(0, 0, 0)));
 
@@ -137,10 +141,12 @@ public class Core {
             fixYawToHub.schedule();
             hubYawAlign = true;}));
 
-        driveController.povDown().onTrue(new InstantCommand(() -> {
+        driveController.povUp().onFalse(new InstantCommand(() -> {
             fixYawToHub.cancel(); 
             hubYawAlign = false;}));
 
+        driveController.leftTrigger().whileTrue(fixYawToHubPolar);
+    
         drivetrain.registerTelemetry(logger::telemeterize);
     }
 
