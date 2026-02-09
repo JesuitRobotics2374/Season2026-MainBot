@@ -89,6 +89,7 @@ public class Core {
         ShuffleboardTab tab = Shuffleboard.getTab("Test");
 
         SmartDashboard.putData("Auto Chooser", autoChooser);
+        SmartDashboard.putNumber("Speed", drivetrain.getChassisSpeed());
         
     }
 

@@ -38,7 +38,7 @@ public class Robot extends TimedRobot {
      CommandScheduler.getInstance().run();
 
     //ask if elastic widgets are to be made here - xan
-
+    
     m_core.drivetrain.passGlobalEstimates(m_core.vision.getGlobalFieldPoses());
   }
 
@@ -61,9 +61,6 @@ public class Robot extends TimedRobot {
     if (m_autonomousCommand != null) {
       CommandScheduler.getInstance().schedule(new SequentialCommandGroup(m_autonomousCommand, climbAlign));
     }
-
-    
-
 
   }
 

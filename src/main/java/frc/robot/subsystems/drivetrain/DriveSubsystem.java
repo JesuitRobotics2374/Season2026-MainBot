@@ -4,6 +4,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Supplier;
 
+import org.apache.commons.math4.legacy.analysis.function.Power;
+import org.apache.commons.math4.legacy.analysis.function.Sqrt;
+
 import com.ctre.phoenix6.Utils;
 import com.ctre.phoenix6.swerve.SwerveDrivetrainConstants;
 import com.ctre.phoenix6.swerve.SwerveModule;
@@ -247,6 +250,10 @@ public class DriveSubsystem extends TunerSwerveDrivetrain implements Subsystem {
 
     private Rotation2d getGyroscopeRotation() {
         return Rotation2d.fromDegrees(getState().Pose.getRotation().getDegrees());
+    }
+
+    public double getChassisSpeed() {
+        return Math.sqrt(Math.pow(getCurrentRobotChassisSpeeds().vxMetersPerSecond,2)+Math.pow(getCurrentRobotChassisSpeeds().vxMetersPerSecond,2));
     }
 
     private SwerveModulePosition[] getSwerveModulePositions() {
