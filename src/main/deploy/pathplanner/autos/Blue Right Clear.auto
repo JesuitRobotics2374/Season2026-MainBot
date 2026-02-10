@@ -7,13 +7,13 @@
         {
           "type": "path",
           "data": {
-            "pathName": "Small Forward"
+            "pathName": "ClearanceRight"
           }
         }
       ]
     }
   },
-  "resetOdom": false,
+  "resetOdom": true,
   "folder": null,
   "choreoAuto": false
 }
