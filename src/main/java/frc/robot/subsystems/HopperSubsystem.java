@@ -32,8 +32,14 @@ public class HopperSubsystem extends SubsystemBase {
   }
 
   public Command roll() {
-    rolling = true;
-    return new InstantCommand(() -> rollerMotor.set(0.5));
+    if(rolling) {
+      rolling = false;
+      return new InstantCommand(() -> rollerMotor.stopMotor());
+    }
+    else {
+      rolling = true;
+      return new InstantCommand(() -> rollerMotor.set(0.5));
+    }
   }
 
   public Command purge() {

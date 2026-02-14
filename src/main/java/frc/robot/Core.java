@@ -6,6 +6,8 @@ package frc.robot;
 
 import static edu.wpi.first.units.Units.*;
 
+import java.lang.management.OperatingSystemMXBean;
+
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 
@@ -25,6 +27,10 @@ import frc.robot.align.driverAssist.FixYawToHub;
 import frc.robot.align.preciseAligning.CanAlign;
 import frc.robot.align.preciseAligning.ClimbAlign;
 import frc.robot.subsystems.drivetrain.TunerConstants;
+import frc.robot.subsystems.ClimberSubsystem;
+import frc.robot.subsystems.HopperSubsystem;
+import frc.robot.subsystems.IntakeSubsystem;
+import frc.robot.subsystems.ShooterSubsystem;
 import frc.robot.subsystems.drivetrain.DriveSubsystem;
 import frc.robot.subsystems.vision.VisionSubsystem;
 import frc.robot.utils.Telemetry;
@@ -47,12 +53,19 @@ public class Core {
     //Controllers
 
     private final CommandXboxController driveController = new CommandXboxController(0);
+    private final CommandXboxController operatorController = new CommandXboxController(1);
 
     //Subsystems
 
     public final DriveSubsystem drivetrain = TunerConstants.createDrivetrain();
 
     public final VisionSubsystem vision = new VisionSubsystem();
+
+    public final ClimberSubsystem climberSubsystem = new ClimberSubsystem();
+    public final HopperSubsystem hopperSubsystem = new HopperSubsystem();
+    public final IntakeSubsystem intakeSubsystem = new IntakeSubsystem();
+    public final ShooterSubsystem shooterSubsystem = new ShooterSubsystem();
+
 
     //Auto
 
@@ -88,12 +101,23 @@ public class Core {
     public void configureShuffleBoard() {
         ShuffleboardTab tab = Shuffleboard.getTab("Test");
 
-        SmartDashboard.putData("Auto Chooser", autoChooser);
+        tab.addDouble("Speed Shooter", () -> shooterSubsystem.getSpeedRpm()).withPosition(2, 1).withSize(5, 3);
+        tab.addDouble("Target Speed Shooter", () -> shooterSubsystem.getTargetRpm()).withPosition(7, 1).withSize(2, 1);
+
+        tab.addDouble("Speed Kicker", () -> shooterSubsystem.getKickerSpeedRpm()).withPosition(2, 1).withSize(5, 3);
+        tab.addDouble("Target Speed Kicker", () -> shooterSubsystem.getKickerTargetRpm()).withPosition(7, 1).withSize(2, 1);
+
+        tab.addBoolean("Shooting", () -> shooterSubsystem.getShooting());
+        tab.addBoolean("Kicking", () -> shooterSubsystem.getKicking());
+        tab.addBoolean("Rolling", () -> hopperSubsystem.isRolling());
+        tab.addBoolean("Intaking", () -> intakeSubsystem.getIntaking());
+
+        // SmartDashboard.putData("Auto Chooser", autoChooser);
     }
 
-     public Command getAutonomousCommand() {
-        return autoChooser.getSelected();
-    }
+    //  public Command getAutonomousCommand() {
+    //     return autoChooser.getSelected();
+    // }
 
     private void configureBindings() {
         // Note that X is defined as forward according to WPILib convention,
@@ -142,6 +166,15 @@ public class Core {
             hubYawAlign = false;}));
 
         drivetrain.registerTelemetry(logger::telemeterize);
+
+        //OPERATOR
+        operatorController.a().onTrue(intakeSubsystem.intake());
+        operatorController.b().onTrue(hopperSubsystem.roll());
+        operatorController.x().onTrue(new InstantCommand(() -> shooterSubsystem.rotateAtCached()));
+        operatorController.y().onTrue(new InstantCommand(() -> shooterSubsystem.rotateKicker()));
+
+        operatorController.povUp().onTrue(new InstantCommand(() ->shooterSubsystem.changeTargetRpm(100)));
+        operatorController.povDown().onTrue(new InstantCommand(() ->shooterSubsystem.changeTargetRpm(-100)));
     }
 
     public double getAxisMovementScale() {

@@ -17,11 +17,16 @@ public class ShooterSubsystem extends SubsystemBase {
 
     private final TalonFX control;
     private final TalonFX follower;
+    private final TalonFX kicker;
     
     // Request object to avoid allocation in loops
     private final VelocityVoltage velocityRequest = new VelocityVoltage(0).withSlot(0);
 
-    private double targetRpm = 0.0;
+    private double targetRpm = 3000.0;
+    private double targetKickerRpm = 500.0;
+
+    private boolean isKicking = false;
+    private boolean isShooting = false;
     
     // Constants
     private static final double MAX_RPM = 6000.0; 
@@ -32,6 +37,8 @@ public class ShooterSubsystem extends SubsystemBase {
 
         control = new TalonFX(11);
         follower = new TalonFX(12);
+
+        kicker = new TalonFX(13);
 
         TalonFXConfiguration controlCfg = new TalonFXConfiguration();
         controlCfg.MotorOutput.NeutralMode = NeutralModeValue.Brake;
@@ -69,9 +76,36 @@ public class ShooterSubsystem extends SubsystemBase {
         control.setControl(velocityRequest.withVelocity(rpm * RPM_TO_RPS));
     }
 
-    private void stopMotor() {
+    public void rotateKicker() {
+      if (isKicking) {
+        isKicking = false;
+        kicker.stopMotor();
+      }
+      else {
+        isKicking = true;
+        kicker.setControl(velocityRequest.withVelocity(targetKickerRpm * RPM_TO_RPS));
+      }
+    }
+    
+
+      /**
+     * Runs the motor at the specified RPM using closed-loop control.
+     * @param rpm Target RPM
+     */
+    public void rotateAtCached() {
+        // Convert RPM to RPS
+        if (isShooting) {
+          isShooting = false;
+          stop();
+        }
+        else {
+          isShooting = true;
+          rotate(targetRpm);
+        }
+    }
+
+    private void stop() {
       control.stopMotor();
-      setTargetRpm(0);
     }
 
     private void setTargetRpm(double rpm) {
@@ -80,31 +114,37 @@ public class ShooterSubsystem extends SubsystemBase {
         targetRpm = rpm;
     }
 
-    private void changeTargetRpm(double deltaRpm) {
+    public void changeTargetRpm(double deltaRpm) {
         setTargetRpm(targetRpm + deltaRpm);
     }
 
-    public Command stop() {
-      return new InstantCommand(() -> stopMotor());
+    public boolean getShooting() {
+      return isShooting;
     }
-
-    public Command setTargetRPM(double rpm) {
-      return new InstantCommand(() -> setTargetRpm(rpm));
-    }
-
-    public Command changeTargetRPM(double deltaRpm) {
-      return new InstantCommand(() -> changeTargetRpm(deltaRpm));
-    }
-
-    public double getTargetRpm() {
-        return targetRpm;
+    public boolean getKicking() {
+      return isKicking;
     }
 
     /**
      * @return Current velocity in RPM
      */
     public double getSpeedRpm() {
-        return control.getRotorVelocity().getValueAsDouble() * 60.0;
+      return control.getRotorVelocity().getValueAsDouble() * 60.0;
+    }
+
+    public double getTargetRpm() {
+      return targetRpm;
+    }
+
+    /**
+     * @return Current velocity in RPM
+     */
+    public double getKickerSpeedRpm() {
+      return kicker.getRotorVelocity().getValueAsDouble() * 60.0;
+    }
+
+    public double getKickerTargetRpm() {
+      return targetKickerRpm;
     }
 
     @Override

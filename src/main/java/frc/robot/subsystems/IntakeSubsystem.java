@@ -60,7 +60,12 @@ public class IntakeSubsystem extends SubsystemBase {
   }
 
   public Command intake() {
-    return new InstantCommand(() -> intakeFuel(-0.5));
+    if (intaking) {
+      return new InstantCommand(() -> intakeFuel(0));  
+    }
+    else {
+      return new InstantCommand(() -> stopIntake());
+    }
   }
 
   public Command purge() {
