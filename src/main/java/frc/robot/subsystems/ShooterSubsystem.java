@@ -15,6 +15,8 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class ShooterSubsystem extends SubsystemBase {
 
+    private HopperSubsystem m_hopper;
+
     private final TalonFX control;
     private final TalonFX follower;
     private final TalonFX kicker;
@@ -33,7 +35,8 @@ public class ShooterSubsystem extends SubsystemBase {
     private static final double RPM_TO_RPS = 1.0 / 60.0;
     private static final double CURRENT_LIMIT = 40.0; // Amps
 
-    public ShooterSubsystem() {
+    public ShooterSubsystem(HopperSubsystem m_hopper) {
+        this.m_hopper = m_hopper;
 
         control = new TalonFX(11);
         follower = new TalonFX(12);
@@ -74,6 +77,44 @@ public class ShooterSubsystem extends SubsystemBase {
     private void rotate(double rpm) {
         // Convert RPM to RPS
         control.setControl(velocityRequest.withVelocity(rpm * RPM_TO_RPS));
+    }
+
+    private void stopAll() {
+      control.stopMotor();
+      kicker.stopMotor();
+      m_hopper.stop2();
+    }
+
+    private boolean autoShooting = false;
+
+    public Command autoShoot() {
+      if (autoShooting) {
+        autoShooting = false;
+        return new InstantCommand(() -> stopAll());
+      }
+      else {
+        autoShooting = true;
+        return new FunctionalCommand(
+            () -> {
+                rotate(targetRpm);
+            },
+            () -> {
+                boolean shooterReady = Math.abs(control.getRotorVelocity().getValueAsDouble() - targetRpm) <= 100;
+
+                if (shooterReady) {
+                    kicker.setControl(velocityRequest.withVelocity(targetRpmKicker * RPM_TO_RPS));
+                    m_hopper.roll2();
+                }
+            },
+            interrupted -> {
+                control.stopMotor();
+                kicker.stopMotor();
+                m_hopper.stop2();
+            },
+            () -> false,
+            this
+        );
+      }
     }
 
     public void rotateKicker() {
