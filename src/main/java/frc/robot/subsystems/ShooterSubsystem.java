@@ -10,6 +10,7 @@ import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.FunctionalCommand;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
@@ -25,7 +26,7 @@ public class ShooterSubsystem extends SubsystemBase {
     private final VelocityVoltage velocityRequest = new VelocityVoltage(0).withSlot(0);
 
     private double targetRpm = 3000.0;
-    private double targetKickerRpm = 500.0;
+    private double targetKickerRpm = 1000.0;
 
     private boolean isKicking = false;
     private boolean isShooting = false;
@@ -102,7 +103,7 @@ public class ShooterSubsystem extends SubsystemBase {
                 boolean shooterReady = Math.abs(control.getRotorVelocity().getValueAsDouble() - targetRpm) <= 100;
 
                 if (shooterReady) {
-                    kicker.setControl(velocityRequest.withVelocity(targetRpmKicker * RPM_TO_RPS));
+                    kicker.setControl(velocityRequest.withVelocity(targetKickerRpm * RPM_TO_RPS));
                     m_hopper.roll2();
                 }
             },
@@ -162,6 +163,11 @@ public class ShooterSubsystem extends SubsystemBase {
     public boolean getShooting() {
       return isShooting;
     }
+
+    public boolean getAutoShooting() {
+      return autoShooting;
+    }
+
     public boolean getKicking() {
       return isKicking;
     }

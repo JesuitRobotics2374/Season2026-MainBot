@@ -64,7 +64,7 @@ public class Core {
     public final ClimberSubsystem climberSubsystem = new ClimberSubsystem();
     public final HopperSubsystem hopperSubsystem = new HopperSubsystem();
     public final IntakeSubsystem intakeSubsystem = new IntakeSubsystem();
-    public final ShooterSubsystem shooterSubsystem = new ShooterSubsystem();
+    public final ShooterSubsystem shooterSubsystem = new ShooterSubsystem(hopperSubsystem);
 
 
     //Auto
@@ -111,6 +111,8 @@ public class Core {
         tab.addBoolean("Kicking", () -> shooterSubsystem.getKicking());
         tab.addBoolean("Rolling", () -> hopperSubsystem.isRolling());
         tab.addBoolean("Intaking", () -> intakeSubsystem.getIntaking());
+
+        tab.addBoolean("Auto Shooting", () -> shooterSubsystem.getAutoShooting());
 
         // SmartDashboard.putData("Auto Chooser", autoChooser);
     }
@@ -175,6 +177,8 @@ public class Core {
 
         operatorController.povUp().onTrue(new InstantCommand(() ->shooterSubsystem.changeTargetRpm(100)));
         operatorController.povDown().onTrue(new InstantCommand(() ->shooterSubsystem.changeTargetRpm(-100)));
+
+        operatorController.leftTrigger().onTrue(shooterSubsystem.autoShoot());
     }
 
     public double getAxisMovementScale() {
