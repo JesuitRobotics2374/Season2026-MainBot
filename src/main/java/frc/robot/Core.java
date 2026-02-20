@@ -12,6 +12,7 @@ import com.ctre.phoenix6.swerve.SwerveRequest;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
+import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
@@ -28,8 +29,10 @@ import frc.robot.subsystems.drivetrain.TunerConstants;
 import frc.robot.subsystems.drivetrain.DriveSubsystem;
 import frc.robot.subsystems.vision.VisionSubsystem;
 import frc.robot.utils.Telemetry;
+import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 
 import com.pathplanner.lib.auto.AutoBuilder;
+import frc.robot.TestMotor;
 
 public class Core {
     //Swerve Stuff
@@ -47,12 +50,15 @@ public class Core {
     //Controllers
 
     private final CommandXboxController driveController = new CommandXboxController(0);
+    private final Joystick operatorController = new Joystick(1);
 
     //Subsystems
 
     public final DriveSubsystem drivetrain = TunerConstants.createDrivetrain();
 
     public final VisionSubsystem vision = new VisionSubsystem();
+
+    public final TestMotor testMotor = new TestMotor();
 
     //Auto
 
@@ -142,6 +148,10 @@ public class Core {
             hubYawAlign = false;}));
 
         drivetrain.registerTelemetry(logger::telemeterize);
+
+        new JoystickButton(operatorController, 15).onTrue(testMotor.setRPM());
+        new JoystickButton(operatorController, 6).onTrue(testMotor.stop());
+        
     }
 
     public double getAxisMovementScale() {
