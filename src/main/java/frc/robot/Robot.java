@@ -36,6 +36,8 @@ public class Robot extends TimedRobot {
      CommandScheduler.getInstance().run(); 
 
     m_core.drivetrain.passGlobalEstimates(m_core.vision.getGlobalFieldPoses());
+
+    
   }
 
   @Override
