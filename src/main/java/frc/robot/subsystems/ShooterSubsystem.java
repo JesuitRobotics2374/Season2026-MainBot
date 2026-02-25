@@ -96,6 +96,10 @@ public class ShooterSubsystem extends SubsystemBase {
       return new InstantCommand(() -> changeTargetRpm(deltaRpm));
     }
 
+    public Command start(){
+      return new InstantCommand(() -> rotate(targetRpm));
+    }
+
     public double getTargetRpm() {
         return targetRpm;
     }

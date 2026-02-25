@@ -26,6 +26,10 @@ import frc.robot.align.preciseAligning.CanAlign;
 import frc.robot.align.preciseAligning.ClimbAlign;
 import frc.robot.subsystems.drivetrain.TunerConstants;
 import frc.robot.subsystems.drivetrain.DriveSubsystem;
+import frc.robot.subsystems.ShooterSubsystem;
+import frc.robot.subsystems.IntakeSubsystem;
+import frc.robot.subsystems.HopperSubsystem;
+import frc.robot.subsystems.ClimberSubsystem;
 import frc.robot.subsystems.vision.VisionSubsystem;
 import frc.robot.utils.Telemetry;
 
@@ -47,12 +51,16 @@ public class Core {
     //Controllers
 
     private final CommandXboxController driveController = new CommandXboxController(0);
-
+    private final CommandXboxController operatorController = new CommandXboxController(1);
     //Subsystems
 
     public final DriveSubsystem drivetrain = TunerConstants.createDrivetrain();
-
+    public final ShooterSubsystem m_shooter = new ShooterSubsystem(); 
+    public final HopperSubsystem m_hopper = new HopperSubsystem();
+    public final IntakeSubsystem m_intake = new IntakeSubsystem();
     public final VisionSubsystem vision = new VisionSubsystem();
+    public final ClimberSubsystem m_climb = new ClimberSubsystem();
+
 
     //Auto
 
@@ -128,10 +136,9 @@ public class Core {
 
         driveController.a().onTrue(new ClimbAlign(drivetrain, vision, testTarget));
         driveController.b().onTrue(new CanAlign(drivetrain, vision, testTarget.requestFiducialID().get(), false));
-
+        
         driveController.y().onTrue(vision.runOnce(() -> vision.getTagRelativeToBot(26)));
 
-        driveController.x().onTrue(climbAlign);
 
         driveController.povUp().onTrue(new InstantCommand(() -> {
             fixYawToHub.schedule();
@@ -141,7 +148,27 @@ public class Core {
             fixYawToHub.cancel(); 
             hubYawAlign = false;}));
 
+        operatorController.leftTrigger().onTrue(new InstantCommand(() -> m_shooter.changeTargetRPM(-20))); //change
+        operatorController.rightTrigger().onTrue(new InstantCommand(() -> m_shooter.changeTargetRPM(20))); // change 
+
+        operatorController.rightBumper().onTrue(new InstantCommand(() -> m_shooter.stop()));
+        operatorController.rightBumper().onTrue(new InstantCommand(() -> m_shooter.start()));
+
+        operatorController.a().onTrue(new InstantCommand((() -> m_intake.intake())));
+        operatorController.b().onTrue(new InstantCommand((() -> m_intake.purge())));
+        operatorController.x().onTrue(new InstantCommand((() -> m_intake.stop())));
+
+        operatorController.povUp().onTrue(new InstantCommand(() -> m_hopper.roll()));
+        operatorController.povDown().onTrue(new InstantCommand(() -> m_hopper.purge()));
+        operatorController.povLeft().onTrue(new InstantCommand(() -> m_hopper.stop()));
+        operatorController.povRight().onTrue(new InstantCommand(() -> m_hopper.pulse()));
+        
+        operatorController.leftStick().onTrue(new InstantCommand(() -> m_climb.extendArm()));
+        operatorController.rightStick().onTrue(new InstantCommand(() -> m_climb.retractArm()));
+
         drivetrain.registerTelemetry(logger::telemeterize);
+
+
     }
 
     public double getAxisMovementScale() {
