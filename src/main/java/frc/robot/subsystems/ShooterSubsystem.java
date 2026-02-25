@@ -24,16 +24,27 @@ public class ShooterSubsystem extends SubsystemBase {
   private final VelocityVoltage velocityRequest = new VelocityVoltage(0).withSlot(0);
 
   private double targetRpm = 0.0;
+  private final TalonFX left;
+  private final TalonFX center;
+  private final TalonFX right;
+  private final TalonFX kicker;
 
   // Constants
   private static final double MAX_RPM = 6000.0;
   private static final double RPM_TO_RPS = 1.0 / 60.0;
   private static final double CURRENT_LIMIT = 40.0; // Amps
 
+   private boolean isShooting = false;
+
   public ShooterSubsystem() {
 
     control = new TalonFX(11);
     follower = new TalonFX(12);
+     left = new TalonFX(31);
+        center = new TalonFX(32);
+        right = new TalonFX(33);
+
+        kicker = new TalonFX(36);
 
     TalonFXConfiguration controlCfg = new TalonFXConfiguration();
     controlCfg.MotorOutput.NeutralMode = NeutralModeValue.Brake;
@@ -112,26 +123,39 @@ public class ShooterSubsystem extends SubsystemBase {
     return control.getRotorVelocity().getValueAsDouble() * 60.0;
   }
 
+   public boolean isShooting() {
+        return isShooting;
+    }
+
+  public double getShooterSupplyCurrent() {
+    return right.getSupplyCurrent().getValueAsDouble() +
+        left.getSupplyCurrent().getValueAsDouble() +
+        center.getSupplyCurrent().getValueAsDouble();
+  }
+
   @Override
   public void periodic() {
     rotate(targetRpm);
   }
 
-  public double getShooterSupplyCurrent() {
-    return control.getSupplyCurrent().getValueAsDouble() +
-        follower.getSupplyCurrent().getValueAsDouble();
-  }
-
-  public boolean isFinished(double rpm) {
-    if (rpm == 0)
-      return true;
-    else
-      return false;
-  }
-  public boolean isRunning(double rpm) {
-    if (rpm != 0){
-    return true;
-    }
-    return false;
-  }
+  
+  /**
+   * public double getShooterSupplyCurrent() {
+   * return control.getSupplyCurrent().getValueAsDouble() +
+   * follower.getSupplyCurrent().getValueAsDouble();
+   * }
+   * 
+   * public boolean isFinished(double rpm) {
+   * if (rpm == 0)
+   * return true;
+   * else
+   * return false;
+   * }
+   * public boolean isRunning(double rpm) {
+   * if (rpm != 0){
+   * return true;
+   * }
+   * return false;
+   * }
+   **/
 }

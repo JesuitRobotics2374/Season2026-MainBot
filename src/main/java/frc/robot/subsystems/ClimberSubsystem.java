@@ -20,16 +20,23 @@ public class ClimberSubsystem extends SubsystemBase {
   private final TalonFX climberMotor;
   private final double minRotations = 0;
   private final double maxRotations = -31;
+  private TalonFX follower;
 
   /** Creates a new Climber. */
   public ClimberSubsystem() {
     this.climberMotor = new TalonFX(1);
+    follower = new TalonFX(42);
+
+    follower.setPosition(0);
+    follower.setNeutralMode(NeutralModeValue.Brake);
+    
     climberMotor.setPosition(0);
     climberMotor.setNeutralMode(NeutralModeValue.Brake);
   }
-  
+
   /**
    * Sets the speed of the motor to extend or retract the arm
+   * 
    * @param speed
    */
   private void setMotorSpeed(double speed) {
@@ -39,49 +46,60 @@ public class ClimberSubsystem extends SubsystemBase {
 
   /**
    * Extends the arm
+   * 
    * @return Functional Command to extend arm.
    */
   public Command extendArm() {
-    //return new InstantCommand(() -> setClimberMotorSpeed(1));
+    // return new InstantCommand(() -> setClimberMotorSpeed(1));
 
     return new FunctionalCommand(
-      //init
-      () -> {setMotorSpeed(0.5);},
-      //execute
-      () -> {},
-      //interrupt
-      interrupted -> {setMotorSpeed(0);},
-      //isFinished
-      () -> hasReachedMax(),
-      //requirements
-      this
-    );
+        // init
+        () -> {
+          setMotorSpeed(0.5);
+        },
+        // execute
+        () -> {
+        },
+        // interrupt
+        interrupted -> {
+          setMotorSpeed(0);
+        },
+        // isFinished
+        () -> hasReachedMax(),
+        // requirements
+        this);
 
   }
 
   /**
    * Retracts the arm
+   * 
    * @return Instant Command to retract arm.
    */
   public Command retractArm() {
     // new InstantCommand(() -> setClimberMotorSpeed(-1));
     return new FunctionalCommand(
-      //init
-      () -> {setMotorSpeed(-0.5);},
-      //execute
-      () -> {},
-      //interrupt
-      interrupted -> {setMotorSpeed(0);},
-      //isFinished
-      () -> hasReachedMin(),
-      //requirements
-      this
-    );
+        // init
+        () -> {
+          setMotorSpeed(-0.5);
+        },
+        // execute
+        () -> {
+        },
+        // interrupt
+        interrupted -> {
+          setMotorSpeed(0);
+        },
+        // isFinished
+        () -> hasReachedMin(),
+        // requirements
+        this);
 
   }
 
   /**
    * Checks the position of the motor and stops it
+   * 
    * @return boolean
    */
   public boolean hasReachedMax() {
@@ -93,6 +111,7 @@ public class ClimberSubsystem extends SubsystemBase {
 
   /**
    * Checks the position of the motor and stops it
+   * 
    * @return
    */
   public boolean hasReachedMin() {
@@ -105,20 +124,25 @@ public class ClimberSubsystem extends SubsystemBase {
   /**
    * @return The current supplied to this motor in amps
    */
-  public double getClimberSupplyCurrent() {
-    return climberMotor.getSupplyCurrent().getValueAsDouble();
-  }
+  // public double getClimberSupplyCurrent() {
+  // return climberMotor.getSupplyCurrent().getValueAsDouble();
+  // }
 
   /**
    * Sets the current limit of this motor
    * current limit at -1 means default
    */
-  public void setClimberCurrentLimit(double currentLimit) {
-    if (currentLimit == -1) {
-      return;
-    }
-    CurrentLimitsConfigs configs = new CurrentLimitsConfigs().withSupplyCurrentLimit(currentLimit).withSupplyCurrentLimitEnable(true);
-    climberMotor.getConfigurator().apply(configs);
+  // public void setClimberCurrentLimit(double currentLimit) {
+  // if (currentLimit == -1) {
+  // return;
+  // }
+  // CurrentLimitsConfigs configs = new
+  // CurrentLimitsConfigs().withSupplyCurrentLimit(currentLimit).withSupplyCurrentLimitEnable(true);
+  // climberMotor.getConfigurator().apply(configs);
+  // }
+  public double getClimberSupplyCurrent() {
+    return climberMotor.getSupplyCurrent().getValueAsDouble() +
+        follower.getSupplyCurrent().getValueAsDouble();
   }
 
   @Override

@@ -74,10 +74,13 @@ public class HopperSubsystem extends SubsystemBase {
         // Add the subsystem requirement
         this);
   }
-
+   public double getHopperSupplyCurrent() {
+    return rollerMotor.getSupplyCurrent().getValueAsDouble(); //FOR NOW
+   }
  /**
    * @return The current supplied to this motor in amps
    */
+  /** 
   public double getHopperSupplyCurrent() {
     return 0; //FOR NOW
   }
@@ -86,13 +89,15 @@ public class HopperSubsystem extends SubsystemBase {
    * Sets the current limit of this motor
    * currentLimit at -1 means default
    */
+  /** 
   public void setHopperCurrentLimit(double currentLimit) {
     if (currentLimit == -1) {
       return;
     }
+      */
 
     //configure motor current limit
-  }
+  
 
   @Override
   public void periodic() {

@@ -13,16 +13,23 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.NeutralModeValue;
+
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 
 
+
 public class IntakeSubsystem extends SubsystemBase {
-  
+   private boolean isIntaking;
   private boolean intaking;
   private TalonFX intakeMotor;
-
+  private final TalonFX pivotMotor;
   public IntakeSubsystem() {
-    this.intakeMotor = new TalonFX(38, "FastFD"); 
+    this.intakeMotor = new TalonFX(38, "FastFD");
+    pivotMotor = new TalonFX(35); 
+
+    pivotMotor.setPosition(0);
+    pivotMotor.setNeutralMode(NeutralModeValue.Brake);
     intaking = false;
   }
 
@@ -72,17 +79,16 @@ public class IntakeSubsystem extends SubsystemBase {
     return new InstantCommand(() -> stopIntake());
   }
 
-  /**
-   * @return The current supplied to this motor in amps
-   */
+  public boolean isIntaking() {
+    return isIntaking;
+  }
+
+  /** 
   public double getIntakeSupplyCurrent() {
     return intakeMotor.getSupplyCurrent().getValueAsDouble();
   }
 
-   /**
-   * Sets the current limit of this motor
-   * -1 current limit means default configs
-   */
+  
   public void setIntakeCurrentLimit(double currentLimit) {
     if (currentLimit == -1) {
       return;
@@ -90,7 +96,11 @@ public class IntakeSubsystem extends SubsystemBase {
     CurrentLimitsConfigs configs = new CurrentLimitsConfigs().withSupplyCurrentLimit(currentLimit).withSupplyCurrentLimitEnable(true);
     intakeMotor.getConfigurator().apply(configs);
   }
-
+  */
+   public double getIntakeSupplyCurrent() {
+    return intakeMotor.getSupplyCurrent().getValueAsDouble() +
+           pivotMotor.getSupplyCurrent().getValueAsDouble();
+  }
   @Override
   public void periodic() {
     // This method will be called once per scheduler run
