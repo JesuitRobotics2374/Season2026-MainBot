@@ -7,19 +7,73 @@
         {
           "type": "path",
           "data": {
-            "pathName": "Back Left to Depot Blue"
+            "pathName": "Left Clearance"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "far target rpm"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "Shoot"
+          }
+        },
+        {
+          "type": "wait",
+          "data": {
+            "waitTime": 3.0
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "Stop Shoot"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "Rotate To Depot Blue"
+            "pathName": "blue left to depot"
+          }
+        },
+        {
+          "type": "wait",
+          "data": {
+            "waitTime": 3.0
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "Depot To Shoot Blue"
+            "pathName": "blue depot to hub"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "1.5m target rpm"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "Shoot"
+          }
+        },
+        {
+          "type": "wait",
+          "data": {
+            "waitTime": 3.0
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "Stop Shoot"
           }
         }
       ]

@@ -69,12 +69,12 @@ public class ShooterSubsystem extends SubsystemBase {
         control.setControl(velocityRequest.withVelocity(rpm * RPM_TO_RPS));
     }
 
-    private void stopMotor() {
+    public void stopMotor() {
       control.stopMotor();
       setTargetRpm(0);
     }
 
-    private void setTargetRpm(double rpm) {
+    public void setTargetRpm(double rpm) {
         if (rpm > MAX_RPM) rpm = MAX_RPM;
         if (rpm < -MAX_RPM) rpm = -MAX_RPM;
         targetRpm = rpm;

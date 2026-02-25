@@ -3,29 +3,45 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 2.6182222222222227,
-        "y": 4.229888888888889
+        "x": 2.579244444444445,
+        "y": 5.477177777777777
       },
       "prevControl": null,
       "nextControl": {
-        "x": 2.8676685116863747,
-        "y": 4.246518641519832
+        "x": 4.547622222222223,
+        "y": 5.720788888888887
       },
       "isLocked": false,
-      "linkedName": "Hub Center Blue"
+      "linkedName": "blue hub left"
     },
     {
       "anchor": {
-        "x": 1.8581555555555558,
-        "y": 3.8303666666666665
+        "x": 6.165200000000001,
+        "y": 5.905933333333333
       },
       "prevControl": {
-        "x": 1.609019115994336,
-        "y": 3.8096052967032312
+        "x": 5.5902777777777795,
+        "y": 5.204333333333332
+      },
+      "nextControl": {
+        "x": 6.424675983595081,
+        "y": 6.2225819912798706
+      },
+      "isLocked": false,
+      "linkedName": null
+    },
+    {
+      "anchor": {
+        "x": 7.363766666666668,
+        "y": 6.724466666666666
+      },
+      "prevControl": {
+        "x": 6.6816555555555555,
+        "y": 6.977822222222221
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": "Hub Center Blue Backwards"
+      "linkedName": "Blue Left NZ"
     }
   ],
   "rotationTargets": [],
@@ -42,13 +58,13 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": -179.51853419416162
+    "rotation": -135.1996360545244
   },
   "reversed": false,
   "folder": null,
   "idealStartingState": {
     "velocity": 0,
-    "rotation": 0.2864765102770711
+    "rotation": -33.02386755579668
   },
   "useDefaultConstraints": true
 }

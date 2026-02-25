@@ -7,13 +7,13 @@
         {
           "type": "path",
           "data": {
-            "pathName": "Right Clearance"
+            "pathName": "blue left bump to hub"
           }
         },
         {
           "type": "named",
           "data": {
-            "name": "far target rpm"
+            "name": "3m target rpm"
           }
         },
         {
@@ -37,19 +37,31 @@
         {
           "type": "path",
           "data": {
-            "pathName": "Back to Human Station Blue"
+            "pathName": "Blue left hub to nz"
           }
         },
         {
-          "type": "wait",
+          "type": "named",
           "data": {
-            "waitTime": 3.0
+            "name": "Start Intake"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "Move Towards Hub Center Blue"
+            "pathName": "Blue nz sweep left to right"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "Stop Intake"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Blue nz right to shoot"
           }
         },
         {

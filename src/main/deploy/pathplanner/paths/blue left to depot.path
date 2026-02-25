@@ -3,45 +3,34 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 2.1407444444444446,
-        "y": 1.1214111111111107
+        "x": 2.2869111111111113,
+        "y": 6.997311111111111
       },
       "prevControl": null,
       "nextControl": {
-        "x": 1.9564559093942593,
-        "y": 1.2903422682404475
+        "x": 2.579244444444445,
+        "y": 6.4223888888888885
       },
       "isLocked": false,
-      "linkedName": "p1-e"
+      "linkedName": "Left Clear"
     },
     {
       "anchor": {
-        "x": 0.864,
-        "y": 0.673166666666666
+        "x": 1.2442555555555554,
+        "y": 5.9643999999999995
       },
       "prevControl": {
-        "x": 1.3414777777777775,
-        "y": 1.2675777777777761
+        "x": 1.4727084427106192,
+        "y": 5.862865383486636
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": "End To Blue Human Station"
+      "linkedName": "blue depot"
     }
   ],
   "rotationTargets": [],
   "constraintZones": [],
-  "pointTowardsZones": [
-    {
-      "fieldPosition": {
-        "x": 4.625,
-        "y": 4.05
-      },
-      "rotationOffset": 0.0,
-      "minWaypointRelativePos": 0.10755395683453041,
-      "maxWaypointRelativePos": 0.75,
-      "name": "Point Towards Hub"
-    }
-  ],
+  "pointTowardsZones": [],
   "eventMarkers": [],
   "globalConstraints": {
     "maxVelocity": 3.0,
@@ -59,7 +48,7 @@
   "folder": null,
   "idealStartingState": {
     "velocity": 0,
-    "rotation": 50.08190051655022
+    "rotation": -51.61346048231477
   },
   "useDefaultConstraints": true
 }

@@ -25,11 +25,14 @@ import frc.robot.align.driverAssist.FixYawToHub;
 import frc.robot.align.preciseAligning.CanAlign;
 import frc.robot.align.preciseAligning.ClimbAlign;
 import frc.robot.subsystems.drivetrain.TunerConstants;
+import frc.robot.subsystems.IntakeSubsystem;
+import frc.robot.subsystems.ShooterSubsystem;
 import frc.robot.subsystems.drivetrain.DriveSubsystem;
 import frc.robot.subsystems.vision.VisionSubsystem;
 import frc.robot.utils.Telemetry;
 
 import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.auto.NamedCommands;
 
 public class Core {
     //Swerve Stuff
@@ -53,6 +56,9 @@ public class Core {
     public final DriveSubsystem drivetrain = TunerConstants.createDrivetrain();
 
     public final VisionSubsystem vision = new VisionSubsystem();
+
+    public final ShooterSubsystem m_shooter = new ShooterSubsystem();
+    public final IntakeSubsystem m_intake = new IntakeSubsystem();
 
     //Auto
 
@@ -79,6 +85,15 @@ public class Core {
 
     public Core() {
         configureBindings();
+
+        NamedCommands.registerCommand("far target rpm", new InstantCommand(() -> m_shooter.setTargetRpm(4500)));
+        NamedCommands.registerCommand("3m target rpm", new InstantCommand(() -> m_shooter.setTargetRpm(4000)));
+        NamedCommands.registerCommand("1.5m target rpm", new InstantCommand(() -> m_shooter.setTargetRpm(3550)));
+        NamedCommands.registerCommand("Shoot", new InstantCommand(() -> m_shooter.autoShoot())); //WILL WORK WHEN EHTAN'S CODE IS PUSHED IN
+        NamedCommands.registerCommand("Stop Shoot", new InstantCommand(() -> m_shooter.stopAll())); //^^
+        
+        NamedCommands.registerCommand("Start Intake", new InstantCommand(() -> m_intake.intakeFuel(-0.5)));
+        NamedCommands.registerCommand("Stop Intake", new InstantCommand(() -> m_intake.stopIntake()));
 
         autoChooser = AutoBuilder.buildAutoChooser();
         

@@ -28,7 +28,7 @@ public class IntakeSubsystem extends SubsystemBase {
   /**
    * Stops intaking
    */
-  private void stopIntake() {
+  public void stopIntake() {
     intaking = false;
     intakeMotor.stopMotor();
   }
@@ -46,7 +46,7 @@ public class IntakeSubsystem extends SubsystemBase {
    * Intakes fuel into the hopper
    * @param speed the speed that the robot intakes
    */
-  private void intakeFuel(double speed) {
+  public void intakeFuel(double speed) {
     intaking = true;
     intakeMotor.set(speed);
   }
