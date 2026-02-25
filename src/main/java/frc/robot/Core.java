@@ -25,6 +25,8 @@ import frc.robot.align.driverAssist.FixYawToHub;
 import frc.robot.align.preciseAligning.CanAlign;
 import frc.robot.align.preciseAligning.ClimbAlign;
 import frc.robot.subsystems.drivetrain.TunerConstants;
+import frc.robot.subsystems.IntakeSubsystem;
+import frc.robot.subsystems.ShooterSubsystem;
 import frc.robot.subsystems.drivetrain.DriveSubsystem;
 import frc.robot.subsystems.vision.VisionSubsystem;
 import frc.robot.utils.Telemetry;
@@ -53,6 +55,10 @@ public class Core {
     public final DriveSubsystem drivetrain = TunerConstants.createDrivetrain();
 
     public final VisionSubsystem vision = new VisionSubsystem();
+
+    public final ShooterSubsystem m_shooter = new ShooterSubsystem();
+
+    public final IntakeSubsystem m_intake = new IntakeSubsystem();
 
     //Auto
 
@@ -89,6 +95,10 @@ public class Core {
         ShuffleboardTab tab = Shuffleboard.getTab("Test");
 
         SmartDashboard.putData("Auto Chooser", autoChooser);
+        tab.addDouble("Speed", () -> drivetrain.getRobotSpeed());
+        tab.addDouble("Shooter RPM", () -> m_shooter.getSpeedRpm());
+        tab.addBoolean("Intaking", () -> m_intake.getIntaking());
+        
     }
 
      public Command getAutonomousCommand() {

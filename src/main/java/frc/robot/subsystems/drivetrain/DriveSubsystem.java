@@ -279,6 +279,10 @@ public class DriveSubsystem extends TunerSwerveDrivetrain implements Subsystem {
         return estimator.getEstimatedPosition().getRotation().getDegrees();
     }
 
+    public double getRobotSpeed(){
+       return Math.sqrt(Math.pow(estimator.getEstimatedPosition().getX(), 2)+Math.pow(estimator.getEstimatedPosition().getY(), 2));
+    }
+
     public Pose2d getEstimator() {
         return estimator.getEstimatedPosition();
     }
