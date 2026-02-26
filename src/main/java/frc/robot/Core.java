@@ -94,28 +94,37 @@ public class Core {
     private void configureBindings() {
         // Note that X is defined as forward according to WPILib convention,
         // and Y is defined as to the left according to WPILib convention.
+        // drivetrain.setDefaultCommand(
+        //     // Drivetrain will execute this command periodically
+        //     drivetrain.applyRequest(() -> {
+        //         double axisScale = getAxisMovementScale();
+
+        //         double driverVelocityX = driveController.getLeftY() * MaxSpeed * axisScale;
+        //         double driverVelocityY = driveController.getLeftX() * MaxSpeed * axisScale;
+        //         double driverRotationalRate = -driveController.getRightX() * MaxAngularRate * axisScale;
+
+        //         // Determine which controller is active
+        //         // boolean driverActive =
+        //         //     Math.abs(driverVelocityX) > 0.05 ||
+        //         //     Math.abs(driverVelocityY) > 0.05 ||
+        //         //     Math.abs(driverRotationalRate) > 0.05;
+        //         boolean driverActive = Math.abs(driveController.getRightX()) > 0.1 || !hubYawAlign;
+
+        //         double desiredRotationalRate = driverActive ? driverRotationalRate : calculateRotationalRate();
+
+        //             return drive
+        //                 .withVelocityX(-driverVelocityX) // Limit translational acceleration forward/backward
+        //                 .withVelocityY(-driverVelocityY) // Limit translational acceleration left/right
+        //                 .withRotationalRate(desiredRotationalRate);
+        //     })
+        // );
         drivetrain.setDefaultCommand(
-            // Drivetrain will execute this command periodically
             drivetrain.applyRequest(() -> {
-                double axisScale = getAxisMovementScale();
-
-                double driverVelocityX = driveController.getLeftY() * MaxSpeed * axisScale;
-                double driverVelocityY = driveController.getLeftX() * MaxSpeed * axisScale;
-                double driverRotationalRate = -driveController.getRightX() * MaxAngularRate * axisScale;
-
-                // Determine which controller is active
-                // boolean driverActive =
-                //     Math.abs(driverVelocityX) > 0.05 ||
-                //     Math.abs(driverVelocityY) > 0.05 ||
-                //     Math.abs(driverRotationalRate) > 0.05;
-                boolean driverActive = Math.abs(driveController.getRightX()) > 0.1 || !hubYawAlign;
-
-                double desiredRotationalRate = driverActive ? driverRotationalRate : calculateRotationalRate();
-
-                    return drive
-                        .withVelocityX(xRateLimiter.calculate(-driverVelocityX)) // Limit translational acceleration forward/backward
-                        .withVelocityY(yRateLimiter.calculate(-driverVelocityY)) // Limit translational acceleration left/right
-                        .withRotationalRate(omegaRateLimiter.calculate(desiredRotationalRate));
+            
+            return drive
+                        .withVelocityX(0) // Limit translational acceleration forward/backward
+                        .withVelocityY(0) // Limit translational acceleration left/right
+                        .withRotationalRate(0);
             })
         );
 

@@ -263,7 +263,6 @@ public class ShooterSubsystem extends SubsystemBase {
      */
     public void stop() {
         control.stopMotor();
-        ;
     }
 
     /**
@@ -279,7 +278,7 @@ public class ShooterSubsystem extends SubsystemBase {
     private void stopAll() {
         control.stopMotor();
         kicker.stopMotor();
-        m_hopper.stop();
+        m_hopper.stopMotor();
     }
 
     /**
@@ -347,7 +346,7 @@ public class ShooterSubsystem extends SubsystemBase {
     }
 
     /**
-     * Toggles distance-based auto range mode.
+     * Toggles auto range mode.
      */
     public void toggleAutoRange() {
         doAutoShoot = !doAutoShoot;

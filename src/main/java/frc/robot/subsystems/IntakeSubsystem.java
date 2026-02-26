@@ -4,71 +4,130 @@
 
 package frc.robot.subsystems;
 
-import edu.wpi.first.wpilibj2.command.InstantCommand;
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.FunctionalCommand;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
+import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.configs.TalonFXConfigurator;
 import com.ctre.phoenix6.hardware.TalonFX;
-import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
-
+import com.ctre.phoenix6.signals.NeutralModeValue;
 
 public class IntakeSubsystem extends SubsystemBase {
-  
-  private boolean intaking;
-  private TalonFX intakeMotor;
 
+  private final TalonFX intakeMotor;
+  private final TalonFX pivotMotor;
+  private boolean raised;
+  private boolean lowered;
+
+  private double targetSpeed = -0.8;
+
+  private static final double CURRENT_LIMIT = 25.0; // Amps
+
+  private boolean isIntaking;
+
+  /** Creates a new Intake. */
   public IntakeSubsystem() {
-    this.intakeMotor = new TalonFX(38, "FastFD"); 
-    intaking = false;
+    intakeMotor = new TalonFX(37);
+    pivotMotor = new TalonFX(35); 
+
+    pivotMotor.setPosition(0);
+    pivotMotor.setNeutralMode(NeutralModeValue.Brake);
+    raised = true;
+    lowered = false;
+
+    TalonFXConfiguration controlCfg = new TalonFXConfiguration();
+    controlCfg.CurrentLimits.SupplyCurrentLimitEnable = true;
+    controlCfg.CurrentLimits.SupplyCurrentLimit = CURRENT_LIMIT;
+    controlCfg.CurrentLimits.StatorCurrentLimitEnable = true;
+    controlCfg.CurrentLimits.StatorCurrentLimit = CURRENT_LIMIT / 0.75;
+
+    intakeMotor.getConfigurator().apply(controlCfg);
   }
 
-  /**
-   * Stops intaking
-   */
-  private void stopIntake() {
-    intaking = false;
-    intakeMotor.stopMotor();
+  public Command raiseManual() {
+    return new InstantCommand(() -> pivotMotor.set(0.1));
   }
 
-  /**
-   * Stops intaking and reverse intake to get rid of a stuck fuel or smth
-   * @param speed the speed that the intake purges the fuel
-   */
-  private void purge(double speed) {
-    intaking = false;
-    intakeMotor.set(speed);
+  public Command lowerManual() {
+    return new InstantCommand(() -> pivotMotor.set(-0.1));
   }
 
-  /**
-   * Intakes fuel into the hopper
-   * @param speed the speed that the robot intakes
-   */
-  private void intakeFuel(double speed) {
-    intaking = true;
-    intakeMotor.set(speed);
+  public Command stopPivot() {
+    return new InstantCommand(() -> pivotMotor.set(0));
   }
 
-  /**
-   * Tells if intake is intaking
-   * @return true = intaking
-   */
-  public boolean getIntaking() {
-    return intaking;
+  //FIX THESE SOMEDAY
+
+  // public Command raise() {
+  //   return new FunctionalCommand(
+  //       () -> {
+  //       },
+  //       () -> {
+  //         pivotMotor.set(0.5);
+  //         raised = pivotMotor.getPosition().getValueAsDouble() >= 0;
+  //       },
+  //       interrupted -> {
+  //         pivotMotor.set(0);
+  //       },
+  //       () -> raised,
+  //       this);
+  // }
+
+  // public Command lower() {
+  //   return new FunctionalCommand(
+  //       () -> {
+  //       },
+  //       () -> {
+  //         pivotMotor.set(-0.5);
+  //         lowered = pivotMotor.getPosition().getValueAsDouble() <= -2.25; //SEVERELY INCORRECT
+  //       },
+  //       interrupted -> {
+  //         pivotMotor.set(0);
+  //       },
+  //       () -> lowered,
+  //       this);
+  // }
+
+  public double getTargetSpeed() {
+    return targetSpeed;
   }
 
-  public Command intake() {
-    return new InstantCommand(() -> intakeFuel(-0.5));
+  public void increaseTargetSpeed(double delta) {
+    targetSpeed += -Math.abs(delta);
   }
 
-  public Command purge() {
-    return new InstantCommand(() -> purge(0.5));
+  public void decreaseTargetSpeed(double delta) {
+    targetSpeed += Math.abs(delta);
+  }
+
+  public void intake() {
+    if (isIntaking) {
+      isIntaking = false;
+      intakeMotor.stopMotor();;
+    }
+    else {
+      isIntaking = true;
+      intakeMotor.set(targetSpeed);
+    }
   }
 
   public Command stop() {
-    return new InstantCommand(() -> stopIntake());
+    isIntaking = false;
+    return new InstantCommand(() -> intakeMotor.set(0), this);
+  }
+
+  public Command purge() {
+    return new InstantCommand(() -> intakeMotor.set(0.3), this);
+  }
+
+  public double getIntakeSupplyCurrent() {
+    return intakeMotor.getSupplyCurrent().getValueAsDouble() +
+           pivotMotor.getSupplyCurrent().getValueAsDouble();
+  }
+
+  public boolean isIntaking() {
+    return isIntaking;
   }
 
   @Override
