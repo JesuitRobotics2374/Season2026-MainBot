@@ -64,10 +64,6 @@ public class Core {
 
     private final Target testTarget = new Target(31, new Transform3d(1.575, 0.0, 0, new Rotation3d(0, 0, 0)));
 
-    private final SequentialCommandGroup climbAlign = new SequentialCommandGroup(
-            new ClimbAlign(drivetrain, vision, testTarget),
-            new CanAlign(drivetrain, vision, testTarget.requestFiducialID().get(), true));
-
     private boolean hubYawAlign = false;
 
     private static final double TranslationalAccelerationLimit = 10; // meters per second^2
@@ -125,13 +121,6 @@ public class Core {
 
         // reset the field-centric heading on left bumper press
         driveController.back().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
-
-        driveController.a().onTrue(new ClimbAlign(drivetrain, vision, testTarget));
-        driveController.b().onTrue(new CanAlign(drivetrain, vision, testTarget.requestFiducialID().get(), false));
-
-        driveController.y().onTrue(vision.runOnce(() -> vision.getTagRelativeToBot(26)));
-
-        driveController.x().onTrue(climbAlign);
 
         driveController.povUp().onTrue(new InstantCommand(() -> {
             fixYawToHub.schedule();
