@@ -10,13 +10,17 @@ import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 
 import edu.wpi.first.math.filter.SlewRateLimiter;
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
+import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
@@ -32,13 +36,18 @@ import frc.robot.subsystems.vision.VisionSubsystem;
 import frc.robot.utils.Telemetry;
 
 import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.path.PathConstraints;
+import com.pathplanner.lib.path.PathPlannerPath;
 import com.pathplanner.lib.auto.NamedCommands;
+
+
 
 public class Core {
     //Swerve Stuff
     private double MaxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond) * 0.75; // kSpeedAt12Volts desired top speed
     private double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond); // 3/4 of a rotation per second
                                                                                       // max angular velocity
+    private Command pathfindingCommand;
 
     /* Setting up bindings for necessary control of the swerve drive platform */
     private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
@@ -166,4 +175,40 @@ public class Core {
     private double calculateRotationalRate() {
         return fixYawToHub.getRotationalRate();
     }
+
+    public void doPathfind(Pose2d target) {
+        PathConstraints constraints = new PathConstraints(
+                3, 4, // 3 - 4
+                Units.degreesToRadians(540),
+                Units.degreesToRadians(720));
+
+        System.out.println(target);
+
+        // Since AutoBuilder is configured, we can use it to build pathfinding commands
+        pathfindingCommand = AutoBuilder.pathfindToPose(
+                target,
+                constraints,
+                0);
+
+        pathfindingCommand.schedule();
+
+        System.out.println("PATHFIND TO " + target.toString() + " STARTED");
+    }
+
+       public Command getPath(String id) {
+        try {
+            // Load the path you want to follow using its name in the GUI
+            PathPlannerPath path = PathPlannerPath.fromPathFile(id);
+
+            // Create a path following command using AutoBuilder. This will also trigger
+            // event markers.
+            return AutoBuilder.followPath(path);
+
+        } catch (Exception e) {
+            DriverStation.reportError("Pathing failed: " + e.getMessage(), e.getStackTrace());
+            return Commands.none();
+        }
+    }
+
+
 }
