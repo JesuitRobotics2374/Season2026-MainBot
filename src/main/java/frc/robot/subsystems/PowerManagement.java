@@ -30,8 +30,6 @@ public class PowerManagement extends SubsystemBase {
     driveLimit = Constants.DEFAULT_DRIVE_CURRENT;
     steerLimit = Constants.DEFAULT_STEER_CURRENT;
 
-    drivetrain.setDriveCurrentLimit(driveLimit, driveLimit / 0.65);
-    drivetrain.setSteerCurrentLimit(steerLimit, steerLimit / 0.65);
 
     System.out.println("Power Management Initialized");
   }
@@ -89,8 +87,7 @@ public class PowerManagement extends SubsystemBase {
     }
 
     // Apply config ONLY when state changed
-    drivetrain.setDriveCurrentLimit(driveLimit, driveLimit / 0.65);
-    drivetrain.setSteerCurrentLimit(steerLimit, steerLimit / 0.65);
+  
   }
   /** 
   private ClimberSubsystem climber;

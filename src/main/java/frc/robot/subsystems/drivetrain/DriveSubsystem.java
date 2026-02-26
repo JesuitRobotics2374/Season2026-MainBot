@@ -315,9 +315,9 @@ public class DriveSubsystem extends TunerSwerveDrivetrain implements Subsystem {
 
     /**
      * Sets a current limit for the drive motors
-     * @param current In amps to supply to each drive motor. -1 for default
+     *  current In amps to supply to each drive motor. -1 for default
      */
-    public void setDriveCurrentLimit(double supply, double stator, double driveLimit) {
+    public void setDriveCurrentLimit(double supply, double stator) {
         if (supply == -1) {
             return;
         }
@@ -343,9 +343,9 @@ public class DriveSubsystem extends TunerSwerveDrivetrain implements Subsystem {
 
     /**
      * Sets a current limit for the steer motors
-     * @param current In amps to supply to each steer motor. -1 for default
+     * Current In amps to supply to each steer motor. -1 for default
      */
-    public void setSteerCurrentLimit(double supply, double stator, double Drivelimit) {
+    public void setSteerCurrentLimit(double supply, double stator) {
         if (supply == -1) {
             return;
         }
