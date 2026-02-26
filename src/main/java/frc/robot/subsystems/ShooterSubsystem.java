@@ -320,6 +320,16 @@ public class ShooterSubsystem extends SubsystemBase {
      * Sets the hood to a given position
      */
     public Command moveHood(double rotations) {
+        double pos = 0;
+        if (rotations < MIN_HOOD) {
+            pos = MIN_HOOD;
+        }
+        if (rotations > MAX_HOOD) {
+            pos = MAX_HOOD;
+        }
+
+        rotations = pos;
+        
         final double speed; //IDK IF THIS BEING FINAL WILL MESS IT UP
 
         if (getHoodPosition() - rotations > 0) {
