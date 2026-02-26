@@ -49,6 +49,9 @@ public class ShooterSubsystem extends SubsystemBase {
     // Feeds note into flywheel
     private final TalonFX kicker;
 
+    // Adjusts shooting angle
+    private final TalonFX hood;
+
     // References to other subsystems
     private HopperSubsystem m_hopper;
     private DriveSubsystem m_drivetrain;
@@ -67,6 +70,10 @@ public class ShooterSubsystem extends SubsystemBase {
     private static final double CURRENT_LIMIT = 60.0; // Amps
     private static final double KICKER_CURRENT_LIMIT = 60; // Amps
 
+    private static final double HOOD_SPEED = 0.1; // Rotations per second, TODO: INCREASE
+    private static final double MIN_HOOD = 0.0; // Rotations
+    private static final double MAX_HOOD = 0.5; // Rotations
+
     // Auto-shoot state flags
     private boolean doAutoShoot = false;
     private boolean autoShooting = false;
@@ -74,7 +81,7 @@ public class ShooterSubsystem extends SubsystemBase {
     private double MIN_RANGE = 0.5; // meters
 
     // Polynomial shooter curve storage
-    private double[][] shooterValues = {{}};
+    private double[][] shooterValues = { {} };
     private double[] shooterCoeffs = {};
 
     // Toggle state tracking
@@ -84,20 +91,20 @@ public class ShooterSubsystem extends SubsystemBase {
     /**
      * ShooterSubsystem Constructor
      *
-     * @param m_hopper Hopper subsystem reference
-     * @param isRed Alliance color flag
+     * @param m_hopper     Hopper subsystem reference
+     * @param isRed        Alliance color flag
      * @param m_drivetrain Drivetrain subsystem reference
      */
-    public ShooterSubsystem(HopperSubsystem m_hopper, boolean isRed, DriveSubsystem m_drivetrain) 
-      {
+    public ShooterSubsystem(HopperSubsystem m_hopper, boolean isRed, DriveSubsystem m_drivetrain) {
 
         this.m_hopper = m_hopper;
         this.m_drivetrain = m_drivetrain;
-    
+
         // CAN IDs
         control = new TalonFX(34);
         follower = new TalonFX(35);
         kicker = new TalonFX(36);
+        hood = new TalonFX(37);
 
         // Shooter motor configuration
         TalonFXConfiguration controlCfg = new TalonFXConfiguration();
@@ -140,6 +147,9 @@ public class ShooterSubsystem extends SubsystemBase {
 
         kicker.getConfigurator().apply(controlCfgKicker);
 
+        hood.setNeutralMode(NeutralModeValue.Brake);
+        hood.setPosition(0);
+
         this.isRed = isRed;
     }
 
@@ -170,7 +180,7 @@ public class ShooterSubsystem extends SubsystemBase {
             RPM = MAX_RPM;
         if (RPM < -MAX_RPM)
             RPM = -MAX_RPM;
-       
+
         targetRPM = RPM;
     }
 
@@ -186,6 +196,15 @@ public class ShooterSubsystem extends SubsystemBase {
             RPM = -MAX_RPM;
 
         targetRPMKicker = RPM;
+    }
+
+    /**
+     * Sets the hood to a given speed.
+     * 
+     * @param speed The speed to set the hood to
+     */
+    private void setHoodSpeed(double speed) {
+        hood.set(speed);
     }
 
     /**
@@ -243,7 +262,8 @@ public class ShooterSubsystem extends SubsystemBase {
      * Stops shooter flywheel.
      */
     public void stop() {
-        control.stopMotor();;
+        control.stopMotor();
+        ;
     }
 
     /**
@@ -298,6 +318,35 @@ public class ShooterSubsystem extends SubsystemBase {
     }
 
     /**
+     * Sets the hood to a given position
+     */
+    public Command moveHood(double rotations) {
+        final double speed; //IDK IF THIS BEING FINAL WILL MESS IT UP
+
+        if (getHoodPosition() - rotations > 0) {
+            speed = HOOD_SPEED;
+        }
+        else if (getHoodPosition() == rotations) {
+            speed = 0;
+        }
+        else {
+            speed = -HOOD_SPEED;
+        }
+
+        return new FunctionalCommand(() -> {
+            setHoodSpeed(speed);
+        },
+                () -> {
+                    setHoodSpeed(speed);
+                },
+                interrupted -> {
+                    setHoodSpeed(0);
+                },
+                () -> Math.abs(getHoodPosition() - rotations) < 0.01,
+                this);
+    }
+
+    /**
      * Toggles distance-based auto range mode.
      */
     public void toggleAutoRange() {
@@ -315,7 +364,7 @@ public class ShooterSubsystem extends SubsystemBase {
      * @return Follower motor RPM
      */
     public double getFollowerRPM() {
-      return follower.getRotorVelocity().getValueAsDouble() * 60.0;
+        return follower.getRotorVelocity().getValueAsDouble() * 60.0;
     }
 
     /**
@@ -337,6 +386,13 @@ public class ShooterSubsystem extends SubsystemBase {
      */
     public double getTargetRPMKicker() {
         return targetRPMKicker;
+    }
+
+    /**
+     * @return The hood's position
+     */
+    public double getHoodPosition() {
+        return hood.getRotorPosition().getValueAsDouble();
     }
 
     /**
@@ -444,7 +500,7 @@ public class ShooterSubsystem extends SubsystemBase {
         double delta_y = absoluteTargetTranslation.getY() - m_drivetrain.getRobotY();
 
         double hyp = Math.sqrt(delta_x * delta_x + delta_y * delta_y);
-        
+
         return hyp;
     }
 
