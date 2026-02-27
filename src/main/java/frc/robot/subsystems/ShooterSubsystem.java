@@ -67,7 +67,7 @@ public class ShooterSubsystem extends SubsystemBase {
     private double targetRPMKicker = 2000;
 
     // Shooter limits and constants
-    private static final double MAX_RPM = 6000.0;
+    private static final double MAX_RPM = 5400.0;
     private static final double RPM_TO_RPS = 1.0 / 60.0; // CTRE uses rotations per second
     private static final double CURRENT_LIMIT = 60.0; // Amps
     private static final double KICKER_CURRENT_LIMIT = 60; // Amps
