@@ -151,16 +151,16 @@ public class Core {
         operatorController.leftTrigger().onTrue(new InstantCommand(() -> m_shooter.changeTargetRPM(-20))); //change
         operatorController.rightTrigger().onTrue(new InstantCommand(() -> m_shooter.changeTargetRPM(20))); // change 
 
-        operatorController.rightBumper().onTrue(new InstantCommand(() -> m_shooter.stop()));
         operatorController.rightBumper().onTrue(new InstantCommand(() -> m_shooter.start()));
+        operatorController.rightBumper().onFalse(new InstantCommand(() -> m_shooter.stop()));
 
         operatorController.a().onTrue(new InstantCommand((() -> m_intake.intake())));
         operatorController.b().onTrue(new InstantCommand((() -> m_intake.purge())));
         operatorController.x().onTrue(new InstantCommand((() -> m_intake.stop())));
 
-        operatorController.povUp().onTrue(new InstantCommand(() -> m_hopper.roll()));
+        operatorController.povLeft().onTrue(new InstantCommand(() -> m_hopper.roll()));
+        operatorController.povLeft().onFalse(new InstantCommand(() -> m_hopper.stop()));
         operatorController.povDown().onTrue(new InstantCommand(() -> m_hopper.purge()));
-        operatorController.povLeft().onTrue(new InstantCommand(() -> m_hopper.stop()));
         operatorController.povRight().onTrue(new InstantCommand(() -> m_hopper.pulse()));
         
         operatorController.leftStick().onTrue(new InstantCommand(() -> m_climb.extendArm()));
