@@ -5,12 +5,14 @@ import org.apache.commons.math4.legacy.fitting.WeightedObservedPoints;
 
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.Follower;
+import com.ctre.phoenix6.controls.PositionVoltage;
 import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
@@ -58,21 +60,21 @@ public class ShooterSubsystem extends SubsystemBase {
 
     // Reusable velocity control request to prevent object allocation in loops
     private final VelocityVoltage velocityRequest = new VelocityVoltage(0).withSlot(0);
+    private final PositionVoltage positionRequest = new PositionVoltage(0).withSlot(0);
 
     // Target speeds
-    private double targetRPM = 0.0;
+    private double targetRPM = 2000;
     private double targetRPMKicker = 2000;
 
     // Shooter limits and constants
     private static final double MAX_RPM = 6000.0;
-    private static final double MIN_RPM = 5;
     private static final double RPM_TO_RPS = 1.0 / 60.0; // CTRE uses rotations per second
     private static final double CURRENT_LIMIT = 60.0; // Amps
     private static final double KICKER_CURRENT_LIMIT = 60; // Amps
 
-    private static final double HOOD_SPEED = 0.1; // Rotations per second, TODO: INCREASE
+    private static final double HOOD_SPEED = 0.05; // Rotations per second, TODO: INCREASE
     private static final double MIN_HOOD = 0.0; // Rotations
-    private static final double MAX_HOOD = 0.5; // Rotations
+    private static final double MAX_HOOD = 0.9; // Rotations
 
     // Auto-shoot state flags
     private boolean doAutoShoot = false;
@@ -101,15 +103,15 @@ public class ShooterSubsystem extends SubsystemBase {
         this.m_drivetrain = m_drivetrain;
 
         // CAN IDs
-        control = new TalonFX(34);
-        follower = new TalonFX(35);
-        kicker = new TalonFX(36);
-        hood = new TalonFX(37);
+        kicker = new TalonFX(33);
+        hood = new TalonFX(34);
+        control = new TalonFX(35);
+        follower = new TalonFX(36);
 
         // Shooter motor configuration
         TalonFXConfiguration controlCfg = new TalonFXConfiguration();
         controlCfg.MotorOutput.NeutralMode = NeutralModeValue.Coast;
-        controlCfg.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
+        controlCfg.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
 
         // Current limiting
         controlCfg.CurrentLimits.SupplyCurrentLimitEnable = true;
@@ -126,7 +128,7 @@ public class ShooterSubsystem extends SubsystemBase {
         // Kicker configuration
         TalonFXConfiguration controlCfgKicker = new TalonFXConfiguration();
         controlCfgKicker.MotorOutput.NeutralMode = NeutralModeValue.Coast;
-        controlCfgKicker.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
+        controlCfgKicker.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
 
         controlCfgKicker.CurrentLimits.SupplyCurrentLimitEnable = true;
         controlCfgKicker.CurrentLimits.SupplyCurrentLimit = KICKER_CURRENT_LIMIT;
@@ -143,12 +145,12 @@ public class ShooterSubsystem extends SubsystemBase {
         follower.getConfigurator().apply(controlCfg);
 
         // Follower motor mirrors primary (opposed direction)
-        follower.setControl(new Follower(34, MotorAlignmentValue.Opposed));
+        follower.setControl(new Follower(control.getDeviceID(), MotorAlignmentValue.Opposed));
 
         kicker.getConfigurator().apply(controlCfgKicker);
 
         hood.setNeutralMode(NeutralModeValue.Brake);
-        hood.setPosition(0);
+        zeroHood();
 
         this.isRed = isRed;
     }
@@ -223,6 +225,11 @@ public class ShooterSubsystem extends SubsystemBase {
         kicker.setControl(velocityRequest.withVelocity(targetRPMKicker * RPM_TO_RPS));
     }
 
+    public void zeroHood() {
+        System.out.println("Zeroing Hood");
+        hood.setPosition(0);
+    }
+
     /**
      * Runs shooter flywheel at specified RPM.
      *
@@ -288,12 +295,13 @@ public class ShooterSubsystem extends SubsystemBase {
     private Command existingAutoShootCommand = new FunctionalCommand(
             () -> {
                 rotate(getTargetRPM());
+                setKickerControl();
             },
             () -> {
                 rotate(getTargetRPM());
+                setKickerControl();
                 if (isVelocityWithinTolerance()) {
-                    setKickerControl();
-                    m_hopper.roll();
+                    m_hopper.spinForwards();
                 }
             },
             interrupted -> {
@@ -316,30 +324,53 @@ public class ShooterSubsystem extends SubsystemBase {
         }
     }
 
+    // /**
+    //  * Sets the hood to a given position
+    //  */
+    // public Command moveHood(double rotations) {
+
+    // double target = MathUtil.clamp(rotations, MIN_HOOD, MAX_HOOD);
+
+    // return new FunctionalCommand(
+
+    // // initialize
+    // () -> hood.setControl(positionRequest.withPosition(target)),
+
+    // // execute (nothing needed, Talon handles control)
+    // () -> {
+    // },
+
+    // // end
+    // interrupted -> hood.stopMotor(),
+
+    // // isFinished
+    // () -> Math.abs(getHoodPosition() - target) < 0.01,
+
+    // this);
+    // }
+
     /**
      * Sets the hood to a given position
      */
     public Command moveHood(double rotations) {
-        double pos = 0;
+        final double pos;
+
         if (rotations < MIN_HOOD) {
             pos = MIN_HOOD;
-        }
-        if (rotations > MAX_HOOD) {
+        } else if (rotations > MAX_HOOD) {
             pos = MAX_HOOD;
+        } else {
+            pos = rotations;
         }
 
-        rotations = pos;
-        
-        final double speed; //IDK IF THIS BEING FINAL WILL MESS IT UP
+        final double speed; // IDK IF THIS BEING FINAL WILL MESS IT UP
 
         if (getHoodPosition() - rotations > 0) {
-            speed = HOOD_SPEED;
-        }
-        else if (getHoodPosition() == rotations) {
-            speed = 0;
-        }
-        else {
             speed = -HOOD_SPEED;
+        } else if (getHoodPosition() == rotations) {
+            speed = 0;
+        } else {
+            speed = HOOD_SPEED;
         }
 
         return new FunctionalCommand(() -> {
@@ -351,7 +382,7 @@ public class ShooterSubsystem extends SubsystemBase {
                 interrupted -> {
                     setHoodSpeed(0);
                 },
-                () -> Math.abs(getHoodPosition() - rotations) < 0.01,
+                () -> Math.abs(getHoodPosition() - pos) < 0.01,
                 this);
     }
 

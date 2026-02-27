@@ -25,6 +25,8 @@ import frc.robot.align.driverAssist.FixYawToHub;
 import frc.robot.align.preciseAligning.CanAlign;
 import frc.robot.align.preciseAligning.ClimbAlign;
 import frc.robot.subsystems.drivetrain.TunerConstants;
+import frc.robot.subsystems.HopperSubsystem;
+import frc.robot.subsystems.ShooterSubsystem;
 import frc.robot.subsystems.drivetrain.DriveSubsystem;
 import frc.robot.subsystems.vision.VisionSubsystem;
 import frc.robot.utils.Telemetry;
@@ -47,12 +49,17 @@ public class Core {
     //Controllers
 
     private final CommandXboxController driveController = new CommandXboxController(0);
+    private final CommandXboxController operatorController = new CommandXboxController(1);
 
     //Subsystems
 
     public final DriveSubsystem drivetrain = TunerConstants.createDrivetrain();
 
     public final VisionSubsystem vision = new VisionSubsystem();
+
+    public final HopperSubsystem hopper = new HopperSubsystem();
+
+    public final ShooterSubsystem shooter = new ShooterSubsystem(hopper, false, drivetrain);
 
     //Auto
 
@@ -83,6 +90,9 @@ public class Core {
 
     public void configureShuffleBoard() {
         ShuffleboardTab tab = Shuffleboard.getTab("Test");
+
+        tab.addDouble("Speed Center", () -> shooter.getSpeedRPM());
+        tab.addDouble("Target Speed Center", () -> shooter.getTargetRPM());
 
         SmartDashboard.putData("Auto Chooser", autoChooser);
     }
@@ -131,13 +141,40 @@ public class Core {
         // reset the field-centric heading on left bumper press
         driveController.back().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
 
-        driveController.povUp().onTrue(new InstantCommand(() -> {
-            fixYawToHub.schedule();
-            hubYawAlign = true;}));
+        // driveController.povUp().onTrue(new InstantCommand(() -> {
+        //     fixYawToHub.schedule();
+        //     hubYawAlign = true;}));
 
-        driveController.povDown().onTrue(new InstantCommand(() -> {
-            fixYawToHub.cancel(); 
-            hubYawAlign = false;}));
+        // driveController.povDown().onTrue(new InstantCommand(() -> {
+        //     fixYawToHub.cancel(); 
+        //     hubYawAlign = false;}));
+
+        // operatorController.a().onTrue(hopper.roll());
+        // operatorController.b().onTrue(hopper.purge());
+        
+        // operatorController.x().onTrue(hopper.runOnce(() -> hopper.stopMotor()));
+        // operatorController.y().onTrue(hopper.stopCommand());
+        
+        // operatorController.povUp().onTrue(hopper.pulse());
+
+        operatorController.a().onTrue(new InstantCommand(() -> shooter.setKickerControl()));
+        operatorController.b().onTrue(hopper.roll());
+
+        // operatorController.povRight().onTrue(shooter.moveHood(0.5));
+        // operatorController.povLeft().onTrue(shooter.moveHood(0.0));
+        // operatorController.b().onTrue(new InstantCommand(() -> shooter.zeroHood()));
+
+        operatorController.x().onTrue(new InstantCommand(() -> shooter.stop()));
+        operatorController.y().onTrue(new InstantCommand(() -> shooter.stopKicker()));
+
+        operatorController.start().onTrue(new InstantCommand(() -> shooter.autoShoot()));
+
+        operatorController.povUp().onTrue(new InstantCommand(() -> shooter.changeTargetRPM(100)));
+        operatorController.povDown().onTrue(new InstantCommand(() -> shooter.changeTargetRPM(-100)));
+
+// Rotate kicker
+// StopAll
+// moveHood (BE CAREFUL, NOT TESTED)
 
         drivetrain.registerTelemetry(logger::telemeterize);
     }

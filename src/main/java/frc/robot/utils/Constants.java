@@ -4,7 +4,7 @@ import edu.wpi.first.apriltag.AprilTagFields;
 
 public class Constants {
     // Vision constants
-    public static int numberOfCams = 2;
+    public static int numberOfCams = 0;
     public static final AprilTagFields FIELD_LAYOUT = AprilTagFields.k2026RebuiltWelded;
     
     public static final double AUTO_X_OFFSET = 0;

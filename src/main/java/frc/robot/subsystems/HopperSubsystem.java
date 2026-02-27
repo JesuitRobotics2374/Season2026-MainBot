@@ -9,53 +9,73 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.FunctionalCommand;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+
+import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.NeutralModeValue;
 
 public class HopperSubsystem extends SubsystemBase {
+
   private final TalonFX rollerMotor;
+
+  private final VelocityVoltage velocityRequest = new VelocityVoltage(0).withSlot(0);
+
+  private double targetRPM = 1800;
+
   private boolean rolling;
   private boolean pulsing;
+
+  private final double RPM_TO_RPS = 1.0 / 60.0;
 
   public HopperSubsystem() {
     rolling = false;
     pulsing = false;
-    rollerMotor = new TalonFX(23); 
+    rollerMotor = new TalonFX(32);
+
+    TalonFXConfiguration controlCfg = new TalonFXConfiguration();
+    controlCfg.MotorOutput.NeutralMode = NeutralModeValue.Coast;
+    
+    controlCfg.Slot0.kP = 0.09;
+    controlCfg.Slot0.kI = 0;
+    controlCfg.Slot0.kD = 0.001;
+    controlCfg.Slot0.kV = 0.12;
+
+    rollerMotor.getConfigurator().apply(controlCfg);
   }
 
-  /**
-   * getter command to get feedstate
-   */
-  public boolean isRolling() {
-    return rolling;
+  public void spinForwards() {
+    rollerMotor.setControl(velocityRequest.withVelocity(targetRPM * RPM_TO_RPS));
   }
 
-  public void roll() {
-    if (rolling) {
-      rolling = false;
-      rollerMotor.stopMotor();
-    }
-    else {
-      rolling = true;
-      rollerMotor.set(0.4);
-    }
-  }
-
-  public Command purge() {
-    rolling = false;
-    pulsing = false;
-    return new InstantCommand(() -> rollerMotor.set(-0.4));
-  }
-
-  public Command stopCommand() {
-    rolling = false;
-    pulsing = false;
-    return new InstantCommand(() -> rollerMotor.stopMotor());
+  public void spinBackwards() {
+    rollerMotor.setControl(velocityRequest.withVelocity(-targetRPM * RPM_TO_RPS));
   }
 
   public void stopMotor() {
     rolling = false;
     pulsing = false;
     rollerMotor.stopMotor();
+  }
+
+  public Command roll() {
+    if (rolling) {
+      rolling = false;
+      return new InstantCommand(() -> rollerMotor.stopMotor());
+    } else {
+      rolling = true;
+      return new InstantCommand(() -> spinForwards());
+    }
+  }
+
+  public Command purge() {
+    rolling = false;
+    pulsing = false;
+    return new InstantCommand(() -> spinBackwards());
+  }
+
+  public Command stopCommand() {
+    return new InstantCommand(() -> stopMotor());
   }
 
   public Command pulse() {
@@ -72,16 +92,14 @@ public class HopperSubsystem extends SubsystemBase {
         () -> {
           // Pulse logic: 0.4s ON, 0.2s OFF (Total 0.6s cycle)
           if ((timer.get() % 0.6) < 0.4) {
-            rollerMotor.set(0.4);
+            spinForwards();
           } else {
-            rollerMotor.set(-0.4);
+            spinBackwards();;
           }
         },
         // 3. End: Stop the motor when the command is interrupted/finished
         interrupted -> {
-          rollerMotor.stopMotor();
-          rolling = false;
-          pulsing = false;
+          stopMotor();
         },
         // 4. isFinished: Return false so it runs until you release the button
         () -> !pulsing,
@@ -89,11 +107,18 @@ public class HopperSubsystem extends SubsystemBase {
         this);
   }
 
-   /**
+  /**
+   * getter method to get feedstate
+   */
+  public boolean isRolling() {
+    return rolling;
+  }
+
+  /**
    * @return The current supplied to this motor in amps
    */
   public double getHopperSupplyCurrent() {
-    return rollerMotor.getSupplyCurrent().getValueAsDouble(); //FOR NOW
+    return rollerMotor.getSupplyCurrent().getValueAsDouble(); // FOR NOW
   }
 
   @Override
