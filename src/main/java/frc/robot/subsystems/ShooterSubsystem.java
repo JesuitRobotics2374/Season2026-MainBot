@@ -3,6 +3,8 @@ package frc.robot.subsystems;
 import org.apache.commons.math4.legacy.fitting.PolynomialCurveFitter;
 import org.apache.commons.math4.legacy.fitting.WeightedObservedPoints;
 
+import com.ctre.phoenix6.configs.MotionMagicConfigs;
+import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
@@ -148,7 +150,31 @@ public class ShooterSubsystem extends SubsystemBase {
 
         kicker.getConfigurator().apply(controlCfgKicker);
 
-        hood.setNeutralMode(NeutralModeValue.Brake);
+        TalonFXConfiguration talonFXConfigs = new TalonFXConfiguration();
+        Slot0Configs slot0Configs = talonFXConfigs.Slot0;
+        MotionMagicConfigs motionMagicConfigs = talonFXConfigs.MotionMagic;
+
+        slot0Configs.kG = 0.001; // Output of voltage to overcome gravity
+        slot0Configs.kV = 0; // Output per unit target velocity, perhaps not needed
+        slot0Configs.kA = 0.0; // Output per unit target acceleration, perhaps not needed
+        slot0Configs.kP = 0.01; // Controls the response to position error—how much the motor reacts to the
+                              // difference between the current position and the target position.
+        slot0Configs.kI = 0.01; // Addresses steady-state error, which occurs when the motor doesn’t quite reach
+        // the target position due to forces like gravity or friction.
+        slot0Configs.kD = 0.01; // Responds to the rate of change of the error, damping the motion as the motor
+                               // approaches the target. This reduces overshooting and oscillations.
+
+        talonFXConfigs.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
+        talonFXConfigs.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+
+        motionMagicConfigs.MotionMagicCruiseVelocity = 1; // Target velocity in rps
+        motionMagicConfigs.MotionMagicAcceleration = 5; // Target acceleration in rps/s
+        motionMagicConfigs.MotionMagicJerk = 50; // Target jerk in rps/s/s
+
+        hood.getConfigurator().apply(talonFXConfigs);
+        hood.getConfigurator().apply(slot0Configs);
+        hood.getConfigurator().apply(motionMagicConfigs);
+
         setZeroHood();
 
         this.isRed = isRed;
@@ -199,18 +225,24 @@ public class ShooterSubsystem extends SubsystemBase {
         targetRPMKicker = RPM;
     }
 
-    public void updateHoodPos() {
+    private void updateHoodPos() {
         MotionMagicVoltage m_request = new MotionMagicVoltage(hoodTargetPos);
 
         hood.setControl(m_request);
     }
 
-    public void hoodChangeBy(double deltaPos) {
-       hoodTargetPos += deltaPos;
-       updateHoodPos();
+    private void setHoodPos(double pos) {
+        hoodTargetPos = pos;
+
+        updateHoodPos();
     }
 
-    public void setZeroHood() {
+    private void hoodChangeBy(double deltaPos) {
+        hoodTargetPos += deltaPos;
+        updateHoodPos();
+    }
+
+    private void setZeroHood() {
         hood.setPosition(0.0);
         hoodTargetPos = 0;
 
@@ -222,14 +254,14 @@ public class ShooterSubsystem extends SubsystemBase {
      *
      * @param deltaRPM Change in RPM
      */
-    public void changeTargetRPM(double deltaRPM) {
+    private void changeTargetRPM(double deltaRPM) {
         setTargetRPM(targetRPM + deltaRPM);
     }
 
     /**
      * Applies closed-loop velocity control to kicker motor.
      */
-    public void setKickerControl() {
+    private void setKickerControl() {
         kicker.setControl(velocityRequest.withVelocity(targetRPMKicker * RPM_TO_RPS));
     }
 
@@ -238,14 +270,14 @@ public class ShooterSubsystem extends SubsystemBase {
      *
      * @param targetRPM Desired RPM
      */
-    public void rotate(double targetRPM) {
+    private void rotate(double targetRPM) {
         control.setControl(velocityRequest.withVelocity(targetRPM * RPM_TO_RPS));
     }
 
     /**
      * Toggles shooter on/off using cached targetRPM.
      */
-    public void rotateAtCached() {
+    private void rotateAtCached() {
         if (isShooting) {
             isShooting = false;
             stop();
@@ -258,7 +290,7 @@ public class ShooterSubsystem extends SubsystemBase {
     /**
      * Toggles kicker motor.
      */
-    public void rotateKicker() {
+    private void rotateKicker() {
         if (isKicking) {
             kicker.stopMotor();
             isKicking = false;
@@ -271,14 +303,14 @@ public class ShooterSubsystem extends SubsystemBase {
     /**
      * Stops shooter flywheel.
      */
-    public void stop() {
+    private void stop() {
         control.stopMotor();
     }
 
     /**
      * Stops kicker motor.
      */
-    public void stopKicker() {
+    private void stopKicker() {
         kicker.stopMotor();
     }
 
@@ -325,6 +357,42 @@ public class ShooterSubsystem extends SubsystemBase {
             autoShooting = true;
             CommandScheduler.getInstance().schedule(existingAutoShootCommand);
         }
+    }
+
+    public Command hoodPosCommand(double pos) {
+        return new InstantCommand(() -> hoodPosCommand(pos), this);
+    }
+    
+    public Command hoodChangeCommand(double deltaPos) {
+        return new InstantCommand(() -> hoodChangeBy(deltaPos), this);
+    }
+
+    public Command zeroHoodCommand() {
+        return new InstantCommand(() -> setZeroHood(), this);
+    }
+
+    public Command changeTargetRPMCommand(double deltaRPM) {
+        return new InstantCommand(() -> changeTargetRPM(deltaRPM), this);
+    }
+
+    public Command changeKickerSpeedCommand(double deltaRPM) {
+        return new InstantCommand(() -> setTargetRPMKicker(getTargetRPMKicker() + deltaRPM), this);
+    }
+
+    public Command setKickerControlCommand() {
+        return new InstantCommand(() -> setKickerControl(), this);
+    }
+
+    public Command rotateKickerCommand() {
+        return new InstantCommand(() -> rotateKicker(), this);
+    }
+
+    public Command stopShooterCommand() {
+        return new InstantCommand(() -> stop(), this);
+    }
+
+    public Command stopKickerCommand() {
+        return new InstantCommand(() -> stopKicker(), this);
     }
 
     /**

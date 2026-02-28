@@ -26,6 +26,7 @@ import frc.robot.align.preciseAligning.CanAlign;
 import frc.robot.align.preciseAligning.ClimbAlign;
 import frc.robot.subsystems.drivetrain.TunerConstants;
 import frc.robot.subsystems.HopperSubsystem;
+import frc.robot.subsystems.IntakeSubsystem;
 import frc.robot.subsystems.ShooterSubsystem;
 import frc.robot.subsystems.drivetrain.DriveSubsystem;
 import frc.robot.subsystems.vision.VisionSubsystem;
@@ -60,6 +61,8 @@ public class Core {
     public final HopperSubsystem hopper = new HopperSubsystem();
 
     public final ShooterSubsystem shooter = new ShooterSubsystem(hopper, false, drivetrain);
+
+    public final IntakeSubsystem intake = new IntakeSubsystem();
 
     //Auto
 
@@ -104,77 +107,64 @@ public class Core {
     private void configureBindings() {
         // Note that X is defined as forward according to WPILib convention,
         // and Y is defined as to the left according to WPILib convention.
-        // drivetrain.setDefaultCommand(
-        //     // Drivetrain will execute this command periodically
-        //     drivetrain.applyRequest(() -> {
-        //         double axisScale = getAxisMovementScale();
-
-        //         double driverVelocityX = driveController.getLeftY() * MaxSpeed * axisScale;
-        //         double driverVelocityY = driveController.getLeftX() * MaxSpeed * axisScale;
-        //         double driverRotationalRate = -driveController.getRightX() * MaxAngularRate * axisScale;
-
-        //         // Determine which controller is active
-        //         // boolean driverActive =
-        //         //     Math.abs(driverVelocityX) > 0.05 ||
-        //         //     Math.abs(driverVelocityY) > 0.05 ||
-        //         //     Math.abs(driverRotationalRate) > 0.05;
-        //         boolean driverActive = Math.abs(driveController.getRightX()) > 0.1 || !hubYawAlign;
-
-        //         double desiredRotationalRate = driverActive ? driverRotationalRate : calculateRotationalRate();
-
-        //             return drive
-        //                 .withVelocityX(-driverVelocityX) // Limit translational acceleration forward/backward
-        //                 .withVelocityY(-driverVelocityY) // Limit translational acceleration left/right
-        //                 .withRotationalRate(desiredRotationalRate);
-        //     })
-        // );
         drivetrain.setDefaultCommand(
+            // Drivetrain will execute this command periodically
             drivetrain.applyRequest(() -> {
-            
-            return drive
-                        .withVelocityX(0) // Limit translational acceleration forward/backward
-                        .withVelocityY(0) // Limit translational acceleration left/right
-                        .withRotationalRate(0);
+                double axisScale = getAxisMovementScale();
+
+                double driverVelocityX = driveController.getLeftY() * MaxSpeed * axisScale;
+                double driverVelocityY = driveController.getLeftX() * MaxSpeed * axisScale;
+                double driverRotationalRate = -driveController.getRightX() * MaxAngularRate * axisScale;
+
+                // Determine which controller is active
+                // boolean driverActive =
+                //     Math.abs(driverVelocityX) > 0.05 ||
+                //     Math.abs(driverVelocityY) > 0.05 ||
+                //     Math.abs(driverRotationalRate) > 0.05;
+                boolean driverActive = Math.abs(driveController.getRightX()) > 0.1 || !hubYawAlign;
+
+                double desiredRotationalRate = driverActive ? driverRotationalRate : calculateRotationalRate();
+
+                    return drive
+                        .withVelocityX(-driverVelocityX) // Limit translational acceleration forward/backward
+                        .withVelocityY(-driverVelocityY) // Limit translational acceleration left/right
+                        .withRotationalRate(desiredRotationalRate);
             })
         );
+
+        // DRIVER BINDINGS
 
         // reset the field-centric heading on left bumper press
         driveController.back().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
 
-        // driveController.povUp().onTrue(new InstantCommand(() -> {
-        //     fixYawToHub.schedule();
-        //     hubYawAlign = true;}));
+        driveController.povUp().onTrue(new InstantCommand(() -> {
+            fixYawToHub.schedule();
+            hubYawAlign = true;}));
 
-        // driveController.povDown().onTrue(new InstantCommand(() -> {
-        //     fixYawToHub.cancel(); 
-        //     hubYawAlign = false;}));
+        driveController.povDown().onTrue(new InstantCommand(() -> {
+            fixYawToHub.cancel(); 
+            hubYawAlign = false;}));
 
-        // operatorController.a().onTrue(hopper.roll());
-        // operatorController.b().onTrue(hopper.purge());
-        
-        // operatorController.x().onTrue(hopper.runOnce(() -> hopper.stopMotor()));
-        // operatorController.y().onTrue(hopper.stopCommand());
-        
-        // operatorController.povUp().onTrue(hopper.pulse());
+        // OPERATOR BINDINGS
 
-        operatorController.a().onTrue(new InstantCommand(() -> shooter.setKickerControl()));
-        operatorController.b().onTrue(hopper.roll());
+        operatorController.a().onTrue(new InstantCommand(() -> shooter.autoShoot()));
+        operatorController.b().onTrue(hopper.changeRPMCommand(100));
+        operatorController.x().onTrue(hopper.changeRPMCommand(-100));
+        operatorController.y().onTrue(intake.intakeCommand());
 
-        // operatorController.povRight().onTrue(shooter.moveHood(0.5));
-        // operatorController.povLeft().onTrue(shooter.moveHood(0.0));
-        // operatorController.b().onTrue(new InstantCommand(() -> shooter.zeroHood()));
+        operatorController.povUp().onTrue(intake.setPositionCommand(0));
+        operatorController.povRight().onTrue(intake.changeTargetRPMCommand(100));
+        operatorController.povDown().onTrue(intake.setPositionCommand(0.5));
+        operatorController.povRight().onTrue(intake.changeTargetRPMCommand(-100));
 
-        operatorController.x().onTrue(new InstantCommand(() -> shooter.stop()));
-        operatorController.y().onTrue(new InstantCommand(() -> shooter.stopKicker()));
+        operatorController.rightBumper().onTrue(shooter.changeKickerSpeedCommand(100));
+        operatorController.rightTrigger().onTrue(shooter.changeTargetRPMCommand(100));
+        operatorController.leftBumper().onTrue(shooter.changeKickerSpeedCommand(-100));
+        operatorController.leftTrigger().onTrue(shooter.changeTargetRPMCommand(-100));
 
-        operatorController.start().onTrue(new InstantCommand(() -> shooter.autoShoot()));
+        operatorController.start().onTrue(hopper.pulseCommand());
+        operatorController.back().onTrue(new InstantCommand(() -> shooter.toggleAutoRange()));
 
-        operatorController.povUp().onTrue(new InstantCommand(() -> shooter.changeTargetRPM(100)));
-        operatorController.povDown().onTrue(new InstantCommand(() -> shooter.changeTargetRPM(-100)));
-
-// Rotate kicker
-// StopAll
-// moveHood (BE CAREFUL, NOT TESTED)
 
         drivetrain.registerTelemetry(logger::telemeterize);
     }

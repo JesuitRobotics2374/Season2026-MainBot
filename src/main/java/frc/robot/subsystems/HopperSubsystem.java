@@ -44,6 +44,10 @@ public class HopperSubsystem extends SubsystemBase {
     rollerMotor.getConfigurator().apply(controlCfg);
   }
 
+  private void changeRPM(double delta) {
+    targetRPM += delta;
+  }
+
   public void spinForwards() {
     rollerMotor.setControl(velocityRequest.withVelocity(targetRPM * RPM_TO_RPS));
   }
@@ -58,7 +62,7 @@ public class HopperSubsystem extends SubsystemBase {
     rollerMotor.stopMotor();
   }
 
-  public Command roll() {
+  public Command rollCommand() {
     if (rolling) {
       rolling = false;
       return new InstantCommand(() -> rollerMotor.stopMotor());
@@ -68,7 +72,7 @@ public class HopperSubsystem extends SubsystemBase {
     }
   }
 
-  public Command purge() {
+  public Command purgeCommand() {
     rolling = false;
     pulsing = false;
     return new InstantCommand(() -> spinBackwards());
@@ -78,7 +82,11 @@ public class HopperSubsystem extends SubsystemBase {
     return new InstantCommand(() -> stopMotor());
   }
 
-  public Command pulse() {
+  public Command changeRPMCommand(double delta) {
+    return new InstantCommand(() -> changeRPM(delta));
+  }
+
+  public Command pulseCommand() {
     Timer timer = new Timer();
 
     return new FunctionalCommand(
@@ -94,7 +102,7 @@ public class HopperSubsystem extends SubsystemBase {
           if ((timer.get() % 0.6) < 0.4) {
             spinForwards();
           } else {
-            spinBackwards();;
+            spinBackwards();
           }
         },
         // 3. End: Stop the motor when the command is interrupted/finished

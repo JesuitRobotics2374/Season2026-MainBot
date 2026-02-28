@@ -35,7 +35,7 @@ public class IntakeSubsystem extends SubsystemBase {
   private final double RPM_TO_RPS = 1.0 / 60.0;
   private static final double CURRENT_LIMIT = 60.0; // Amps
 
-  private double targetPos;
+  private double targetPos; // the target position of the pivotMotor
 
   private boolean isIntaking;
 
