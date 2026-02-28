@@ -152,7 +152,7 @@ public class Core {
         // OPERATOR BINDINGS
 
         
-        operatorController.a().onTrue(intake.intakeCommand());
+        operatorController.a().toggleOnTrue(intake.intakeCommand());
         operatorController.b().onTrue(hopper.changeRPMCommand(100));
         operatorController.x().onTrue(hopper.changeRPMCommand(-100));
         operatorController.y().onTrue(new InstantCommand(() -> shooter.autoShoot()));
