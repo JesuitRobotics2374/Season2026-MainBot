@@ -11,7 +11,7 @@
               {
                 "type": "path",
                 "data": {
-                  "pathName": "Blue right shoot to nz"
+                  "pathName": "Back Left to Depot Blue"
                 }
               },
               {
@@ -47,15 +47,15 @@
           "data": {
             "commands": [
               {
-                "type": "path",
-                "data": {
-                  "pathName": "Blue nz sweep right to left"
-                }
-              },
-              {
                 "type": "named",
                 "data": {
                   "name": "Start Intake"
+                }
+              },
+              {
+                "type": "path",
+                "data": {
+                  "pathName": "Depot Intake"
                 }
               }
             ]
@@ -66,15 +66,15 @@
           "data": {
             "commands": [
               {
-                "type": "path",
-                "data": {
-                  "pathName": "Blue left nz to shoot"
-                }
-              },
-              {
                 "type": "named",
                 "data": {
                   "name": "Stop Intake"
+                }
+              },
+              {
+                "type": "path",
+                "data": {
+                  "pathName": "Depot To Shoot Blue"
                 }
               }
             ]

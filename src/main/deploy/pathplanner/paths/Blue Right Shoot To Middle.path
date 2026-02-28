@@ -3,13 +3,13 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 2.988511111111111,
-        "y": 1.1311555555555548
+        "x": 2.1407444444444446,
+        "y": 1.1214111111111107
       },
       "prevControl": null,
       "nextControl": {
-        "x": 3.495634807411782,
-        "y": 0.5350927246799677
+        "x": 2.6478681407451155,
+        "y": 0.5253482802355236
       },
       "isLocked": false,
       "linkedName": "p1-e"
@@ -63,7 +63,7 @@
   "rotationTargets": [
     {
       "waypointRelativePos": 0.5,
-      "rotationDegrees": 178.43609630018125
+      "rotationDegrees": 178.43609630018128
     }
   ],
   "constraintZones": [],
@@ -85,7 +85,7 @@
   "folder": null,
   "idealStartingState": {
     "velocity": 0,
-    "rotation": 60.151696830700786
+    "rotation": 50.08190051655022
   },
   "useDefaultConstraints": true
 }

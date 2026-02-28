@@ -39,6 +39,7 @@ import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.path.PathConstraints;
 import com.pathplanner.lib.path.PathPlannerPath;
 import com.pathplanner.lib.auto.NamedCommands;
+import com.pathplanner.lib.commands.PathPlannerAuto;
 
 
 
@@ -111,12 +112,10 @@ public class Core {
 
     public void configureShuffleBoard() {
         ShuffleboardTab tab = Shuffleboard.getTab("Test");
-
-        SmartDashboard.putData("Auto Chooser", autoChooser);
     }
 
      public Command getAutonomousCommand() {
-        return autoChooser.getSelected();
+        return new PathPlannerAuto("Blue Depot Hub");
     }
 
     private void configureBindings() {

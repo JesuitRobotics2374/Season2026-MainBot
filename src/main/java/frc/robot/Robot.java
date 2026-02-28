@@ -4,6 +4,8 @@
 
 package frc.robot;
 
+import com.pathplanner.lib.commands.PathPlannerAuto;
+
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.wpilibj.TimedRobot;
@@ -52,9 +54,10 @@ public class Robot extends TimedRobot {
     m_autonomousCommand = m_core.getAutonomousCommand();
 
     if (m_autonomousCommand != null) {
-      CommandScheduler.getInstance().schedule(new SequentialCommandGroup(m_autonomousCommand, climbAlign));
+      //CommandScheduler.getInstance().schedule(new SequentialCommandGroup(m_autonomousCommand, climbAlign));
+      m_core.drivetrain.resetPose((((PathPlannerAuto) m_core.getAutonomousCommand()).getStartingPose()));
+      CommandScheduler.getInstance().schedule(m_autonomousCommand);
     }
-
 
   }
 
