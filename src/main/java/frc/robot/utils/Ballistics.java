@@ -156,6 +156,67 @@ public class Ballistics {
         return y;
     }
 
+    public static double calculateZ(double Vi, double ViRobotX, double ViRobotY, double lambda) {
+        boolean hasReachedPeak = false;
+
+        x = 0;
+        y = 0;
+        z = 0;
+        theta = 0;
+
+        Vx = Vi * Math.cos(lambda) + ViRobotX;
+        Vy = ViRobotY;
+        Vz = Vi * Math.sin(lambda);
+
+        double Vel = Math.sqrt(Vx * Vx + Vy * Vy + Vz * Vz);
+
+        Ax = -(drag * Vel * Vx) / m;
+        Ay = -(drag * Vel * Vy) / m;
+        Az = g - (drag * Vel * Vz) / m;
+
+        time = 0;
+
+        while (!hasReachedPeak) {
+            time += dt;
+
+            Vx += Ax * dt;
+            Vy += Ay * dt;
+            Vz += Az * dt;
+
+            Vel = Math.sqrt(Vx * Vx + Vy * Vy + Vz * Vz);
+
+            Ax = -(drag * Vel * Vx) / m;
+            Ay = -(drag * Vel * Vy) / m;
+            Az = g - (drag * Vel * Vz) / m;
+
+            x += Vx * dt;
+            y += Vy * dt;
+            z += Vz * dt;
+
+            hasReachedPeak = Vz <= 0;
+        }
+
+        while (z > deltaH) {
+            time += dt;
+
+            Vx += Ax * dt;
+            Vy += Ay * dt;
+            Vz += Az * dt;
+
+            Vel = Math.sqrt(Vx * Vx + Vy * Vy + Vz * Vz);
+
+            Ax = -(drag * Vel * Vx) / m;
+            Ay = -(drag * Vel * Vy) / m;
+            Az = g - (drag * Vel * Vz) / m;
+
+            x += Vx * dt;
+            y += Vy * dt;
+            z += Vz * dt;
+        }
+
+        return z;
+    }
+
     public static double CalculateNeededShooterSpeed(double distanceX, double VRobotX, double VRobotY, double lambda) {
         double low = 5.0; // minimum shooter speed
         double high = 20.0; // maximum shooter speed
@@ -189,9 +250,14 @@ public class Ballistics {
         double hubY = 4.034356;
         double roboY = 6.9;
 
-        double dist = Math.sqrt(Math.pow(hubX - roboX, 2) + Math.pow(hubY - roboY, 2)) + 0.24;
+        // double dist = Math.sqrt(Math.pow(hubX - roboX, 2) + Math.pow(hubY - roboY, 2)) + 0.24;
 
-        System.out.println(CalculateNeededShooterSpeed(dist, 0, 0, 45 * Math.PI / 180));
+        // System.out.println(CalculateNeededShooterSpeed(dist, 0, 0, 45 * Math.PI / 180));
+
+        double vx = 0;
+        double vy = 3;
+
+        System.out.println(Ballistics.calculateZ(Ballistics.CalculateNeededShooterSpeed(2, vx, vy, Constants.HOOD_ZERO_ANGLE), vx, vy, Constants.HOOD_ZERO_ANGLE));
         // System.out.println(CalculateNeededShooterSpeed(5, 2, 3));
 
         // double ViMin = 5; // minimum initial velocity (m/s)

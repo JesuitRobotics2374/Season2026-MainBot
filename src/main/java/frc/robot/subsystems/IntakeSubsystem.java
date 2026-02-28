@@ -14,22 +14,25 @@ import com.ctre.phoenix6.configs.MotionMagicConfigs;
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.configs.TalonFXConfigurator;
+import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
+import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
 public class IntakeSubsystem extends SubsystemBase {
 
-  private final TalonFX intakeMotor;
+  private final TalonFX intakeControl;
   private final TalonFX pivotMotor;
+  private final TalonFX intakeFollower;
 
   private final VelocityVoltage velocityRequest = new VelocityVoltage(0).withSlot(0);
   private boolean raised;
   private boolean lowered;
 
-  private double MAX_RPM = 2000;
+  private double MAX_RPM = 5000;
   private double targetRPM = 4000;
 
   private final double RPM_TO_RPS = 1.0 / 60.0;
@@ -42,7 +45,8 @@ public class IntakeSubsystem extends SubsystemBase {
   /** Creates a new Intake. */
   public IntakeSubsystem() {
     pivotMotor = new TalonFX(30);
-    intakeMotor = new TalonFX(31);
+    intakeControl = new TalonFX(31);
+    intakeFollower = new TalonFX(37);
 
     TalonFXConfiguration controlCfg = new TalonFXConfiguration();
 
@@ -57,7 +61,9 @@ public class IntakeSubsystem extends SubsystemBase {
     controlCfg.CurrentLimits.StatorCurrentLimitEnable = true;
     controlCfg.CurrentLimits.StatorCurrentLimit = CURRENT_LIMIT / 0.75;
 
-    intakeMotor.getConfigurator().apply(controlCfg);
+    intakeControl.getConfigurator().apply(controlCfg);
+
+    intakeFollower.setControl(new Follower(intakeControl.getDeviceID(), MotorAlignmentValue.Opposed));
 
     TalonFXConfiguration talonFXConfigs = new TalonFXConfiguration();
     // Slot0Configs slot0Configs = talonFXConfigs.Slot0;
@@ -74,7 +80,7 @@ public class IntakeSubsystem extends SubsystemBase {
     //                        // approaches the target. This reduces overshooting and oscillations.
 
     talonFXConfigs.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
-    talonFXConfigs.MotorOutput.NeutralMode = NeutralModeValue.Coast;
+    talonFXConfigs.MotorOutput.NeutralMode = NeutralModeValue.Brake;
 
     // motionMagicConfigs.MotionMagicCruiseVelocity = 80; // Target velocity in rps
     // motionMagicConfigs.MotionMagicAcceleration = 68; // Target acceleration in rps/s
@@ -117,7 +123,7 @@ public class IntakeSubsystem extends SubsystemBase {
   // }
 
   private void stop() {
-    intakeMotor.stopMotor();
+    intakeControl.stopMotor();
   }
 
   private void setTargetRPM(double RPM) {
@@ -134,8 +140,7 @@ public class IntakeSubsystem extends SubsystemBase {
   }
 
   private void rotate(double targetRPM) {
-    System.out.println("targetrpm intake:" + getTargetRPM());
-    intakeMotor.setControl(velocityRequest.withVelocity(targetRPM * RPM_TO_RPS));
+    intakeControl.setControl(velocityRequest.withVelocity(targetRPM * RPM_TO_RPS));
   }
 
   // public Command deltaPivotCommand(double delta) {
@@ -190,7 +195,7 @@ public class IntakeSubsystem extends SubsystemBase {
   }
 
   public double getIntakeSupplyCurrent() {
-    return intakeMotor.getSupplyCurrent().getValueAsDouble() +
+    return intakeControl.getSupplyCurrent().getValueAsDouble() +
         pivotMotor.getSupplyCurrent().getValueAsDouble();
   }
 
@@ -199,7 +204,7 @@ public class IntakeSubsystem extends SubsystemBase {
   }
 
   public double getSpeedRPM() {
-    return intakeMotor.getRotorVelocity().getValueAsDouble() * 60;
+    return intakeControl.getRotorVelocity().getValueAsDouble() * 60;
   }
 
   public boolean isPurging() {

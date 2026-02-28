@@ -12,11 +12,13 @@ import com.ctre.phoenix6.swerve.SwerveRequest;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
@@ -92,16 +94,27 @@ public class Core {
     }
 
     public void configureShuffleBoard() {
-        ShuffleboardTab tab = Shuffleboard.getTab("Test");
+        ShuffleboardTab intakeTab = Shuffleboard.getTab("Intake");
+        ShuffleboardTab shooterTab = Shuffleboard.getTab("Shooter");
+        ShuffleboardTab Tab = Shuffleboard.getTab("Tab");
 
-        tab.addDouble("Speed Shooter", () -> shooter.getSpeedRPM());
-        tab.addDouble("Target Speed Shooter", () -> shooter.getTargetRPM());
-        
-        tab.addDouble("Speed Intake", () -> intake.getSpeedRPM());
-        tab.addDouble("Target Speed Intake", () -> intake.getTargetRPM());
+        intakeTab.addDouble("Speed Intake", () -> intake.getSpeedRPM());
+        intakeTab.addDouble("Target Speed Intake", () -> intake.getTargetRPM());
+        intakeTab.addBoolean("Intaking", () -> intake.isIntaking());
+
+        shooterTab.addDouble("Speed Shooter", () -> shooter.getSpeedRPM());
+        shooterTab.addDouble("Target Speed Shooter", () -> shooter.getTargetRPM());
+        shooterTab.addDouble("Speed Kicker", () -> shooter.getSpeedRPMKicker());
+        shooterTab.addDouble("Target Speed Kicker", () -> shooter.getTargetRPMKicker());
+        shooterTab.addBoolean("Shooting", () -> shooter.isRunning());
+        shooterTab.addBoolean("Kicking", () -> shooter.isKicking());
+    
+        Tab.addDouble("Drivetrain X", () -> drivetrain.getEstimator().getX());
+        Tab.addDouble("Drivetrain Y", () -> drivetrain.getEstimator().getY());
+        Tab.addDouble("Dist To Hub", () -> shooter.getDistToHub());
+        Tab.addDouble("Time", () -> DriverStation.getMatchTime());
 
         SmartDashboard.putData("Auto Chooser", autoChooser);
-
     }
 
      public Command getAutonomousCommand() {
@@ -141,12 +154,12 @@ public class Core {
         // reset the field-centric heading on left bumper press
         driveController.back().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
 
-        driveController.povUp().onTrue(new InstantCommand(() -> {
-            fixYawToHub.schedule();
+        driveController.leftTrigger().onTrue(new InstantCommand(() -> {
+            CommandScheduler.getInstance().schedule(fixYawToHub);
             hubYawAlign = true;}));
 
-        driveController.povDown().onTrue(new InstantCommand(() -> {
-            fixYawToHub.cancel(); 
+        driveController.leftTrigger().onFalse(new InstantCommand(() -> {
+            CommandScheduler.getInstance().cancel(fixYawToHub);
             hubYawAlign = false;}));
 
         // OPERATOR BINDINGS
@@ -157,15 +170,15 @@ public class Core {
         operatorController.x().onTrue(hopper.changeRPMCommand(-100));
         operatorController.y().onTrue(new InstantCommand(() -> shooter.autoShoot()));
 
-         driveController.povUp().whileTrue(intake.raiseManual()).onFalse(intake.stopPivot());
+        operatorController.povUp().whileTrue(intake.raiseManual()).onFalse(intake.stopPivot());
         operatorController.povRight().onTrue(intake.changeTargetRPMCommand(100));
-        driveController.povDown().whileTrue(intake.lowerManual()).onFalse(intake.stopPivot());
+        operatorController.povDown().whileTrue(intake.lowerManual()).onFalse(intake.stopPivot());
         operatorController.povLeft().onTrue(intake.changeTargetRPMCommand(-100));
 
-        operatorController.rightBumper().onTrue(shooter.changeKickerSpeedCommand(100));
-        operatorController.rightTrigger().onTrue(shooter.changeTargetRPMCommand(100));
-        operatorController.leftBumper().onTrue(shooter.changeKickerSpeedCommand(-100));
-        operatorController.leftTrigger().onTrue(shooter.changeTargetRPMCommand(-100));
+        operatorController.rightBumper().onTrue(new InstantCommand(() -> shooter.changeKickerTargetRPM(100)));
+        operatorController.rightTrigger().onTrue(new InstantCommand(() -> shooter.changeTargetRPM(100)));
+        operatorController.leftBumper().onTrue(new InstantCommand(() -> shooter.changeKickerTargetRPM(-100)));
+        operatorController.leftTrigger().onTrue(new InstantCommand(() -> shooter.changeTargetRPM(-100)));
 
         operatorController.start().onTrue(hopper.pulseCommand());
         operatorController.back().onTrue(new InstantCommand(() -> shooter.toggleAutoRange()));

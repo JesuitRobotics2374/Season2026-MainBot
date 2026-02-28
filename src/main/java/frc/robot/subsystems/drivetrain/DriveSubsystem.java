@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.function.Supplier;
 
 import com.ctre.phoenix6.Utils;
+import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.swerve.SwerveDrivetrainConstants;
 import com.ctre.phoenix6.swerve.SwerveModule;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants;
@@ -293,5 +294,77 @@ public class DriveSubsystem extends TunerSwerveDrivetrain implements Subsystem {
 
     public double getTimeSinceLastEstimatorUpdate() {
         return timeSinceLastEstimatorUpdate;
+    }
+
+            /**
+     * @return The total current supplied to the drivetrain
+     */
+    public double getTotalDriveSupplyCurrent() {
+        double totalCurrent = 0;
+        for (int i = 0; i < 4; i++) {
+            // Access each module's drive motor and get its stator current
+            totalCurrent += this.getModule(i).getDriveMotor().getSupplyCurrent().getValueAsDouble();
+        }
+        for (int i = 0; i < 4; i++) {
+            // Access each module's drive motor and get its stator current
+            totalCurrent += this.getModule(i).getSteerMotor().getSupplyCurrent().getValueAsDouble();
+        }
+        return totalCurrent;
+    }
+
+    /**
+     * Sets a current limit for the drive motors
+     * @param current In amps to supply to each drive motor. -1 for default
+     */
+    public void setDriveCurrentLimit(double supply, double stator) {
+        if (supply == -1) {
+            return;
+        }
+
+        // 1. Get the existing configuration from the motor
+        CurrentLimitsConfigs currentConfigs = new CurrentLimitsConfigs();
+
+        for (int i = 0; i < 4; i++) {
+
+            this.getModule(i).getDriveMotor().getConfigurator().refresh(currentConfigs);
+
+            // 2. Modify only the specific fields you need
+            currentConfigs.SupplyCurrentLimit = supply;
+            currentConfigs.SupplyCurrentLimitEnable = true;
+            currentConfigs.StatorCurrentLimit = stator;
+            currentConfigs.StatorCurrentLimitEnable = true;
+
+            // 3. Apply the updated object back to the motor
+            this.getModule(i).getDriveMotor().getConfigurator().apply(currentConfigs);
+
+        }
+    }
+
+    /**
+     * Sets a current limit for the steer motors
+     * @param current In amps to supply to each steer motor. -1 for default
+     */
+    public void setSteerCurrentLimit(double supply, double stator) {
+        if (supply == -1) {
+            return;
+        }
+
+        // 1. Get the existing configuration from the motor
+        CurrentLimitsConfigs currentConfigs = new CurrentLimitsConfigs();
+
+        for (int i = 0; i < 4; i++) {
+            
+            this.getModule(i).getSteerMotor().getConfigurator().refresh(currentConfigs);
+
+            // 2. Modify only the specific fields you need
+            currentConfigs.SupplyCurrentLimit = supply;
+            currentConfigs.SupplyCurrentLimitEnable = true;
+            currentConfigs.StatorCurrentLimit = stator;
+            currentConfigs.StatorCurrentLimitEnable = true;
+
+            // 3. Apply the updated object back to the motor
+            this.getModule(i).getSteerMotor().getConfigurator().apply(currentConfigs);
+
+        }
     }
 }
