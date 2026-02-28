@@ -5,6 +5,7 @@ import org.apache.commons.math4.legacy.fitting.WeightedObservedPoints;
 
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.Follower;
+import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.controls.PositionVoltage;
 import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
@@ -72,9 +73,7 @@ public class ShooterSubsystem extends SubsystemBase {
     private static final double CURRENT_LIMIT = 60.0; // Amps
     private static final double KICKER_CURRENT_LIMIT = 60; // Amps
 
-    private static final double HOOD_SPEED = 0.05; // Rotations per second, TODO: INCREASE
-    private static final double MIN_HOOD = 0.0; // Rotations
-    private static final double MAX_HOOD = 0.9; // Rotations
+    private double hoodTargetPos;
 
     // Auto-shoot state flags
     private boolean doAutoShoot = false;
@@ -150,7 +149,7 @@ public class ShooterSubsystem extends SubsystemBase {
         kicker.getConfigurator().apply(controlCfgKicker);
 
         hood.setNeutralMode(NeutralModeValue.Brake);
-        zeroHood();
+        setZeroHood();
 
         this.isRed = isRed;
     }
@@ -200,13 +199,22 @@ public class ShooterSubsystem extends SubsystemBase {
         targetRPMKicker = RPM;
     }
 
-    /**
-     * Sets the hood to a given speed.
-     * 
-     * @param speed The speed to set the hood to
-     */
-    private void setHoodSpeed(double speed) {
-        hood.set(speed);
+    public void updateHoodPos() {
+        MotionMagicVoltage m_request = new MotionMagicVoltage(hoodTargetPos);
+
+        hood.setControl(m_request);
+    }
+
+    public void hoodChangeBy(double deltaPos) {
+       hoodTargetPos += deltaPos;
+       updateHoodPos();
+    }
+
+    public void setZeroHood() {
+        hood.setPosition(0.0);
+        hoodTargetPos = 0;
+
+        updateHoodPos();
     }
 
     /**
@@ -223,11 +231,6 @@ public class ShooterSubsystem extends SubsystemBase {
      */
     public void setKickerControl() {
         kicker.setControl(velocityRequest.withVelocity(targetRPMKicker * RPM_TO_RPS));
-    }
-
-    public void zeroHood() {
-        System.out.println("Zeroing Hood");
-        hood.setPosition(0);
     }
 
     /**
@@ -322,68 +325,6 @@ public class ShooterSubsystem extends SubsystemBase {
             autoShooting = true;
             CommandScheduler.getInstance().schedule(existingAutoShootCommand);
         }
-    }
-
-    // /**
-    //  * Sets the hood to a given position
-    //  */
-    // public Command moveHood(double rotations) {
-
-    // double target = MathUtil.clamp(rotations, MIN_HOOD, MAX_HOOD);
-
-    // return new FunctionalCommand(
-
-    // // initialize
-    // () -> hood.setControl(positionRequest.withPosition(target)),
-
-    // // execute (nothing needed, Talon handles control)
-    // () -> {
-    // },
-
-    // // end
-    // interrupted -> hood.stopMotor(),
-
-    // // isFinished
-    // () -> Math.abs(getHoodPosition() - target) < 0.01,
-
-    // this);
-    // }
-
-    /**
-     * Sets the hood to a given position
-     */
-    public Command moveHood(double rotations) {
-        final double pos;
-
-        if (rotations < MIN_HOOD) {
-            pos = MIN_HOOD;
-        } else if (rotations > MAX_HOOD) {
-            pos = MAX_HOOD;
-        } else {
-            pos = rotations;
-        }
-
-        final double speed; // IDK IF THIS BEING FINAL WILL MESS IT UP
-
-        if (getHoodPosition() - rotations > 0) {
-            speed = -HOOD_SPEED;
-        } else if (getHoodPosition() == rotations) {
-            speed = 0;
-        } else {
-            speed = HOOD_SPEED;
-        }
-
-        return new FunctionalCommand(() -> {
-            setHoodSpeed(speed);
-        },
-                () -> {
-                    setHoodSpeed(speed);
-                },
-                interrupted -> {
-                    setHoodSpeed(0);
-                },
-                () -> Math.abs(getHoodPosition() - pos) < 0.01,
-                this);
     }
 
     /**

@@ -5,24 +5,37 @@
 package frc.robot.subsystems;
 
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.FunctionalCommand;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.utils.Constants;
 
+import com.ctre.phoenix6.configs.MotionMagicConfigs;
+import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.configs.TalonFXConfigurator;
+import com.ctre.phoenix6.controls.MotionMagicVoltage;
+import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
 public class IntakeSubsystem extends SubsystemBase {
 
   private final TalonFX intakeMotor;
   private final TalonFX pivotMotor;
+
+  private final VelocityVoltage velocityRequest = new VelocityVoltage(0).withSlot(0);
   private boolean raised;
   private boolean lowered;
 
-  private double targetSpeed = -0.8;
+  private double MAX_RPM = 2000;
+  private double targetRPM = 1000;
 
-  private static final double CURRENT_LIMIT = 25.0; // Amps
+  private final double RPM_TO_RPS = 1.0 / 60.0;
+  private static final double CURRENT_LIMIT = 60.0; // Amps
+
+  private double targetPos;
 
   private boolean isIntaking;
 
@@ -31,11 +44,6 @@ public class IntakeSubsystem extends SubsystemBase {
     pivotMotor = new TalonFX(30);
     intakeMotor = new TalonFX(31);
 
-    pivotMotor.setPosition(0);
-    pivotMotor.setNeutralMode(NeutralModeValue.Brake);
-    raised = true;
-    lowered = false;
-
     TalonFXConfiguration controlCfg = new TalonFXConfiguration();
     controlCfg.CurrentLimits.SupplyCurrentLimitEnable = true;
     controlCfg.CurrentLimits.SupplyCurrentLimit = CURRENT_LIMIT;
@@ -43,83 +51,124 @@ public class IntakeSubsystem extends SubsystemBase {
     controlCfg.CurrentLimits.StatorCurrentLimit = CURRENT_LIMIT / 0.75;
 
     intakeMotor.getConfigurator().apply(controlCfg);
+
+    pivotMotor.setPosition(0);
+    pivotMotor.setNeutralMode(NeutralModeValue.Brake);
+
+    TalonFXConfiguration talonFXConfigs = new TalonFXConfiguration();
+    Slot0Configs slot0Configs = talonFXConfigs.Slot0;
+    MotionMagicConfigs motionMagicConfigs = talonFXConfigs.MotionMagic;
+
+    slot0Configs.kG = 5.7; // Output of voltage to overcome gravity
+    slot0Configs.kV = 2; // Output per unit target velocity, perhaps not needed
+    slot0Configs.kA = 0.3; // Output per unit target acceleration, perhaps not needed
+    slot0Configs.kP = 15; // Controls the response to position error—how much the motor reacts to the
+                          // difference between the current position and the target position.
+    slot0Configs.kI = 1.5; // Addresses steady-state error, which occurs when the motor doesn’t quite reach
+    // the target position due to forces like gravity or friction.
+    slot0Configs.kD = 0.3; // Responds to the rate of change of the error, damping the motion as the motor
+                           // approaches the target. This reduces overshooting and oscillations.
+
+    talonFXConfigs.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
+
+    motionMagicConfigs.MotionMagicCruiseVelocity = 80; // Target velocity in rps
+    motionMagicConfigs.MotionMagicAcceleration = 68; // Target acceleration in rps/s
+    motionMagicConfigs.MotionMagicJerk = 400; // Target jerk in rps/s/s
+
+    pivotMotor.getConfigurator().apply(talonFXConfigs);
+    pivotMotor.getConfigurator().apply(slot0Configs);
+    pivotMotor.getConfigurator().apply(motionMagicConfigs);
+
+    MotionMagicVoltage m_request = new MotionMagicVoltage(pivotMotor.getPosition().getValueAsDouble());
+
+    raised = true;
+    lowered = false;
   }
 
-  public Command raiseManual() {
-    return new InstantCommand(() -> pivotMotor.set(0.1));
+  private void updateIntakePos() {
+
+    MotionMagicVoltage m_request = new MotionMagicVoltage(targetPos);
+
+    pivotMotor.setControl(m_request);
   }
 
-  public Command lowerManual() {
-    return new InstantCommand(() -> pivotMotor.set(-0.1));
+  private void intakeChangeBy(double deltaPos) {
+    targetPos += deltaPos;
+
+    updateIntakePos();
   }
 
-  public Command stopPivot() {
-    return new InstantCommand(() -> pivotMotor.set(0));
+  private void setPositionIntake(double pos) {
+    targetPos = pos;
+
+    updateIntakePos();
   }
 
-  // FIX THESE SOMEDAY
+  private void setZero() {
+    pivotMotor.setPosition(0.0);
+    targetPos = 0;
 
-  // public Command raise() {
-  // return new FunctionalCommand(
-  // () -> {
-  // },
-  // () -> {
-  // pivotMotor.set(0.5);
-  // raised = pivotMotor.getPosition().getValueAsDouble() >= 0;
-  // },
-  // interrupted -> {
-  // pivotMotor.set(0);
-  // },
-  // () -> raised,
-  // this);
-  // }
-
-  // public Command lower() {
-  // return new FunctionalCommand(
-  // () -> {
-  // },
-  // () -> {
-  // pivotMotor.set(-0.5);
-  // lowered = pivotMotor.getPosition().getValueAsDouble() <= -2.25; //SEVERELY
-  // INCORRECT
-  // },
-  // interrupted -> {
-  // pivotMotor.set(0);
-  // },
-  // () -> lowered,
-  // this);
-  // }
-
-  public double getTargetSpeed() {
-    return targetSpeed;
+    updateIntakePos();
   }
 
-  public void increaseTargetSpeed(double delta) {
-    targetSpeed += -Math.abs(delta);
+  private void stop() {
+    intakeMotor.stopMotor();
   }
 
-  public void decreaseTargetSpeed(double delta) {
-    targetSpeed += Math.abs(delta);
+  private void setTargetRPM(double RPM) {
+    if (RPM > MAX_RPM)
+      RPM = MAX_RPM;
+    if (RPM < -MAX_RPM)
+      RPM = -MAX_RPM;
+
+    targetRPM = RPM;
   }
 
-  public void intake() {
-    if (isIntaking) {
-      isIntaking = false;
-      intakeMotor.stopMotor();
-      ;
-    } else {
-      isIntaking = true;
-      intakeMotor.set(targetSpeed);
-    }
+  private void changeTargetRPM(double deltaRPM) {
+    setTargetRPM(targetRPM + deltaRPM);
   }
 
-  public Command stop() {
-    isIntaking = false;
-    return new InstantCommand(() -> intakeMotor.set(0), this);
+  private void rotate(double targetRPM) {
+    intakeMotor.setControl(velocityRequest.withVelocity(targetRPM * RPM_TO_RPS));
   }
 
-  public Command purge() {
-    return new InstantCommand(() -> intakeMotor.set(0.3), this);
+  public Command deltaPivotCommand(double delta) {
+    return new InstantCommand(() -> intakeChangeBy(delta), this);
+  }
+
+  public Command setPositionCommand(double pos) {
+    return new InstantCommand(() -> setPositionIntake(pos), this);
+  }
+
+  public Command zeroPivotCommand() {
+    return new InstantCommand(() -> setZero(), this);
+  }
+
+  public Command intakeCommand() {
+    return new FunctionalCommand(
+        () -> {
+          rotate(getTargetRPM());
+        },
+        () -> {
+          rotate(getTargetRPM());
+        },
+        interrupted -> {
+          stop();
+        },
+        () -> false,
+        this);
+  }
+
+  public Command stopCommand() {
+    return new InstantCommand(() -> stop(), this);
+  }
+
+  public Command changeTargetRPMCommand(double deltaRPM) {
+    return new InstantCommand(() -> changeTargetRPM(deltaRPM), this);
+  }
+
+  public double getTargetRPM() {
+    return targetRPM;
   }
 
   public double getIntakeSupplyCurrent() {
@@ -131,8 +180,26 @@ public class IntakeSubsystem extends SubsystemBase {
     return isIntaking;
   }
 
+  public double getSpeedRPM() {
+    return intakeMotor.getRotorVelocity().getValueAsDouble() * 60;
+  }
+
+  public boolean isPurging() {
+    return getSpeedRPM() < 0;
+  }
+
   @Override
   public void periodic() {
     // This method will be called once per scheduler run
   }
+
+  // private void rotateAtCached() {
+  //   if (isIntaking) {
+  //     isIntaking = false;
+  //     stop();
+  //   } else {
+  //     isIntaking = true;
+  //     rotate(targetRPM);
+  //   }
+  // }
 }
