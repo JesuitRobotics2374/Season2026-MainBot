@@ -128,7 +128,7 @@ public class ShooterSubsystem extends SubsystemBase {
 
         // Kicker configuration
         TalonFXConfiguration controlCfgKicker = new TalonFXConfiguration();
-        controlCfgKicker.MotorOutput.NeutralMode = NeutralModeValue.Coast;
+        controlCfgKicker.MotorOutput.NeutralMode = NeutralModeValue.Brake;
         controlCfgKicker.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
 
         controlCfgKicker.CurrentLimits.SupplyCurrentLimitEnable = true;
@@ -175,7 +175,7 @@ public class ShooterSubsystem extends SubsystemBase {
         hood.getConfigurator().apply(slot0Configs);
         hood.getConfigurator().apply(motionMagicConfigs);
 
-        setZeroHood();
+        //setZeroHood();
 
         this.isRed = isRed;
     }

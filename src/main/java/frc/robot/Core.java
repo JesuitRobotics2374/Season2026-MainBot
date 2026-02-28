@@ -94,10 +94,14 @@ public class Core {
     public void configureShuffleBoard() {
         ShuffleboardTab tab = Shuffleboard.getTab("Test");
 
-        tab.addDouble("Speed Center", () -> shooter.getSpeedRPM());
-        tab.addDouble("Target Speed Center", () -> shooter.getTargetRPM());
+        tab.addDouble("Speed Shooter", () -> shooter.getSpeedRPM());
+        tab.addDouble("Target Speed Shooter", () -> shooter.getTargetRPM());
+        
+        tab.addDouble("Speed Intake", () -> intake.getSpeedRPM());
+        tab.addDouble("Target Speed Intake", () -> intake.getTargetRPM());
 
         SmartDashboard.putData("Auto Chooser", autoChooser);
+
     }
 
      public Command getAutonomousCommand() {
@@ -147,15 +151,16 @@ public class Core {
 
         // OPERATOR BINDINGS
 
-        operatorController.a().onTrue(new InstantCommand(() -> shooter.autoShoot()));
+        
+        operatorController.a().onTrue(intake.intakeCommand());
         operatorController.b().onTrue(hopper.changeRPMCommand(100));
         operatorController.x().onTrue(hopper.changeRPMCommand(-100));
-        operatorController.y().onTrue(intake.intakeCommand());
+        operatorController.y().onTrue(new InstantCommand(() -> shooter.autoShoot()));
 
-        operatorController.povUp().onTrue(intake.setPositionCommand(0));
+         driveController.povUp().whileTrue(intake.raiseManual()).onFalse(intake.stopPivot());
         operatorController.povRight().onTrue(intake.changeTargetRPMCommand(100));
-        operatorController.povDown().onTrue(intake.setPositionCommand(0.5));
-        operatorController.povRight().onTrue(intake.changeTargetRPMCommand(-100));
+        driveController.povDown().whileTrue(intake.lowerManual()).onFalse(intake.stopPivot());
+        operatorController.povLeft().onTrue(intake.changeTargetRPMCommand(-100));
 
         operatorController.rightBumper().onTrue(shooter.changeKickerSpeedCommand(100));
         operatorController.rightTrigger().onTrue(shooter.changeTargetRPMCommand(100));
