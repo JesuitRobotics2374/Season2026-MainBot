@@ -12,11 +12,13 @@ import com.ctre.phoenix6.swerve.SwerveRequest;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
@@ -26,6 +28,7 @@ import frc.robot.align.preciseAligning.CanAlign;
 import frc.robot.align.preciseAligning.ClimbAlign;
 import frc.robot.subsystems.drivetrain.TunerConstants;
 import frc.robot.subsystems.HopperSubsystem;
+import frc.robot.subsystems.IntakeSubsystem;
 import frc.robot.subsystems.ShooterSubsystem;
 import frc.robot.subsystems.drivetrain.DriveSubsystem;
 import frc.robot.subsystems.vision.VisionSubsystem;
@@ -61,6 +64,8 @@ public class Core {
 
     public final ShooterSubsystem shooter = new ShooterSubsystem(hopper, false, drivetrain);
 
+    public final IntakeSubsystem intake = new IntakeSubsystem();
+
     //Auto
 
      private final SendableChooser<Command> autoChooser;
@@ -89,10 +94,25 @@ public class Core {
     }
 
     public void configureShuffleBoard() {
-        ShuffleboardTab tab = Shuffleboard.getTab("Test");
+        ShuffleboardTab intakeTab = Shuffleboard.getTab("Intake");
+        ShuffleboardTab shooterTab = Shuffleboard.getTab("Shooter");
+        ShuffleboardTab Tab = Shuffleboard.getTab("Tab");
 
-        tab.addDouble("Speed Center", () -> shooter.getSpeedRPM());
-        tab.addDouble("Target Speed Center", () -> shooter.getTargetRPM());
+        intakeTab.addDouble("Speed Intake", () -> intake.getSpeedRPM());
+        intakeTab.addDouble("Target Speed Intake", () -> intake.getTargetRPM());
+        intakeTab.addBoolean("Intaking", () -> intake.isIntaking());
+
+        shooterTab.addDouble("Speed Shooter", () -> shooter.getSpeedRPM());
+        shooterTab.addDouble("Target Speed Shooter", () -> shooter.getTargetRPM());
+        shooterTab.addDouble("Speed Kicker", () -> shooter.getSpeedRPMKicker());
+        shooterTab.addDouble("Target Speed Kicker", () -> shooter.getTargetRPMKicker());
+        shooterTab.addBoolean("Shooting", () -> shooter.isRunning());
+        shooterTab.addBoolean("Kicking", () -> shooter.isKicking());
+    
+        Tab.addDouble("Drivetrain X", () -> drivetrain.getEstimator().getX());
+        Tab.addDouble("Drivetrain Y", () -> drivetrain.getEstimator().getY());
+        Tab.addDouble("Dist To Hub", () -> shooter.getDistToHub());
+        Tab.addDouble("Time", () -> DriverStation.getMatchTime());
 
         SmartDashboard.putData("Auto Chooser", autoChooser);
     }
@@ -104,77 +124,65 @@ public class Core {
     private void configureBindings() {
         // Note that X is defined as forward according to WPILib convention,
         // and Y is defined as to the left according to WPILib convention.
-        // drivetrain.setDefaultCommand(
-        //     // Drivetrain will execute this command periodically
-        //     drivetrain.applyRequest(() -> {
-        //         double axisScale = getAxisMovementScale();
-
-        //         double driverVelocityX = driveController.getLeftY() * MaxSpeed * axisScale;
-        //         double driverVelocityY = driveController.getLeftX() * MaxSpeed * axisScale;
-        //         double driverRotationalRate = -driveController.getRightX() * MaxAngularRate * axisScale;
-
-        //         // Determine which controller is active
-        //         // boolean driverActive =
-        //         //     Math.abs(driverVelocityX) > 0.05 ||
-        //         //     Math.abs(driverVelocityY) > 0.05 ||
-        //         //     Math.abs(driverRotationalRate) > 0.05;
-        //         boolean driverActive = Math.abs(driveController.getRightX()) > 0.1 || !hubYawAlign;
-
-        //         double desiredRotationalRate = driverActive ? driverRotationalRate : calculateRotationalRate();
-
-        //             return drive
-        //                 .withVelocityX(-driverVelocityX) // Limit translational acceleration forward/backward
-        //                 .withVelocityY(-driverVelocityY) // Limit translational acceleration left/right
-        //                 .withRotationalRate(desiredRotationalRate);
-        //     })
-        // );
         drivetrain.setDefaultCommand(
+            // Drivetrain will execute this command periodically
             drivetrain.applyRequest(() -> {
-            
-            return drive
-                        .withVelocityX(0) // Limit translational acceleration forward/backward
-                        .withVelocityY(0) // Limit translational acceleration left/right
-                        .withRotationalRate(0);
+                double axisScale = getAxisMovementScale();
+
+                double driverVelocityX = driveController.getLeftY() * MaxSpeed * axisScale;
+                double driverVelocityY = driveController.getLeftX() * MaxSpeed * axisScale;
+                double driverRotationalRate = -driveController.getRightX() * MaxAngularRate * axisScale;
+
+                // Determine which controller is active
+                // boolean driverActive =
+                //     Math.abs(driverVelocityX) > 0.05 ||
+                //     Math.abs(driverVelocityY) > 0.05 ||
+                //     Math.abs(driverRotationalRate) > 0.05;
+                boolean driverActive = Math.abs(driveController.getRightX()) > 0.1 || !hubYawAlign;
+
+                double desiredRotationalRate = driverActive ? driverRotationalRate : calculateRotationalRate();
+
+                    return drive
+                        .withVelocityX(-driverVelocityX) // Limit translational acceleration forward/backward
+                        .withVelocityY(-driverVelocityY) // Limit translational acceleration left/right
+                        .withRotationalRate(desiredRotationalRate);
             })
         );
+
+        // DRIVER BINDINGS
 
         // reset the field-centric heading on left bumper press
         driveController.back().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
 
-        // driveController.povUp().onTrue(new InstantCommand(() -> {
-        //     fixYawToHub.schedule();
-        //     hubYawAlign = true;}));
+        driveController.leftTrigger().onTrue(new InstantCommand(() -> {
+            CommandScheduler.getInstance().schedule(fixYawToHub);
+            hubYawAlign = true;}));
 
-        // driveController.povDown().onTrue(new InstantCommand(() -> {
-        //     fixYawToHub.cancel(); 
-        //     hubYawAlign = false;}));
+        driveController.leftTrigger().onFalse(new InstantCommand(() -> {
+            CommandScheduler.getInstance().cancel(fixYawToHub);
+            hubYawAlign = false;}));
 
-        // operatorController.a().onTrue(hopper.roll());
-        // operatorController.b().onTrue(hopper.purge());
+        // OPERATOR BINDINGS
+
         
-        // operatorController.x().onTrue(hopper.runOnce(() -> hopper.stopMotor()));
-        // operatorController.y().onTrue(hopper.stopCommand());
-        
-        // operatorController.povUp().onTrue(hopper.pulse());
+        operatorController.a().toggleOnTrue(intake.intakeCommand());
+        operatorController.b().onTrue(hopper.changeRPMCommand(100));
+        operatorController.x().onTrue(hopper.changeRPMCommand(-100));
+        operatorController.y().onTrue(new InstantCommand(() -> shooter.autoShoot()));
 
-        operatorController.a().onTrue(new InstantCommand(() -> shooter.setKickerControl()));
-        operatorController.b().onTrue(hopper.roll());
+        operatorController.povUp().whileTrue(intake.raiseManual()).onFalse(intake.stopPivot());
+        operatorController.povRight().onTrue(intake.changeTargetRPMCommand(100));
+        operatorController.povDown().whileTrue(intake.lowerManual()).onFalse(intake.stopPivot());
+        operatorController.povLeft().onTrue(intake.changeTargetRPMCommand(-100));
 
-        // operatorController.povRight().onTrue(shooter.moveHood(0.5));
-        // operatorController.povLeft().onTrue(shooter.moveHood(0.0));
-        // operatorController.b().onTrue(new InstantCommand(() -> shooter.zeroHood()));
+        operatorController.rightBumper().onTrue(new InstantCommand(() -> shooter.changeKickerTargetRPM(100)));
+        operatorController.rightTrigger().onTrue(new InstantCommand(() -> shooter.changeTargetRPM(100)));
+        operatorController.leftBumper().onTrue(new InstantCommand(() -> shooter.changeKickerTargetRPM(-100)));
+        operatorController.leftTrigger().onTrue(new InstantCommand(() -> shooter.changeTargetRPM(-100)));
 
-        operatorController.x().onTrue(new InstantCommand(() -> shooter.stop()));
-        operatorController.y().onTrue(new InstantCommand(() -> shooter.stopKicker()));
+        operatorController.start().onTrue(hopper.pulseCommand());
+        operatorController.back().onTrue(new InstantCommand(() -> shooter.toggleAutoRange()));
 
-        operatorController.start().onTrue(new InstantCommand(() -> shooter.autoShoot()));
-
-        operatorController.povUp().onTrue(new InstantCommand(() -> shooter.changeTargetRPM(100)));
-        operatorController.povDown().onTrue(new InstantCommand(() -> shooter.changeTargetRPM(-100)));
-
-// Rotate kicker
-// StopAll
-// moveHood (BE CAREFUL, NOT TESTED)
 
         drivetrain.registerTelemetry(logger::telemeterize);
     }

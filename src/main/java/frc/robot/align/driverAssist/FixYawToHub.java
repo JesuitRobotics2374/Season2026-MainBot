@@ -7,8 +7,11 @@ import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.subsystems.drivetrain.DriveSubsystem;
+import frc.robot.utils.Ballistics;
+import frc.robot.utils.Constants;
 
 public class FixYawToHub extends Command {
 
@@ -53,11 +56,18 @@ public class FixYawToHub extends Command {
 
         double dt = Utils.getCurrentTimeSeconds() - drivetrain.getTimeSinceLastEstimatorUpdate();
 
-        double error_x = drivetrain.getCurrentRobotChassisSpeeds().vxMetersPerSecond * dt;
-        double error_y = drivetrain.getCurrentRobotChassisSpeeds().vyMetersPerSecond * dt;
+        ChassisSpeeds speeds = drivetrain.getCurrentRobotChassisSpeeds();
+
+        double vx = speeds.vxMetersPerSecond;
+        double vy = speeds.vyMetersPerSecond;
+
+        double error_x = vx * dt;
+        double error_y = vy * dt;
+
+        double velErrorY = Ballistics.calculateZ(Ballistics.CalculateNeededShooterSpeed(delta_x, vx, vy, Constants.HOOD_ZERO_ANGLE), vx, vy, Constants.HOOD_ZERO_ANGLE);
 
         delta_x += error_x;
-        delta_y += error_y;
+        delta_y += error_y; // sign MIGHT be wrong
 
         Rotation2d rotation = new Rotation2d(Math.atan2(delta_y, delta_x));
         
