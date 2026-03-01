@@ -21,8 +21,7 @@ public class Ballistics {
     private static double time; // seconds (s)
 
     // Other constants
-    private static final double deltaH = 1; // meters (m)
-    private static final double lambda = 45 * (Math.PI) / 180; // radians (rad)
+    private static final double deltaH = 0.4892; // meters (m)
 
     private static final double m = 0.215; // kilograms (kg)
     private static final double g = -9.8; // meters per second squared (m/s^2)
@@ -35,7 +34,7 @@ public class Ballistics {
 
     private static final double dt = 0.001; // seconds (s)
 
-    private static double calculateX(double Vi, double ViRobotX, double ViRobotY) {
+    public static double calculateX(double Vi, double ViRobotX, double ViRobotY, double lambda) {
         boolean hasReachedPeak = false;
 
         x = 0;
@@ -96,7 +95,129 @@ public class Ballistics {
         return x;
     }
 
-    public static double CalculateNeededShooterSpeed(double distanceX, double VRobotX, double VRobotY) {
+    public static double calculateY(double Vi, double ViRobotX, double ViRobotY, double lambda) {
+        boolean hasReachedPeak = false;
+
+        x = 0;
+        y = 0;
+        z = 0;
+        theta = 0;
+
+        Vx = Vi * Math.cos(lambda) + ViRobotX;
+        Vy = ViRobotY;
+        Vz = Vi * Math.sin(lambda);
+
+        double Vel = Math.sqrt(Vx * Vx + Vy * Vy + Vz * Vz);
+
+        Ax = -(drag * Vel * Vx) / m;
+        Ay = -(drag * Vel * Vy) / m;
+        Az = g - (drag * Vel * Vz) / m;
+
+        time = 0;
+
+        while (!hasReachedPeak) {
+            time += dt;
+
+            Vx += Ax * dt;
+            Vy += Ay * dt;
+            Vz += Az * dt;
+
+            Vel = Math.sqrt(Vx * Vx + Vy * Vy + Vz * Vz);
+
+            Ax = -(drag * Vel * Vx) / m;
+            Ay = -(drag * Vel * Vy) / m;
+            Az = g - (drag * Vel * Vz) / m;
+
+            x += Vx * dt;
+            y += Vy * dt;
+            z += Vz * dt;
+
+            hasReachedPeak = Vz <= 0;
+        }
+
+        while (z > deltaH) {
+            time += dt;
+
+            Vx += Ax * dt;
+            Vy += Ay * dt;
+            Vz += Az * dt;
+
+            Vel = Math.sqrt(Vx * Vx + Vy * Vy + Vz * Vz);
+
+            Ax = -(drag * Vel * Vx) / m;
+            Ay = -(drag * Vel * Vy) / m;
+            Az = g - (drag * Vel * Vz) / m;
+
+            x += Vx * dt;
+            y += Vy * dt;
+            z += Vz * dt;
+        }
+
+        return y;
+    }
+
+    public static double calculateZ(double Vi, double ViRobotX, double ViRobotY, double lambda) {
+        boolean hasReachedPeak = false;
+
+        x = 0;
+        y = 0;
+        z = 0;
+        theta = 0;
+
+        Vx = Vi * Math.cos(lambda) + ViRobotX;
+        Vy = ViRobotY;
+        Vz = Vi * Math.sin(lambda);
+
+        double Vel = Math.sqrt(Vx * Vx + Vy * Vy + Vz * Vz);
+
+        Ax = -(drag * Vel * Vx) / m;
+        Ay = -(drag * Vel * Vy) / m;
+        Az = g - (drag * Vel * Vz) / m;
+
+        time = 0;
+
+        while (!hasReachedPeak) {
+            time += dt;
+
+            Vx += Ax * dt;
+            Vy += Ay * dt;
+            Vz += Az * dt;
+
+            Vel = Math.sqrt(Vx * Vx + Vy * Vy + Vz * Vz);
+
+            Ax = -(drag * Vel * Vx) / m;
+            Ay = -(drag * Vel * Vy) / m;
+            Az = g - (drag * Vel * Vz) / m;
+
+            x += Vx * dt;
+            y += Vy * dt;
+            z += Vz * dt;
+
+            hasReachedPeak = Vz <= 0;
+        }
+
+        while (z > deltaH) {
+            time += dt;
+
+            Vx += Ax * dt;
+            Vy += Ay * dt;
+            Vz += Az * dt;
+
+            Vel = Math.sqrt(Vx * Vx + Vy * Vy + Vz * Vz);
+
+            Ax = -(drag * Vel * Vx) / m;
+            Ay = -(drag * Vel * Vy) / m;
+            Az = g - (drag * Vel * Vz) / m;
+
+            x += Vx * dt;
+            y += Vy * dt;
+            z += Vz * dt;
+        }
+
+        return z;
+    }
+
+    public static double CalculateNeededShooterSpeed(double distanceX, double VRobotX, double VRobotY, double lambda) {
         double low = 5.0; // minimum shooter speed
         double high = 20.0; // maximum shooter speed
         double tolerance = 0.0001; // acceptable error in meters
@@ -108,7 +229,7 @@ public class Ballistics {
             iterations++;
 
             mid = (low + high) / 2.0;
-            double x = calculateX(mid, VRobotX, VRobotY);
+            double x = calculateX(mid, VRobotX, VRobotY, lambda);
 
             if (x < distanceX - tolerance) {
                 low = mid; // need more speed
@@ -118,13 +239,26 @@ public class Ballistics {
                 break; // within tolerance
             }
         }
-        System.out.println("iterations: " + iterations);
         return mid;
     }
 
     public static void main(String[] args) {
 
-        System.out.println(CalculateNeededShooterSpeed(5, 1, 2));
+        double hubX = 4.625594;
+        double roboX = 1;
+
+        double hubY = 4.034356;
+        double roboY = 6.9;
+
+        // double dist = Math.sqrt(Math.pow(hubX - roboX, 2) + Math.pow(hubY - roboY, 2)) + 0.24;
+
+        // System.out.println(CalculateNeededShooterSpeed(dist, 0, 0, 45 * Math.PI / 180));
+
+        double vx = 0;
+        double vy = 3;
+
+        System.out.println(Ballistics.calculateZ(Ballistics.CalculateNeededShooterSpeed(2, vx, vy, Constants.HOOD_ZERO_ANGLE), vx, vy, Constants.HOOD_ZERO_ANGLE));
+        // System.out.println(CalculateNeededShooterSpeed(5, 2, 3));
 
         // double ViMin = 5; // minimum initial velocity (m/s)
         // double ViMax = 15; // maximum initial velocity (m/s)
@@ -169,5 +303,6 @@ public class Ballistics {
         // System.out.println("x for estimated vi: " + calculateX(ViEstimate));
 
         // System.out.println(calculateY(ViEstimate, 1));
+        // }
     }
 }

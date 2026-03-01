@@ -228,7 +228,10 @@ public class Camera {
 
         // No valid tags → fall back to single-tag trust
         if (numTags == 0) {
-            return kSingleTagStdDevs;
+            return VecBuilder.fill(
+                    Double.MAX_VALUE,
+                    Double.MAX_VALUE,
+                    Double.MAX_VALUE);
         }
 
         avgDist /= numTags;
