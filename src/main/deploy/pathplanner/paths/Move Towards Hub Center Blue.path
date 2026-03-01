@@ -3,25 +3,25 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 0.864,
-        "y": 0.673166666666666
+        "x": 0.3903566333808842,
+        "y": 0.6515406562054205
       },
       "prevControl": null,
       "nextControl": {
-        "x": 1.8639999999999999,
-        "y": 0.673166666666666
+        "x": 1.3903566333808839,
+        "y": 0.6515406562054205
       },
       "isLocked": false,
       "linkedName": "End To Blue Human Station"
     },
     {
       "anchor": {
-        "x": 2.6182222222222227,
-        "y": 4.229888888888889
+        "x": 2.589928673323823,
+        "y": 4.028530670470755
       },
       "prevControl": {
-        "x": 3.6182222222222227,
-        "y": 4.229888888888889
+        "x": 2.4087874465049923,
+        "y": 2.941683309557775
       },
       "nextControl": null,
       "isLocked": false,
@@ -59,7 +59,7 @@
   "folder": null,
   "idealStartingState": {
     "velocity": 0,
-    "rotation": 0.0
+    "rotation": 90.0
   },
   "useDefaultConstraints": true
 }

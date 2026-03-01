@@ -5,39 +5,41 @@
     "data": {
       "commands": [
         {
-          "type": "path",
+          "type": "parallel",
           "data": {
-            "pathName": "Right Clearance"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "far target rpm"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "Shoot"
-          }
-        },
-        {
-          "type": "wait",
-          "data": {
-            "waitTime": 3.0
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "Stop Shoot"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "Back to Human Station Blue"
+            "commands": [
+              {
+                "type": "path",
+                "data": {
+                  "pathName": "Back to Human Station Blue"
+                }
+              },
+              {
+                "type": "sequential",
+                "data": {
+                  "commands": [
+                    {
+                      "type": "named",
+                      "data": {
+                        "name": "Deploy Intake"
+                      }
+                    },
+                    {
+                      "type": "wait",
+                      "data": {
+                        "waitTime": 2.0
+                      }
+                    },
+                    {
+                      "type": "named",
+                      "data": {
+                        "name": "Stop Deploy"
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
           }
         },
         {
@@ -55,25 +57,7 @@
         {
           "type": "named",
           "data": {
-            "name": "1.5m target rpm"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
             "name": "Shoot"
-          }
-        },
-        {
-          "type": "wait",
-          "data": {
-            "waitTime": 3.0
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "Stop Shoot"
           }
         }
       ]
