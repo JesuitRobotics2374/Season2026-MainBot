@@ -81,7 +81,7 @@ public class ShooterSubsystem extends SubsystemBase {
     private double hoodTargetPos;
 
     // Auto-shoot state flags
-    private boolean doAutoShoot = false;
+    private boolean doAutoShoot = true;
     private boolean autoShooting = false;
     private final boolean useTable = true;
     private boolean isRed;

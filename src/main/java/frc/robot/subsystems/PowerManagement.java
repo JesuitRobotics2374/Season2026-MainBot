@@ -13,7 +13,6 @@ import frc.robot.subsystems.drivetrain.DriveSubsystem;
 
 public class PowerManagement extends SubsystemBase {
 
-  private ClimberSubsystem climber;
   private HopperSubsystem hopper;
   private IntakeSubsystem intake;
   private ShooterSubsystem shooter;
@@ -23,9 +22,8 @@ public class PowerManagement extends SubsystemBase {
   private double steerLimit;
 
   /** Creates a new PowerManagementSubsystem. */
-  public PowerManagement(DriveSubsystem drivetrain, ClimberSubsystem climber, HopperSubsystem hopper,
+  public PowerManagement(DriveSubsystem drivetrain, HopperSubsystem hopper,
       IntakeSubsystem intake, ShooterSubsystem shooter) {
-    this.climber = climber;
     this.hopper = hopper;
     this.intake = intake;
     this.shooter = shooter;
