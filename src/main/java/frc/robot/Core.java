@@ -32,6 +32,7 @@ import frc.robot.align.preciseAligning.ClimbAlign;
 import frc.robot.subsystems.drivetrain.TunerConstants;
 import frc.robot.subsystems.HopperSubsystem;
 import frc.robot.subsystems.IntakeSubsystem;
+import frc.robot.subsystems.PowerManagement;
 import frc.robot.subsystems.ShooterSubsystem;
 import frc.robot.subsystems.drivetrain.DriveSubsystem;
 import frc.robot.subsystems.vision.VisionSubsystem;
@@ -43,12 +44,10 @@ import com.pathplanner.lib.path.PathPlannerPath;
 import com.pathplanner.lib.auto.NamedCommands;
 import com.pathplanner.lib.commands.PathPlannerAuto;
 
-
-
 public class Core {
     //Swerve Stuff
-    private double MaxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond) * 0.75; // kSpeedAt12Volts desired top speed
-    private double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond); // 3/4 of a rotation per second
+    private double MaxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond) * 0.5; // kSpeedAt12Volts desired top speed
+    private double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond) * 0.65; // 3/4 of a rotation per second
                                                                                       // max angular velocity
     private Command pathfindingCommand;
 
@@ -75,6 +74,8 @@ public class Core {
     public final ShooterSubsystem shooter = new ShooterSubsystem(hopper, false, drivetrain);
 
     public final IntakeSubsystem intake = new IntakeSubsystem();
+
+    public final PowerManagement powerManager = new PowerManagement(drivetrain, hopper, intake, shooter);
 
     //Auto
 
@@ -110,6 +111,9 @@ public class Core {
         
         NamedCommands.registerCommand("Start Intake", intake.intakeCommand());
         NamedCommands.registerCommand("Stop Intake", intake.stopCommand());
+
+        NamedCommands.registerCommand("Deploy Intake", intake.lowerManual());
+        NamedCommands.registerCommand("Stop Deploy", intake.stopPivot());
     }
 
     public void configureShuffleBoard() {
