@@ -11,7 +11,7 @@
               {
                 "type": "path",
                 "data": {
-                  "pathName": "Back to Human Station Blue"
+                  "pathName": "Blue right shoot to nz"
                 }
               },
               {
@@ -43,15 +43,41 @@
           }
         },
         {
-          "type": "wait",
+          "type": "parallel",
           "data": {
-            "waitTime": 3.0
+            "commands": [
+              {
+                "type": "path",
+                "data": {
+                  "pathName": "Blue nz sweep right to left"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "Start Intake"
+                }
+              }
+            ]
           }
         },
         {
-          "type": "path",
+          "type": "parallel",
           "data": {
-            "pathName": "Move Towards Hub Center Blue"
+            "commands": [
+              {
+                "type": "path",
+                "data": {
+                  "pathName": "Blue left nz to shoot"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "Stop Intake"
+                }
+              }
+            ]
           }
         },
         {

@@ -4,38 +4,54 @@
     {
       "anchor": {
         "x": 3.560328102710413,
-        "y": 2.0877318116975756
+        "y": 6.059900142653353
       },
       "prevControl": null,
       "nextControl": {
-        "x": 3.3760395676602277,
-        "y": 2.2566629688269124
+        "x": 2.8875178316690437,
+        "y": 5.387089871611984
       },
       "isLocked": false,
-      "linkedName": "Start Blue Right"
+      "linkedName": "Blue Left Bump"
     },
     {
       "anchor": {
-        "x": 0.3903566333808842,
-        "y": 0.6515406562054205
+        "x": 5.268231098430813,
+        "y": 5.658801711840229
       },
       "prevControl": {
-        "x": 0.8678344111586619,
-        "y": 1.2459517673165306
+        "x": 4.3623708743065475,
+        "y": 5.611946872661388
+      },
+      "nextControl": {
+        "x": 6.018673323823109,
+        "y": 5.697617689015692
+      },
+      "isLocked": false,
+      "linkedName": null
+    },
+    {
+      "anchor": {
+        "x": 6.872624821680876,
+        "y": 6.680955777459733
+      },
+      "prevControl": {
+        "x": 6.199814550639508,
+        "y": 5.9693295292429
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": "End To Blue Human Station"
+      "linkedName": "Blue Left NZ"
     }
   ],
   "rotationTargets": [],
   "constraintZones": [
     {
       "name": "Constraints Zone",
-      "minWaypointRelativePos": 0.7832545577312625,
-      "maxWaypointRelativePos": 1.0,
+      "minWaypointRelativePos": 0.469952734638757,
+      "maxWaypointRelativePos": 0.9669142471303187,
       "constraints": {
-        "maxVelocity": 1.0,
+        "maxVelocity": 1.5,
         "maxAcceleration": 3.0,
         "maxAngularVelocity": 540.0,
         "maxAngularAcceleration": 720.0,
@@ -44,18 +60,7 @@
       }
     }
   ],
-  "pointTowardsZones": [
-    {
-      "fieldPosition": {
-        "x": 4.625,
-        "y": 4.05
-      },
-      "rotationOffset": 0.0,
-      "minWaypointRelativePos": 0.10755395683453041,
-      "maxWaypointRelativePos": 0.75,
-      "name": "Point Towards Hub"
-    }
-  ],
+  "pointTowardsZones": [],
   "eventMarkers": [],
   "globalConstraints": {
     "maxVelocity": 3.0,
@@ -66,14 +71,14 @@
     "unlimited": false
   },
   "goalEndState": {
-    "velocity": 0,
-    "rotation": 90.0
+    "velocity": 1.5,
+    "rotation": 12.828782871455415
   },
   "reversed": false,
   "folder": null,
   "idealStartingState": {
     "velocity": 0,
-    "rotation": 0.0
+    "rotation": -0.3769404795970602
   },
   "useDefaultConstraints": true
 }

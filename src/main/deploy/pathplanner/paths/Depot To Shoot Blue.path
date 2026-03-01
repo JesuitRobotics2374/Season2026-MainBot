@@ -3,32 +3,37 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 2.589928673323823,
-        "y": 4.028530670470755
+        "x": 0.3903566333808839,
+        "y": 6.022866666666666
       },
       "prevControl": null,
       "nextControl": {
-        "x": 2.8393749627879754,
-        "y": 4.045160423101699
+        "x": 1.6842225392296715,
+        "y": 6.189286733238232
       },
       "isLocked": false,
-      "linkedName": "Hub Center Blue"
+      "linkedName": "Depot Intake"
     },
     {
       "anchor": {
-        "x": 1.8581555555555558,
-        "y": 3.8303666666666665
+        "x": 2.589928673323823,
+        "y": 4.028530670470755
       },
       "prevControl": {
-        "x": 1.609019115994336,
-        "y": 3.8096052967032312
+        "x": 2.471064511016008,
+        "y": 4.396473450626089
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": "Hub Center Blue Backwards"
+      "linkedName": "Hub Center Blue"
     }
   ],
-  "rotationTargets": [],
+  "rotationTargets": [
+    {
+      "waypointRelativePos": 0.2388059701492532,
+      "rotationDegrees": -90.67902649042388
+    }
+  ],
   "constraintZones": [],
   "pointTowardsZones": [],
   "eventMarkers": [],
@@ -42,13 +47,13 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": -179.51853419416162
+    "rotation": 0.2864765102770711
   },
   "reversed": false,
   "folder": null,
   "idealStartingState": {
     "velocity": 0,
-    "rotation": 0.2864765102770711
+    "rotation": -90.33408239174854
   },
   "useDefaultConstraints": true
 }

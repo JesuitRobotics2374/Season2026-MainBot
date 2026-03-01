@@ -3,29 +3,29 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 3.5342000000000002,
-        "y": 0.760866666666667
+        "x": 1.2442555555555554,
+        "y": 5.9643999999999995
       },
       "prevControl": null,
       "nextControl": {
-        "x": 3.2613555555555562,
-        "y": 0.731633333333334
+        "x": 1.4556277813132985,
+        "y": 5.830901752153005
       },
       "isLocked": false,
-      "linkedName": null
+      "linkedName": "blue depot"
     },
     {
       "anchor": {
-        "x": 2.988511111111111,
-        "y": 1.1311555555555548
+        "x": 2.589928673323823,
+        "y": 4.028530670470755
       },
       "prevControl": {
-        "x": 2.988511111111111,
-        "y": 0.8485666666666656
+        "x": 2.4820647989978215,
+        "y": 4.254064225879667
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": "p1-e"
+      "linkedName": "Hub Center Blue"
     }
   ],
   "rotationTargets": [],
@@ -41,8 +41,8 @@
     "unlimited": false
   },
   "goalEndState": {
-    "velocity": 5.0,
-    "rotation": 60.151696830700786
+    "velocity": 0,
+    "rotation": 0.2864765102770711
   },
   "reversed": false,
   "folder": null,

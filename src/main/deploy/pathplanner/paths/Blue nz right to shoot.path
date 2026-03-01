@@ -3,39 +3,55 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 3.560328102710413,
-        "y": 2.0877318116975756
+        "x": 7.687760342368046,
+        "y": 1.2467189728958648
       },
       "prevControl": null,
       "nextControl": {
-        "x": 3.3760395676602277,
-        "y": 2.2566629688269124
+        "x": 7.480741797432238,
+        "y": 0.17281027104136926
       },
       "isLocked": false,
-      "linkedName": "Start Blue Right"
+      "linkedName": "Blue Right NZ end"
     },
     {
       "anchor": {
-        "x": 0.3903566333808842,
-        "y": 0.6515406562054205
+        "x": 5.6046362339514975,
+        "y": 2.3465049928673327
       },
       "prevControl": {
-        "x": 0.8678344111586619,
-        "y": 1.2459517673165306
+        "x": 6.961310371096846,
+        "y": 1.7543852135837696
+      },
+      "nextControl": {
+        "x": 4.247962096806149,
+        "y": 2.938624772150896
+      },
+      "isLocked": false,
+      "linkedName": null
+    },
+    {
+      "anchor": {
+        "x": 2.589928673323823,
+        "y": 4.028530670470755
+      },
+      "prevControl": {
+        "x": 1.8980731177682664,
+        "y": 1.3975306704707542
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": "End To Blue Human Station"
+      "linkedName": "Hub Center Blue"
     }
   ],
   "rotationTargets": [],
   "constraintZones": [
     {
       "name": "Constraints Zone",
-      "minWaypointRelativePos": 0.7832545577312625,
-      "maxWaypointRelativePos": 1.0,
+      "minWaypointRelativePos": 1.00472653612424,
+      "maxWaypointRelativePos": 1.3180283592167508,
       "constraints": {
-        "maxVelocity": 1.0,
+        "maxVelocity": 1.5,
         "maxAcceleration": 3.0,
         "maxAngularVelocity": 540.0,
         "maxAngularAcceleration": 720.0,
@@ -44,18 +60,7 @@
       }
     }
   ],
-  "pointTowardsZones": [
-    {
-      "fieldPosition": {
-        "x": 4.625,
-        "y": 4.05
-      },
-      "rotationOffset": 0.0,
-      "minWaypointRelativePos": 0.10755395683453041,
-      "maxWaypointRelativePos": 0.75,
-      "name": "Point Towards Hub"
-    }
-  ],
+  "pointTowardsZones": [],
   "eventMarkers": [],
   "globalConstraints": {
     "maxVelocity": 3.0,
@@ -67,12 +72,12 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": 90.0
+    "rotation": 0.2864765102770711
   },
   "reversed": false,
   "folder": null,
   "idealStartingState": {
-    "velocity": 0,
+    "velocity": 1.5,
     "rotation": 0.0
   },
   "useDefaultConstraints": true
