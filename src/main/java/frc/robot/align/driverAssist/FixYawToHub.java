@@ -22,7 +22,7 @@ public class FixYawToHub extends Command {
     private final SlewRateLimiter yawRateLimiter = new SlewRateLimiter(6.0);
 
     // Position tolerance
-    private static final double YAW_TOLERANCE = 3 * Math.PI / 180; // radians
+    private static final double YAW_TOLERANCE = 5 * Math.PI / 180; // radians
 
     // Maximum output values
     private static final double MAX_ANGULAR_SPEED = 2;
@@ -42,17 +42,17 @@ public class FixYawToHub extends Command {
 
     private Translation2d getAbsoluteTranslation(boolean isRed) {
         if (isRed) {
-            return new Translation2d(); // TODO
+            return new Translation2d(11.915394, 4.034536); // TODO
         } else {
             return new Translation2d(4.625594, 4.034536);
         }
     }
 
-    //private double tempA = 0;
+    private double printClock = 0;
 
     private double calculateRelativeTheta(Pose2d robotPose) {
         double delta_x = absoluteTargetTranslation.getX() - robotPose.getX();
-        double delta_y = absoluteTargetTranslation.getY() - robotPose.getY();
+        double delta_y = absoluteTargetTranslation.getY() - robotPose.getY() - Constants.CENTER_TO_SHOOTER_Y * 10;
 
         double dt = Utils.getCurrentTimeSeconds() - drivetrain.getTimeSinceLastEstimatorUpdate();
 
@@ -70,8 +70,15 @@ public class FixYawToHub extends Command {
         delta_y += error_y; // sign MIGHT be wrong
 
         Rotation2d rotation = new Rotation2d(Math.atan2(delta_y, delta_x));
-        
-        //tempA = rotation.getRadians();
+
+        printClock++;
+
+        if (printClock >= 5) {
+            printClock = 0;
+            System.out.println("DVE: " + drivetrain.getState().Pose);
+            System.out.println("ERRX: " + error_x);
+            System.out.println("ERRY: " + error_y);
+        }
 
         return robotPose.getRotation().minus(rotation).getRadians();
     }
@@ -85,7 +92,7 @@ public class FixYawToHub extends Command {
         this.absoluteTargetTranslation = getAbsoluteTranslation(isRed);
 
         // Yaw PID coefficients
-        yawController = new PIDController(5, 0.7, 2.5);
+        yawController = new PIDController(5, 0.7, 4);
         yawController.setTolerance(YAW_TOLERANCE);
         yawController.enableContinuousInput(-Math.PI, Math.PI);
     }

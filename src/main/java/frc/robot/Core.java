@@ -27,7 +27,6 @@ import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.align.alignUtils.Target;
 import frc.robot.align.driverAssist.FixYawToHub;
-import frc.robot.align.preciseAligning.CanAlign;
 import frc.robot.align.preciseAligning.ClimbAlign;
 import frc.robot.subsystems.drivetrain.TunerConstants;
 import frc.robot.subsystems.HopperSubsystem;
@@ -46,7 +45,7 @@ import com.pathplanner.lib.commands.PathPlannerAuto;
 
 public class Core {
     //Swerve Stuff
-    private double MaxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond) * 0.5; // kSpeedAt12Volts desired top speed
+    private double MaxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond) * 0.7; // kSpeedAt12Volts desired top speed
     private double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond) * 0.65; // 3/4 of a rotation per second
                                                                                       // max angular velocity
     private Command pathfindingCommand;
@@ -90,7 +89,7 @@ public class Core {
     private boolean hubYawAlign = false;
 
     private static final double TranslationalAccelerationLimit = 10; // meters per second^2
-    private static final double RotationalAccelerationLimit = Math.PI * 5.5; // radians per second^2
+    private static final double RotationalAccelerationLimit = Math.PI * 7.5; // radians per second^2
 
     private final SlewRateLimiter xRateLimiter = new SlewRateLimiter(TranslationalAccelerationLimit);
     private final SlewRateLimiter yRateLimiter = new SlewRateLimiter(TranslationalAccelerationLimit);
@@ -150,7 +149,17 @@ public class Core {
         drivetrain.setDefaultCommand(
             // Drivetrain will execute this command periodically
             drivetrain.applyRequest(() -> {
-                double axisScale = getAxisMovementScale();
+                double axisScale = 1;
+
+                if (getBumpAxisMovementScale()) {
+                    axisScale = 0.5;
+                }
+
+                double triggerScale = getTriggerAxisMovementScale();
+
+                if (triggerScale != 1) {
+                    axisScale = triggerScale;
+                }
 
                 double driverVelocityX = driveController.getLeftY() * MaxSpeed * axisScale;
                 double driverVelocityY = driveController.getLeftX() * MaxSpeed * axisScale;
@@ -193,9 +202,10 @@ public class Core {
         operatorController.x().onTrue(hopper.changeRPMCommand(-100));
         operatorController.y().onTrue(new InstantCommand(() -> shooter.autoShoot()));
 
-        operatorController.povUp().whileTrue(intake.raiseManual()).onFalse(intake.stopPivot());
+        
+        operatorController.povUp().whileTrue(intake.lowerManual()).onFalse(intake.stopPivot());
         operatorController.povRight().onTrue(intake.changeTargetRPMCommand(100));
-        operatorController.povDown().whileTrue(intake.lowerManual()).onFalse(intake.stopPivot());
+        operatorController.povDown().whileTrue(intake.raiseManual()).onFalse(intake.stopPivot());
         operatorController.povLeft().onTrue(intake.changeTargetRPMCommand(-100));
 
         operatorController.rightBumper().onTrue(new InstantCommand(() -> shooter.changeKickerTargetRPM(100)));
@@ -210,8 +220,12 @@ public class Core {
         drivetrain.registerTelemetry(logger::telemeterize);
     }
 
-    public double getAxisMovementScale() {
+    public double getTriggerAxisMovementScale() {
         return (1 - (driveController.getRightTriggerAxis() * 0.75));
+    }
+
+    public boolean getBumpAxisMovementScale() {
+        return driveController.rightBumper().getAsBoolean();
     }
 
     private double calculateRotationalRate() {
