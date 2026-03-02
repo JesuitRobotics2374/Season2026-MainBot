@@ -52,7 +52,9 @@ public class FixYawToHub extends Command {
 
     private double calculateRelativeTheta(Pose2d robotPose) {
         double delta_x = absoluteTargetTranslation.getX() - robotPose.getX();
-        double delta_y = absoluteTargetTranslation.getY() - robotPose.getY() - Constants.CENTER_TO_SHOOTER_Y * 10;
+        double delta_y = absoluteTargetTranslation.getY() - robotPose.getY();
+
+        double hyp = Math.atan(delta_y, delta_x);
 
         double dt = Utils.getCurrentTimeSeconds() - drivetrain.getTimeSinceLastEstimatorUpdate();
 
@@ -71,6 +73,8 @@ public class FixYawToHub extends Command {
 
         Rotation2d rotation = new Rotation2d(Math.atan2(delta_y, delta_x));
 
+        Rotation2d shooterFix = new Rotation2d(Math.atan(Constants.CENTER_TO_SHOOTER_Y, hyp);
+
         printClock++;
 
         if (printClock >= 5) {
@@ -80,7 +84,7 @@ public class FixYawToHub extends Command {
             System.out.println("ERRY: " + delta_y);
         }
 
-        return robotPose.getRotation().minus(rotation).getRadians();
+        return robotPose.getRotation().minus(rotation).minus(shooterFix).getRadians(); // may be .plus for shooterFix
     }
 
     public FixYawToHub(DriveSubsystem drivetrain, boolean isRed) {
