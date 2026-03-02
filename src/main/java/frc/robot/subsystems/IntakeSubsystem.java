@@ -35,6 +35,9 @@ public class IntakeSubsystem extends SubsystemBase {
   private double MAX_RPM = 5000;
   private double targetRPM = 4000;
 
+  private double purgeRPM = -2000;
+  private double purgeTime = 0.1; // seconds
+
   private final double RPM_TO_RPS = 1.0 / 60.0;
   private static final double CURRENT_LIMIT = 60.0; // Amps
 
@@ -180,6 +183,21 @@ public class IntakeSubsystem extends SubsystemBase {
         },
         () -> false,
         this);
+  }
+
+  public Command purgeCommand() {
+    return new FunctionalCommand(
+      () -> {
+        int clock = 0;
+      },
+      () -> {
+        rotate(purgeRPM);
+      }
+      interrupted -> {
+        stop();
+      },
+      () -> clock > purgeTime / 0.02,
+      this);
   }
 
   public Command stopCommand() {
