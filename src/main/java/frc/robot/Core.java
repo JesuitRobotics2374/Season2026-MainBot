@@ -7,11 +7,14 @@ package frc.robot;
 import static edu.wpi.first.units.Units.*;
 
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
+import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
+import edu.wpi.first.units.measure.Voltage;
+import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
@@ -98,6 +101,7 @@ public class Core {
         tab.addDouble("Speed", () -> drivetrain.getRobotSpeed());
         tab.addDouble("Shooter RPM", () -> m_shooter.getSpeedRpm());
         tab.addBoolean("Intaking", () -> m_intake.getIntaking());
+        tab.addDouble("Voltage", () -> RobotController.getBatteryVoltage());
         
     }
 
