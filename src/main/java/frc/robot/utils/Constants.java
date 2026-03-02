@@ -8,7 +8,7 @@ public class Constants {
     public static final AprilTagFields FIELD_LAYOUT = AprilTagFields.k2026RebuiltWelded;
 
     public static final double CENTER_TO_SHOOTER_X = 0.41275;
-    public static final double CENTER_TO_SHOOTER_Y = 0.0508;
+    public static final double CENTER_TO_SHOOTER_Y = 0.19;
     public static final double HOOD_ZERO_ANGLE = 63.7;
     
     public static final double AUTO_X_OFFSET = 0;
