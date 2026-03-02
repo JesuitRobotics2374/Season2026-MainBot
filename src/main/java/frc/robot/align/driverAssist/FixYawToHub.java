@@ -76,8 +76,8 @@ public class FixYawToHub extends Command {
         if (printClock >= 5) {
             printClock = 0;
             System.out.println("DVE: " + drivetrain.getState().Pose);
-            System.out.println("ERRX: " + error_x);
-            System.out.println("ERRY: " + error_y);
+            System.out.println("ERRX: " + delta_x);
+            System.out.println("ERRY: " + delta_y);
         }
 
         return robotPose.getRotation().minus(rotation).getRadians();

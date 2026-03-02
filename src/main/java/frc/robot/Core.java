@@ -199,7 +199,8 @@ public class Core {
         
         operatorController.a().toggleOnTrue(intake.intakeCommand());
         operatorController.b().onTrue(hopper.changeRPMCommand(100));
-        operatorController.x().onTrue(hopper.changeRPMCommand(-100));
+        operatorController.x().whileTrue(intake.setRPMCommand(-Math.abs(intake.getTargetRPM())));
+        operatorController.x().whileFalse(intake.setRPMCommand(Math.abs(intake.getTargetRPM())));
         operatorController.y().onTrue(new InstantCommand(() -> shooter.autoShoot()));
 
         

@@ -186,6 +186,10 @@ public class IntakeSubsystem extends SubsystemBase {
     return new InstantCommand(() -> stop(), this);
   }
 
+  public Command setRPMCommand(double RPM) {
+    return new InstantCommand(() -> setTargetRPM(RPM), this);
+  }
+
   public Command changeTargetRPMCommand(double deltaRPM) {
     return new InstantCommand(() -> changeTargetRPM(deltaRPM), this);
   }
