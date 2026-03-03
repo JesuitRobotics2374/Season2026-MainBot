@@ -331,6 +331,7 @@ public class ShooterSubsystem extends SubsystemBase {
         control.stopMotor();
         kicker.stopMotor();
         m_hopper.stopMotor();
+        autoShooting = false;
     }
 
     /**
