@@ -106,7 +106,7 @@ public class Core {
 
     public void configureAutoCommands() {
         NamedCommands.registerCommand("Shoot", new InstantCommand(() -> shooter.autoShoot())); //WILL WORK WHEN EHTAN'S CODE IS PUSHED IN
-        NamedCommands.registerCommand("Stop Shoot", shooter.stopShooterCommand()); //^^
+        NamedCommands.registerCommand("Stop Shoot", new InstantCommand(() -> shooter.stopAll())); //^^
         
         NamedCommands.registerCommand("Start Intake", intake.intakeCommand());
         NamedCommands.registerCommand("Stop Intake", intake.stopCommand());

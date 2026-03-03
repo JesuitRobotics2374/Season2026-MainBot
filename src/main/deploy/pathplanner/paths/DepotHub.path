@@ -3,16 +3,16 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 0.3903566333808842,
-        "y": 0.6515406562054205
+        "x": 1.2442555555555554,
+        "y": 5.9643999999999995
       },
       "prevControl": null,
       "nextControl": {
-        "x": 1.3903566333808839,
-        "y": 0.6515406562054205
+        "x": 1.4556277813132985,
+        "y": 5.830901752153005
       },
       "isLocked": false,
-      "linkedName": "End To Blue Human Station"
+      "linkedName": "blue depot"
     },
     {
       "anchor": {
@@ -20,28 +20,17 @@
         "y": 4.028530670470755
       },
       "prevControl": {
-        "x": 2.4087874465049923,
-        "y": 2.941683309557775
+        "x": 2.4820647989978215,
+        "y": 4.254064225879667
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": "Hub Center Blue"
+      "linkedName": "CenterShoot"
     }
   ],
   "rotationTargets": [],
   "constraintZones": [],
-  "pointTowardsZones": [
-    {
-      "fieldPosition": {
-        "x": 4.625,
-        "y": 4.05
-      },
-      "rotationOffset": 0.0,
-      "minWaypointRelativePos": 0.25,
-      "maxWaypointRelativePos": 0.75,
-      "name": "Point Towards Zone"
-    }
-  ],
+  "pointTowardsZones": [],
   "eventMarkers": [],
   "globalConstraints": {
     "maxVelocity": 3.0,
@@ -59,7 +48,7 @@
   "folder": null,
   "idealStartingState": {
     "velocity": 0,
-    "rotation": 90.0
+    "rotation": 0.0
   },
   "useDefaultConstraints": true
 }

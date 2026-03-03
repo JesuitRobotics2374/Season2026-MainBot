@@ -11,7 +11,7 @@
               {
                 "type": "path",
                 "data": {
-                  "pathName": "Back to Human Station Blue"
+                  "pathName": "RightStartHPS"
                 }
               },
               {
@@ -51,7 +51,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "Move Towards Hub Center Blue"
+            "pathName": "HPSHub"
           }
         },
         {
