@@ -35,12 +35,16 @@ public class IntakeSubsystem extends SubsystemBase {
   private double MAX_RPM = 5000;
   private double targetRPM = 4000;
 
+  private double purgeRPM = -2000;
+  private double purgeTime = 0.1; // seconds
+
   private final double RPM_TO_RPS = 1.0 / 60.0;
   private static final double CURRENT_LIMIT = 60.0; // Amps
 
   private double targetPos; // the target position of the pivotMotor
 
   private boolean isIntaking;
+  private boolean isPurging;
 
   /** Creates a new Intake. */
   public IntakeSubsystem() {
@@ -143,6 +147,10 @@ public class IntakeSubsystem extends SubsystemBase {
     intakeControl.setControl(velocityRequest.withVelocity(targetRPM * RPM_TO_RPS));
   }
 
+  private boolean isPurgeDone() {
+   return purgeClock > (purgeTime / 0.02);
+  }
+
   // public Command deltaPivotCommand(double delta) {
   //   return new InstantCommand(() -> intakeChangeBy(delta), this);
   // }
@@ -170,24 +178,53 @@ public class IntakeSubsystem extends SubsystemBase {
   public Command intakeCommand() {
     return new FunctionalCommand(
         () -> {
-          // rotate(getTargetRPM());
+          isIntaking = true;
         },
         () -> {
           rotate(getTargetRPM());
         },
         interrupted -> {
           stop();
+          isIntaking = false;
         },
         () -> false,
         this);
   }
 
+  private double purgeClock = 0;
+
+  public Command purgeCommand() {
+    return new FunctionalCommand(
+      () -> {
+        isPurging = true;
+        isIntaking = false;
+        purgeClock = 0;
+      },
+      () -> {
+        rotate(purgeRPM);
+      },
+      interrupted -> {
+        stop();
+        isPurging = false;
+      },
+      this::isPurgeDone,
+      this);
+  }
+
   public Command stopCommand() {
-    return new InstantCommand(() -> stop(), this);
+    return new InstantCommand(() -> {
+      stop();
+      isIntaking = false;
+      isPurging = false;
+    }, this);
+  }
+
+  public Command setRPMCommand(double RPM) {
+    return new InstantCommand(() -> setTargetRPM(RPM));
   }
 
   public Command changeTargetRPMCommand(double deltaRPM) {
-    return new InstantCommand(() -> changeTargetRPM(deltaRPM), this);
+    return new InstantCommand(() -> changeTargetRPM(deltaRPM));
   }
 
   public double getTargetRPM() {
@@ -213,7 +250,12 @@ public class IntakeSubsystem extends SubsystemBase {
 
   @Override
   public void periodic() {
-    // This method will be called once per scheduler run
+    if (isPurging) {
+      purgeClock++;
+    }
+    else {
+      purgeClock = 0;
+    }
   }
 
   // private void rotateAtCached() {

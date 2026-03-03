@@ -70,7 +70,7 @@ public class ShooterSubsystem extends SubsystemBase {
 
     // Target speeds
     private double targetRPM = 2000;
-    private double targetRPMKicker = 2000;
+    private double targetRPMKicker = 2500;
 
     // Shooter limits and constants
     private static final double MAX_RPM = 5400.0;
@@ -81,7 +81,7 @@ public class ShooterSubsystem extends SubsystemBase {
     private double hoodTargetPos;
 
     // Auto-shoot state flags
-    private boolean doAutoShoot = true;
+    private boolean doAutoRange = false;
     private boolean autoShooting = false;
     private final boolean useTable = true;
     private boolean isRed;
@@ -89,11 +89,12 @@ public class ShooterSubsystem extends SubsystemBase {
     // Polynomial shooter curve storage
 
     // Distance (from shooter), RPM Shooter, RPM Kicker, Hood
-    private double[][] shooterValues = { { 2.06, 2400, 2000, 0 },
-            { 2.50, 2600, 2000, 0 },
-            { 2.92, 3000, 2000, 0 },
-            { 3.50, 3200, 2000, 0 },
-            { 4.00, 3400, 2000 } };
+    private double[][] shooterValues = { { 1.51, 2000, 2500, 0 },
+            { 2.00, 2300, 2500, 0 },
+            { 2.52, 2600, 2500, 0 },
+            { 3.00, 2800, 2500, 0 },
+            { 3.52, 3000, 2500, 0 },
+            { 4.00, 3200, 2500, 0  }};
     private double[] shooterCoeffs = {};
     private double[] kickerCoeffs = {};
 
@@ -131,9 +132,9 @@ public class ShooterSubsystem extends SubsystemBase {
         controlCfg.CurrentLimits.StatorCurrentLimit = CURRENT_LIMIT / 0.75;
 
         // PID + Feedforward tuning
-        controlCfg.Slot0.kP = 0.09;
-        controlCfg.Slot0.kI = 0;
-        controlCfg.Slot0.kD = 0.001;
+        controlCfg.Slot0.kP = 0.18;
+        controlCfg.Slot0.kI = 0.001;
+        controlCfg.Slot0.kD = 0.002;
         controlCfg.Slot0.kV = 0.12; // ~12V feedforward
 
         // Kicker configuration
@@ -146,9 +147,9 @@ public class ShooterSubsystem extends SubsystemBase {
         controlCfgKicker.CurrentLimits.StatorCurrentLimitEnable = true;
         controlCfgKicker.CurrentLimits.StatorCurrentLimit = KICKER_CURRENT_LIMIT / 0.5;
 
-        controlCfgKicker.Slot0.kP = 0.09;
-        controlCfgKicker.Slot0.kI = 0;
-        controlCfgKicker.Slot0.kD = 0.001;
+        controlCfgKicker.Slot0.kP = 0.18;
+        controlCfgKicker.Slot0.kI = 0.001;
+        controlCfgKicker.Slot0.kD = 0.002;
         controlCfgKicker.Slot0.kV = 0.12;
 
         // Apply configurations
@@ -415,7 +416,7 @@ public class ShooterSubsystem extends SubsystemBase {
      * Toggles auto range mode.
      */
     public void toggleAutoRange() {
-        doAutoShoot = !doAutoShoot;
+        doAutoRange = !doAutoRange;
     }
 
     /**
@@ -519,7 +520,7 @@ public class ShooterSubsystem extends SubsystemBase {
      */
     @Override
     public void periodic() {
-        if (doAutoShoot) {
+        if (doAutoRange) {
             if (isFirstCycleAuto) {
                 storedRPM = targetRPM;
                 isFirstCycleAuto = false;

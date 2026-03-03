@@ -1,5 +1,7 @@
 package frc.robot.align.driverAssist;
 
+import org.opencv.dnn.DetectionModel;
+
 import com.ctre.phoenix6.Utils;
 
 import edu.wpi.first.math.controller.PIDController;
@@ -10,7 +12,6 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.subsystems.drivetrain.DriveSubsystem;
-import frc.robot.utils.Ballistics;
 import frc.robot.utils.Constants;
 
 public class FixYawToHub extends Command {
@@ -22,7 +23,7 @@ public class FixYawToHub extends Command {
     private final SlewRateLimiter yawRateLimiter = new SlewRateLimiter(6.0);
 
     // Position tolerance
-    private static final double YAW_TOLERANCE = 5 * Math.PI / 180; // radians
+    private static final double YAW_TOLERANCE = 0.5 * Math.PI / 180; // radians
 
     // Maximum output values
     private static final double MAX_ANGULAR_SPEED = 2;
@@ -31,12 +32,14 @@ public class FixYawToHub extends Command {
 
     // Minimum output to overcome static friction
     private static final double MIN_ANGULAR_COMMAND = 0.08;
+    private static final double MAX_LEAD_TIME_SECONDS = 0.25;
 
     private final DriveSubsystem drivetrain;
 
     private Translation2d absoluteTargetTranslation;
 
     private double dtheta;
+    private double error_yaw;
 
     boolean finishedOverride;
 
@@ -52,35 +55,36 @@ public class FixYawToHub extends Command {
 
     private double calculateRelativeTheta(Pose2d robotPose) {
         double delta_x = absoluteTargetTranslation.getX() - robotPose.getX();
-        double delta_y = absoluteTargetTranslation.getY() - robotPose.getY() - Constants.CENTER_TO_SHOOTER_Y * 10;
+        double delta_y = absoluteTargetTranslation.getY() - robotPose.getY();
 
         double dt = Utils.getCurrentTimeSeconds() - drivetrain.getTimeSinceLastEstimatorUpdate();
+        dt = Math.max(0.0, Math.min(dt, MAX_LEAD_TIME_SECONDS));
 
         ChassisSpeeds speeds = drivetrain.getCurrentRobotChassisSpeeds();
 
-        double vx = speeds.vxMetersPerSecond;
-        double vy = speeds.vyMetersPerSecond;
+        ChassisSpeeds fieldRelativeSpeeds = ChassisSpeeds.fromRobotRelativeSpeeds(speeds, robotPose.getRotation());
 
-        double error_x = vx * dt;
-        double error_y = vy * dt;
+        // Lead the target by expected estimator staleness (or equivalent latency) in field frame.
+        // If your sign convention drives the wrong way, flip these to -=.
+        delta_x += fieldRelativeSpeeds.vxMetersPerSecond * dt;
+        delta_y += fieldRelativeSpeeds.vyMetersPerSecond * dt;
 
-        double velErrorY = Ballistics.calculateZ(Ballistics.CalculateNeededShooterSpeed(delta_x, vx, vy, Constants.HOOD_ZERO_ANGLE), vx, vy, Constants.HOOD_ZERO_ANGLE);
-
-        delta_x += error_x;
-        delta_y += error_y; // sign MIGHT be wrong
+        double hyp = Math.hypot(delta_x, delta_y);
 
         Rotation2d rotation = new Rotation2d(Math.atan2(delta_y, delta_x));
+
+        Rotation2d shooterFix = new Rotation2d(Math.atan2(Constants.CENTER_TO_SHOOTER_Y, hyp));
 
         printClock++;
 
         if (printClock >= 5) {
             printClock = 0;
             System.out.println("DVE: " + drivetrain.getState().Pose);
-            System.out.println("ERRX: " + error_x);
-            System.out.println("ERRY: " + error_y);
+            System.out.println("ERRX: " + delta_x);
+            System.out.println("ERRY: " + delta_y);
         }
 
-        return robotPose.getRotation().minus(rotation).getRadians();
+        return robotPose.getRotation().minus(rotation).plus(shooterFix).getRadians(); // if turn direction is inverted: rotation.minus(robotPose.getRotation())
     }
 
     public FixYawToHub(DriveSubsystem drivetrain, boolean isRed) {
@@ -92,7 +96,7 @@ public class FixYawToHub extends Command {
         this.absoluteTargetTranslation = getAbsoluteTranslation(isRed);
 
         // Yaw PID coefficients
-        yawController = new PIDController(5, 0.7, 4);
+        yawController = new PIDController(3, 0.0, 2);
         yawController.setTolerance(YAW_TOLERANCE);
         yawController.enableContinuousInput(-Math.PI, Math.PI);
     }
@@ -111,7 +115,7 @@ public class FixYawToHub extends Command {
     @Override
     public void execute() {
 
-        double error_yaw = calculateRelativeTheta(drivetrain.getState().Pose);
+        error_yaw = calculateRelativeTheta(drivetrain.getState().Pose);
 
         // Normalize yaw error to -π to π range
         error_yaw = Rotation2d.fromRadians(error_yaw).getRadians();
