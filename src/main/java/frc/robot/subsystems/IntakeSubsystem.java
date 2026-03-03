@@ -126,7 +126,7 @@ public class IntakeSubsystem extends SubsystemBase {
   //   updateIntakePos();
   // }
 
-  private void stop() {
+  public void stop() {
     intakeControl.stopMotor();
   }
 

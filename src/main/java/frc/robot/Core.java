@@ -111,7 +111,7 @@ public class Core {
         NamedCommands.registerCommand("Start Intake", intake.intakeCommand());
         NamedCommands.registerCommand("Stop Intake", intake.stopCommand());
 
-        NamedCommands.registerCommand("Deploy Intake", intake.lowerManual());
+        NamedCommands.registerCommand("Deploy Intake", intake.raiseManual());
         NamedCommands.registerCommand("Stop Deploy", intake.stopPivot());
     }
 

@@ -13,31 +13,6 @@
                 "data": {
                   "pathName": "RightStartHPS"
                 }
-              },
-              {
-                "type": "sequential",
-                "data": {
-                  "commands": [
-                    {
-                      "type": "named",
-                      "data": {
-                        "name": "Deploy Intake"
-                      }
-                    },
-                    {
-                      "type": "wait",
-                      "data": {
-                        "waitTime": 2.0
-                      }
-                    },
-                    {
-                      "type": "named",
-                      "data": {
-                        "name": "Stop Deploy"
-                      }
-                    }
-                  ]
-                }
               }
             ]
           }

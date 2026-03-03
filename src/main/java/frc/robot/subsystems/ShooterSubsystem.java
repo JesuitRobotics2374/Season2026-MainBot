@@ -81,7 +81,7 @@ public class ShooterSubsystem extends SubsystemBase {
     private double hoodTargetPos;
 
     // Auto-shoot state flags
-    private boolean doAutoRange = false;
+    private boolean doAutoRange = true;
     private boolean autoShooting = false;
     private final boolean useTable = true;
     private boolean isRed;
@@ -328,7 +328,7 @@ public class ShooterSubsystem extends SubsystemBase {
     /**
      * Stops all shooter-related motors and hopper.
      */
-    private void stopAll() {
+    public void stopAll() {
         control.stopMotor();
         kicker.stopMotor();
         m_hopper.stopMotor();
