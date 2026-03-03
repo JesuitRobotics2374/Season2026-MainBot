@@ -166,3 +166,142 @@ public class FixYawToHub extends Command {
         return dtheta;
     }
 }
+// public class FixYawToHub extends Command {
+
+//     // PID for Rotation
+//     private final PIDController yawController;
+
+//     // Rate limiter
+//     private final SlewRateLimiter yawRateLimiter = new SlewRateLimiter(6.0);
+
+//     // Position tolerance
+//     private static final double YAW_TOLERANCE = 0.5 * Math.PI / 180.0; // radians
+
+//     // Maximum output values
+//     private static final double MAX_ANGULAR_SPEED = 2.0;
+//     private static final double THETA_SPEED_MODIFIER = 1.25;
+
+//     // Minimum output to overcome static friction
+//     private static final double MIN_ANGULAR_COMMAND = 0.08;
+//     private static final double MAX_LEAD_TIME_SECONDS = 0.25;
+
+//     private final DriveSubsystem drivetrain;
+//     private final Translation2d absoluteTargetTranslation;
+
+//     private double dtheta = 0;
+
+//     public FixYawToHub(DriveSubsystem drivetrain, boolean isRed) {
+
+//         this.drivetrain = drivetrain;
+//         this.absoluteTargetTranslation = getAbsoluteTranslation(isRed);
+
+//         yawController = new PIDController(3.0, 0.0, 2.0);
+//         yawController.setTolerance(YAW_TOLERANCE);
+//         yawController.enableContinuousInput(-Math.PI, Math.PI);
+
+//         addRequirements(drivetrain);
+//     }
+
+//     private Translation2d getAbsoluteTranslation(boolean isRed) {
+//         if (isRed) {
+//             return new Translation2d(11.915394, 4.034536); // TODO verify 2026 coords
+//         } else {
+//             return new Translation2d(4.625594, 4.034536);
+//         }
+//     }
+
+//     @Override
+//     public void initialize() {
+//         yawController.reset();
+//         yawRateLimiter.reset(0);
+//     }
+
+//     private double calculateRelativeTheta(Pose2d robotPose) {
+
+//         // --- 1️⃣ Shooter offset in robot frame ---
+//         Translation2d shooterOffset = new Translation2d(
+//             Constants.CENTER_TO_SHOOTER_X,
+//             Constants.CENTER_TO_SHOOTER_Y
+//         );
+
+//         // --- 2️⃣ Shooter position in field frame ---
+//         Translation2d shooterFieldPos =
+//             robotPose.getTranslation().plus(
+//                 shooterOffset.rotateBy(robotPose.getRotation())
+//             );
+
+//         // --- 3️⃣ Latency / estimator lead compensation ---
+//         double dt = Utils.getCurrentTimeSeconds()
+//                 - drivetrain.getTimeSinceLastEstimatorUpdate();
+
+//         dt = Math.max(0.0, Math.min(dt, MAX_LEAD_TIME_SECONDS));
+
+//         ChassisSpeeds robotSpeeds = drivetrain.getCurrentRobotChassisSpeeds();
+
+//         ChassisSpeeds fieldSpeeds =
+//             ChassisSpeeds.fromRobotRelativeSpeeds(
+//                 robotSpeeds,
+//                 robotPose.getRotation()
+//             );
+
+//         Translation2d predictedShooterPos =
+//             shooterFieldPos.plus(
+//                 new Translation2d(
+//                     fieldSpeeds.vxMetersPerSecond * dt,
+//                     fieldSpeeds.vyMetersPerSecond * dt
+//                 )
+//             );
+
+//         // --- 4️⃣ Vector from shooter → hub ---
+//         Translation2d toHub =
+//             absoluteTargetTranslation.minus(predictedShooterPos);
+
+//         // --- 5️⃣ Desired field heading ---
+//         Rotation2d desiredHeading = toHub.getAngle();
+
+//         // --- 6️⃣ Angular error (desired - current) ---
+//         return desiredHeading
+//                 .minus(robotPose.getRotation())
+//                 .getRadians();
+//     }
+
+//     @Override
+//     public void execute() {
+
+//         Pose2d robotPose = drivetrain.getState().Pose;
+
+//         double errorYaw = calculateRelativeTheta(robotPose);
+
+//         // PID: treat error as measurement, 0 as setpoint
+//         dtheta = yawController.calculate(errorYaw, 0.0);
+
+//         // Apply minimum command to overcome static friction
+//         if (Math.abs(errorYaw) > YAW_TOLERANCE &&
+//             Math.abs(dtheta) < MIN_ANGULAR_COMMAND) {
+
+//             dtheta = MIN_ANGULAR_COMMAND * Math.signum(dtheta);
+//         }
+
+//         // Apply gain modifier + clamp
+//         dtheta *= THETA_SPEED_MODIFIER;
+//         dtheta = Math.max(-MAX_ANGULAR_SPEED,
+//                           Math.min(dtheta, MAX_ANGULAR_SPEED));
+
+//         // Rate limit
+//         dtheta = yawRateLimiter.calculate(dtheta);
+//     }
+
+//     @Override
+//     public boolean isFinished() {
+//         return false;
+//     }
+
+//     @Override
+//     public void end(boolean interrupted) {
+//         dtheta = 0;
+//     }
+
+//     public double getRotationalRate() {
+//         return dtheta;
+//     }
+// }
