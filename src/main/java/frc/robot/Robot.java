@@ -49,7 +49,9 @@ public class Robot extends TimedRobot {
 
     if (m_autonomousCommand != null) {
       //CommandScheduler.getInstance().schedule(new SequentialCommandGroup(m_autonomousCommand, climbAlign));
-      m_core.drivetrain.resetPose((((PathPlannerAuto) m_core.getAutonomousCommand()).getStartingPose()));
+      if (m_autonomousCommand instanceof PathPlannerAuto) {
+        m_core.drivetrain.resetPose(((PathPlannerAuto) m_autonomousCommand).getStartingPose());
+      }
       CommandScheduler.getInstance().schedule(m_autonomousCommand);
     }
 

@@ -142,7 +142,7 @@ public class Camera {
         if (unreadResults.size() == 0) { // If there are no unread results, ignore changing anything
             return;
         } else {
-            latestResult = unreadResults.get(0); // Update latestResult to the most recent unread result
+            latestResult = unreadResults.get(unreadResults.size() - 1); // Update latestResult to the most recent unread result
         }
     }
 
@@ -183,7 +183,7 @@ public class Camera {
         // pose using the latest
         // result
 
-        if (robotToCameraTransform.getRotation().getZ() > 90) { // do not consider backwards facing cameras
+        if (Math.abs(robotToCameraTransform.getRotation().getZ()) > Math.PI / 2.0) { // do not consider backwards facing cameras
             return null;
         }
 

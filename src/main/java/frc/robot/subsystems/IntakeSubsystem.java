@@ -44,6 +44,7 @@ public class IntakeSubsystem extends SubsystemBase {
   private double targetPos; // the target position of the pivotMotor
 
   private boolean isIntaking;
+  private boolean isPurging;
 
   /** Creates a new Intake. */
   public IntakeSubsystem() {
@@ -146,6 +147,10 @@ public class IntakeSubsystem extends SubsystemBase {
     intakeControl.setControl(velocityRequest.withVelocity(targetRPM * RPM_TO_RPS));
   }
 
+  private boolean isPurgeDone() {
+   return purgeClock > (purgeTime / 0.02);
+  }
+
   // public Command deltaPivotCommand(double delta) {
   //   return new InstantCommand(() -> intakeChangeBy(delta), this);
   // }
@@ -173,35 +178,45 @@ public class IntakeSubsystem extends SubsystemBase {
   public Command intakeCommand() {
     return new FunctionalCommand(
         () -> {
-          // rotate(getTargetRPM());
+          isIntaking = true;
         },
         () -> {
           rotate(getTargetRPM());
         },
         interrupted -> {
           stop();
+          isIntaking = false;
         },
         () -> false,
         this);
   }
 
+  private double purgeClock = 0;
+
   public Command purgeCommand() {
     return new FunctionalCommand(
       () -> {
-        int clock = 0;
+        isPurging = true;
+        isIntaking = false;
+        purgeClock = 0;
       },
       () -> {
         rotate(purgeRPM);
-      }
+      },
       interrupted -> {
         stop();
+        isPurging = false;
       },
-      () -> clock > purgeTime / 0.02,
+      this::isPurgeDone,
       this);
   }
 
   public Command stopCommand() {
-    return new InstantCommand(() -> stop(), this);
+    return new InstantCommand(() -> {
+      stop();
+      isIntaking = false;
+      isPurging = false;
+    }, this);
   }
 
   public Command setRPMCommand(double RPM) {
@@ -235,7 +250,12 @@ public class IntakeSubsystem extends SubsystemBase {
 
   @Override
   public void periodic() {
-    // This method will be called once per scheduler run
+    if (isPurging) {
+      purgeClock++;
+    }
+    else {
+      purgeClock = 0;
+    }
   }
 
   // private void rotateAtCached() {

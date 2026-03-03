@@ -21,7 +21,7 @@ public class HopperSubsystem extends SubsystemBase {
 
   private final VelocityVoltage velocityRequest = new VelocityVoltage(0).withSlot(0);
 
-  private double targetRPM = 1800;
+  private double targetRPM = 2500;
 
   private boolean rolling;
   private boolean pulsing;
@@ -36,9 +36,9 @@ public class HopperSubsystem extends SubsystemBase {
     TalonFXConfiguration controlCfg = new TalonFXConfiguration();
     controlCfg.MotorOutput.NeutralMode = NeutralModeValue.Coast;
     
-    controlCfg.Slot0.kP = 0.09;
-    controlCfg.Slot0.kI = 0;
-    controlCfg.Slot0.kD = 0.001;
+    controlCfg.Slot0.kP = 0.18;
+    controlCfg.Slot0.kI = 0.001;
+    controlCfg.Slot0.kD = 0.002;
     controlCfg.Slot0.kV = 0.12;
 
     rollerMotor.getConfigurator().apply(controlCfg);
