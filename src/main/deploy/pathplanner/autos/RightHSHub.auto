@@ -13,6 +13,31 @@
                 "data": {
                   "pathName": "RightStartHPS"
                 }
+              },
+              {
+                "type": "sequential",
+                "data": {
+                  "commands": [
+                    {
+                      "type": "named",
+                      "data": {
+                        "name": "Deploy Intake"
+                      }
+                    },
+                    {
+                      "type": "wait",
+                      "data": {
+                        "waitTime": 0.125
+                      }
+                    },
+                    {
+                      "type": "named",
+                      "data": {
+                        "name": "Stop Deploy"
+                      }
+                    }
+                  ]
+                }
               }
             ]
           }
@@ -40,34 +65,15 @@
                 }
               },
               {
-                "type": "sequential",
+                "type": "named",
                 "data": {
-                  "commands": [
-                    {
-                      "type": "named",
-                      "data": {
-                        "name": "Deploy Intake"
-                      }
-                    },
-                    {
-                      "type": "wait",
-                      "data": {
-                        "waitTime": 0.5
-                      }
-                    },
-                    {
-                      "type": "named",
-                      "data": {
-                        "name": "Stop Deploy"
-                      }
-                    }
-                  ]
+                  "name": "Start Intake"
                 }
               },
               {
                 "type": "named",
                 "data": {
-                  "name": "Start Intake"
+                  "name": "Fluctuate Intake"
                 }
               }
             ]

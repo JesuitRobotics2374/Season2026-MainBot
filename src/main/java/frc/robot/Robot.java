@@ -8,6 +8,8 @@ import com.pathplanner.lib.commands.PathPlannerAuto;
 
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
+import edu.wpi.first.net.WebServer;
+import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
@@ -26,6 +28,13 @@ public class Robot extends TimedRobot {
 
   public Robot() {
     m_core = new Core();
+  }
+  
+  @Override
+  public void robotInit() {
+    // Starts the web server on port 5800 and points it to the 'deploy' folder
+    // This allows the Elastic dashboard to "Get" the layout from the robot
+    WebServer.start(5800, Filesystem.getDeployDirectory().getPath());
   }
 
   @Override

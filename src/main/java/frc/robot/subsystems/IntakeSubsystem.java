@@ -144,7 +144,7 @@ public class IntakeSubsystem extends SubsystemBase {
     setTargetRPM(targetRPM + deltaRPM);
   }
 
-  private void rotate(double targetRPM) {
+  public void rotate(double targetRPM) {
     intakeControl.setControl(velocityRequest.withVelocity(targetRPM * RPM_TO_RPS));
   }
 
@@ -224,9 +224,9 @@ public class IntakeSubsystem extends SubsystemBase {
         () -> {
           // Pulse logic: 0.4s ON, 0.2s OFF (Total 0.6s cycle)
           if ((timer.get() % 0.5) < 0.25) {
-            pivotMotor.set(-0.2);
+            pivotMotor.set(-0.1);
           } else {
-            pivotMotor.set(0.2);
+            pivotMotor.set(0.1);
           }
         },
         // 3. End: Stop the motor when the command is interrupted/finished
