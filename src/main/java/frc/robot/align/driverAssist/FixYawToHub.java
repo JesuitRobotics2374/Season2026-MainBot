@@ -31,7 +31,7 @@ public class FixYawToHub extends Command {
     private static final double THETA_SPEED_MODIFIER = 1.25;
 
     // Minimum output to overcome static friction
-    private static final double MIN_ANGULAR_COMMAND = 0.08;
+    private static final double MIN_ANGULAR_COMMAND = 0.2;
     private static final double MAX_LEAD_TIME_SECONDS = 0.25;
 
     private final DriveSubsystem drivetrain;
@@ -54,38 +54,84 @@ public class FixYawToHub extends Command {
     private double printClock = 0;
 
     private double calculateRelativeTheta(Pose2d robotPose) {
-        double delta_x = absoluteTargetTranslation.getX() - robotPose.getX();
-        double delta_y = absoluteTargetTranslation.getY() - robotPose.getY();
+    //     double delta_x = absoluteTargetTranslation.getX() - robotPose.getX();
+    //     double delta_y = absoluteTargetTranslation.getY() - robotPose.getY();
 
-        double dt = Utils.getCurrentTimeSeconds() - drivetrain.getTimeSinceLastEstimatorUpdate();
+    //     double dt = Utils.getCurrentTimeSeconds() - drivetrain.getTimeSinceLastEstimatorUpdate();
+    //     dt = Math.max(0.0, Math.min(dt, MAX_LEAD_TIME_SECONDS));
+
+    //     ChassisSpeeds speeds = drivetrain.getCurrentRobotChassisSpeeds();
+
+    //     ChassisSpeeds fieldRelativeSpeeds = ChassisSpeeds.fromRobotRelativeSpeeds(speeds, robotPose.getRotation());
+
+    //     // Lead the target by expected estimator staleness (or equivalent latency) in field frame.
+    //     // If your sign convention drives the wrong way, flip these to -=.
+    //     delta_x += fieldRelativeSpeeds.vxMetersPerSecond * dt;
+    //     delta_y += fieldRelativeSpeeds.vyMetersPerSecond * dt;
+
+    //     double hyp = Math.hypot(delta_x, delta_y);
+
+    //     Rotation2d rotation = new Rotation2d(Math.atan2(delta_y, delta_x));
+
+    //     Rotation2d shooterFix = new Rotation2d(Math.atan2(Constants.CENTER_TO_SHOOTER_Y, hyp));
+
+    //     printClock++;
+
+    //     if (printClock >= 5) {
+    //         printClock = 0;
+    //         System.out.println("DVE: " + drivetrain.getState().Pose);
+    //         System.out.println("ERRX: " + delta_x);
+    //         System.out.println("ERRY: " + delta_y);
+    //     }
+
+    //     return robotPose.getRotation().minus(rotation).plus(shooterFix).getRadians(); // if turn direction is inverted: rotation.minus(robotPose.getRotation())
+
+        // --- 1️⃣ Shooter offset in robot frame ---
+        Translation2d shooterOffset = new Translation2d(
+            Constants.CENTER_TO_SHOOTER_X,
+            Constants.CENTER_TO_SHOOTER_Y
+        );
+
+        // --- 2️⃣ Shooter position in field frame ---
+        Translation2d shooterFieldPos =
+            robotPose.getTranslation().plus(
+                shooterOffset.rotateBy(robotPose.getRotation())
+            );
+
+        // --- 3️⃣ Latency / estimator lead compensation ---
+        double dt = Utils.getCurrentTimeSeconds()
+                - drivetrain.getTimeSinceLastEstimatorUpdate();
+
         dt = Math.max(0.0, Math.min(dt, MAX_LEAD_TIME_SECONDS));
 
-        ChassisSpeeds speeds = drivetrain.getCurrentRobotChassisSpeeds();
+        ChassisSpeeds robotSpeeds = drivetrain.getCurrentRobotChassisSpeeds();
 
-        ChassisSpeeds fieldRelativeSpeeds = ChassisSpeeds.fromRobotRelativeSpeeds(speeds, robotPose.getRotation());
+        ChassisSpeeds fieldSpeeds =
+            ChassisSpeeds.fromRobotRelativeSpeeds(
+                robotSpeeds,
+                robotPose.getRotation()
+            );
 
-        // Lead the target by expected estimator staleness (or equivalent latency) in field frame.
-        // If your sign convention drives the wrong way, flip these to -=.
-        delta_x += fieldRelativeSpeeds.vxMetersPerSecond * dt;
-        delta_y += fieldRelativeSpeeds.vyMetersPerSecond * dt;
+        Translation2d predictedShooterPos =
+            shooterFieldPos.plus(
+                new Translation2d(
+                    fieldSpeeds.vxMetersPerSecond * dt,
+                    fieldSpeeds.vyMetersPerSecond * dt
+                )
+            );
 
-        double hyp = Math.hypot(delta_x, delta_y);
+        // --- 4️⃣ Vector from shooter → hub ---
+        Translation2d toHub =
+            absoluteTargetTranslation.minus(predictedShooterPos);
 
-        Rotation2d rotation = new Rotation2d(Math.atan2(delta_y, delta_x));
+        // --- 5️⃣ Desired field heading ---
+        Rotation2d desiredHeading = toHub.getAngle();
 
-        Rotation2d shooterFix = new Rotation2d(Math.atan2(Constants.CENTER_TO_SHOOTER_Y, hyp));
-
-        printClock++;
-
-        if (printClock >= 5) {
-            printClock = 0;
-            System.out.println("DVE: " + drivetrain.getState().Pose);
-            System.out.println("ERRX: " + delta_x);
-            System.out.println("ERRY: " + delta_y);
-        }
-
-        return robotPose.getRotation().minus(rotation).plus(shooterFix).getRadians(); // if turn direction is inverted: rotation.minus(robotPose.getRotation())
-    }
+        // --- 6️⃣ Angular error (desired - current) ---
+        return desiredHeading
+                .minus(robotPose.getRotation())
+                .getRadians();    
+}
 
     public FixYawToHub(DriveSubsystem drivetrain, boolean isRed) {
         System.out.println("YAW LOCK CREATED");

@@ -8,24 +8,24 @@
       },
       "prevControl": null,
       "nextControl": {
-        "x": 1.6842225392296715,
-        "y": 6.189286733238232
+        "x": 1.6048,
+        "y": 6.022866666666666
       },
       "isLocked": false,
       "linkedName": "Depot Intake"
     },
     {
       "anchor": {
-        "x": 2.6084777777777775,
-        "y": 3.8
+        "x": 1.9361111111111113,
+        "y": 6.4906
       },
       "prevControl": {
-        "x": 2.4896136154699624,
-        "y": 4.167942780155333
+        "x": 1.6437777777777778,
+        "y": 6.022866666666666
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": "CenterShoot"
+      "linkedName": "LeftShoot"
     }
   ],
   "rotationTargets": [
@@ -47,7 +47,7 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": 0.2864765102770711
+    "rotation": -45.27590049754999
   },
   "reversed": false,
   "folder": null,

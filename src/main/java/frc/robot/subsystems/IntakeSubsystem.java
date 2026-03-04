@@ -163,11 +163,11 @@ public class IntakeSubsystem extends SubsystemBase {
   //   return new InstantCommand(() -> setZero(), this);
   // }
 
-  public Command raiseManual() {
+  public Command lowerManual() {
     return new InstantCommand(() -> pivotMotor.set(0.2));
   }
 
-  public Command lowerManual() {
+  public Command raiseManual() {
     return new InstantCommand(() -> pivotMotor.set(-0.2));
   }
 

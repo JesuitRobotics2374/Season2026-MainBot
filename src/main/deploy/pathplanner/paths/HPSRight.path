@@ -8,24 +8,24 @@
       },
       "prevControl": null,
       "nextControl": {
-        "x": 1.4452111111111106,
-        "y": 0.575722222222222
+        "x": 1.5171000000000006,
+        "y": 0.5952111111111105
       },
       "isLocked": false,
       "linkedName": "End To Blue Human Station"
     },
     {
       "anchor": {
-        "x": 2.6084777777777775,
-        "y": 3.8
+        "x": 2.2479333333333336,
+        "y": 1.754799999999999
       },
       "prevControl": {
-        "x": 2.427336550958947,
-        "y": 2.7131526390870193
+        "x": 1.8776444444444444,
+        "y": 0.8680555555555554
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": "CenterShoot"
+      "linkedName": "RightShoot"
     }
   ],
   "rotationTargets": [],
@@ -53,7 +53,7 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": 0.2864765102770711
+    "rotation": 41.65476392515783
   },
   "reversed": false,
   "folder": null,

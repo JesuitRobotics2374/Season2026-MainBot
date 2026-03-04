@@ -111,7 +111,7 @@ public class Core {
         NamedCommands.registerCommand("Start Intake", intake.intakeCommand());
         NamedCommands.registerCommand("Stop Intake", intake.stopCommand());
 
-        NamedCommands.registerCommand("Deploy Intake", intake.raiseManual());
+        NamedCommands.registerCommand("Deploy Intake", intake.lowerManual());
         NamedCommands.registerCommand("Stop Deploy", intake.stopPivot());
     }
 
@@ -172,7 +172,7 @@ public class Core {
                 //     Math.abs(driverRotationalRate) > 0.05;
                 boolean driverActive = Math.abs(driveController.getRightX()) > 0.1 || !hubYawAlign;
 
-                double desiredRotationalRate = driverActive ? driverRotationalRate : calculateRotationalRate();
+                double desiredRotationalRate = driverActive ? driverRotationalRate : -calculateRotationalRate();
 
                     return drive
                         .withVelocityX(-driverVelocityX) // Limit translational acceleration forward/backward
@@ -203,9 +203,9 @@ public class Core {
         operatorController.y().onTrue(new InstantCommand(() -> shooter.autoShoot()));
 
         
-        operatorController.povUp().whileTrue(intake.lowerManual()).onFalse(intake.stopPivot());
+        operatorController.povUp().whileTrue(intake.raiseManual()).onFalse(intake.stopPivot());
         operatorController.povRight().onTrue(intake.changeTargetRPMCommand(100));
-        operatorController.povDown().whileTrue(intake.raiseManual()).onFalse(intake.stopPivot());
+        operatorController.povDown().whileTrue(intake.lowerManual()).onFalse(intake.stopPivot());
         operatorController.povLeft().onTrue(intake.changeTargetRPMCommand(-100));
 
         operatorController.rightBumper().onTrue(new InstantCommand(() -> shooter.changeKickerTargetRPM(100)));
