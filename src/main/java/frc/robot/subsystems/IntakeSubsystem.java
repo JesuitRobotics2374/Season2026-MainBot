@@ -4,6 +4,7 @@
 
 package frc.robot.subsystems;
 
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.FunctionalCommand;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
@@ -163,11 +164,11 @@ public class IntakeSubsystem extends SubsystemBase {
   //   return new InstantCommand(() -> setZero(), this);
   // }
 
-  public Command lowerManual() {
+  public Command raiseManual() {
     return new InstantCommand(() -> pivotMotor.set(0.2));
   }
 
-  public Command raiseManual() {
+  public Command lowerManual() {
     return new InstantCommand(() -> pivotMotor.set(-0.2));
   }
 
@@ -209,6 +210,33 @@ public class IntakeSubsystem extends SubsystemBase {
       },
       this::isPurgeDone,
       this);
+  }
+
+   public Command fluctuatingIntakeCommand() {
+    Timer timer = new Timer();
+
+    return new FunctionalCommand(
+        // 1. Initialize: Start the timer when the command begins
+        () -> {
+          timer.restart();
+        },
+        // 2. Execute: Toggle motor power based on the timer
+        () -> {
+          // Pulse logic: 0.4s ON, 0.2s OFF (Total 0.6s cycle)
+          if ((timer.get() % 0.5) < 0.25) {
+            pivotMotor.set(-0.2);
+          } else {
+            pivotMotor.set(0.2);
+          }
+        },
+        // 3. End: Stop the motor when the command is interrupted/finished
+        interrupted -> {
+          pivotMotor.stopMotor();
+        },
+        // 4. isFinished: Return false so it runs until you release the button
+        () -> false,
+        // Add the subsystem requirement
+        this);
   }
 
   public Command stopCommand() {

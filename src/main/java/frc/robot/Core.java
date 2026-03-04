@@ -6,6 +6,8 @@ package frc.robot;
 
 import static edu.wpi.first.units.Units.*;
 
+import java.util.jar.Attributes.Name;
+
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 
@@ -113,6 +115,8 @@ public class Core {
 
         NamedCommands.registerCommand("Deploy Intake", intake.lowerManual());
         NamedCommands.registerCommand("Stop Deploy", intake.stopPivot());
+        
+        NamedCommands.registerCommand("Fluctuate Intake", intake.fluctuatingIntakeCommand());
     }
 
     public void configureShuffleBoard() {
