@@ -84,6 +84,7 @@ public class ShooterSubsystem extends SubsystemBase {
     private boolean doAutoRange = true;
     private boolean autoShooting = false;
     private final boolean useTable = true;
+    private final boolean useVelBased = false;
     private boolean isRed;
 
     // Polynomial shooter curve storage
@@ -97,6 +98,7 @@ public class ShooterSubsystem extends SubsystemBase {
             { 4.00, 3200, 2500, 0  }};
     private double[] shooterCoeffs = {};
     private double[] kickerCoeffs = {};
+    private double[] velCoeffs = {};
 
     // Toggle state tracking
     private boolean isShooting = false;
@@ -203,11 +205,13 @@ public class ShooterSubsystem extends SubsystemBase {
 
         WeightedObservedPoints shooterPoints = new WeightedObservedPoints();
         WeightedObservedPoints kickerPoints = new WeightedObservedPoints();
+        WeightedObservedPoints velPoints = new WeightedObservedPoints();
 
         for (int i = 0; i < shooterValues.length; i++) {
             double[] values = shooterValues[i];
             shooterPoints.add(values[0], values[1]);
             kickerPoints.add(values[0], values[2]);
+            velPoints.add(Ballistics.CalculateNeededShooterSpeed(values[0], Math.toRadians(Constants.HOOD_ZERO_ANGLE)), values[1]);
         }
 
         PolynomialCurveFitter fitterShooter = PolynomialCurveFitter.create(3);
@@ -215,6 +219,9 @@ public class ShooterSubsystem extends SubsystemBase {
 
         PolynomialCurveFitter fitterKicker = PolynomialCurveFitter.create(3);
         kickerCoeffs = fitterKicker.fit(kickerPoints.toList());
+
+        PolynomialCurveFitter fitterVel = PolynomialCurveFitter.create(3);
+        velCoeffs = fitterVel.fit(velPoints.toList());
     }
 
     /**
@@ -537,8 +544,14 @@ public class ShooterSubsystem extends SubsystemBase {
                 shooterRPM = best[1];
                 kickerRPM = best[2];
             } else {
-                shooterRPM = getValueFromCurve(distToHub, shooterCoeffs);
-                kickerRPM = getValueFromCurve(distToHub, kickerCoeffs);
+                if (useVelBased) {
+                    shooterRPM = getValueFromCurve(Ballistics.CalculateNeededShooterSpeed(distToHub, 0, 0, Constants.HOOD_ZERO_ANGLE), velCoeffs);
+                    kickerRPM = getValueFromCurve(distToHub, kickerCoeffs);
+                }
+                else {
+                    shooterRPM = getValueFromCurve(distToHub, shooterCoeffs);
+                    kickerRPM = getValueFromCurve(distToHub, kickerCoeffs);
+                }
             }
 
             targetRPM = shooterRPM;
