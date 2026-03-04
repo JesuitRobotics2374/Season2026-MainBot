@@ -64,6 +64,7 @@ public class Robot extends TimedRobot {
   @Override
   public void autonomousExit() {
     CommandScheduler.getInstance().schedule(new InstantCommand(() -> m_core.intake.stop()));
+    CommandScheduler.getInstance().schedule(m_core.intake.stopPivot());
     CommandScheduler.getInstance().schedule(new InstantCommand(() -> m_core.shooter.stopAll()));
   }
 

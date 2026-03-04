@@ -8,8 +8,8 @@
       },
       "prevControl": null,
       "nextControl": {
-        "x": 2.612522792835632,
-        "y": 1.2614711523220794
+        "x": 2.267422222222222,
+        "y": 2.8072
       },
       "isLocked": false,
       "linkedName": "Start Blue Right"
@@ -47,7 +47,7 @@
   "rotationTargets": [
     {
       "waypointRelativePos": 0.7036247334754773,
-      "rotationDegrees": 41.7920794279141
+      "rotationDegrees": 5.799233895645
     }
   ],
   "constraintZones": [
@@ -80,7 +80,7 @@
     "rotation": 156.58788583069736
   },
   "reversed": false,
-  "folder": null,
+  "folder": "Extras",
   "idealStartingState": {
     "velocity": 0,
     "rotation": 90.51849968729069
