@@ -3,39 +3,55 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 3.582922222222223,
-        "y": 0.575722222222222
+        "x": 7.687760342368046,
+        "y": 1.2467189728958648
       },
       "prevControl": null,
       "nextControl": {
-        "x": 2.4233333333333342,
-        "y": 0.5876037882390234
+        "x": 7.480741797432238,
+        "y": 0.17281027104136926
       },
       "isLocked": false,
-      "linkedName": "Start Blue Right"
+      "linkedName": "Blue Right NZ end"
     },
     {
       "anchor": {
-        "x": 0.4452111111111111,
-        "y": 0.575722222222222
+        "x": 5.6046362339514975,
+        "y": 2.3465049928673327
       },
       "prevControl": {
-        "x": 1.659712598280305,
-        "y": 0.5757222222222221
+        "x": 6.961310371096846,
+        "y": 1.7543852135837696
+      },
+      "nextControl": {
+        "x": 4.247962096806149,
+        "y": 2.938624772150896
+      },
+      "isLocked": false,
+      "linkedName": null
+    },
+    {
+      "anchor": {
+        "x": 2.2284444444444444,
+        "y": 3.8888333333333325
+      },
+      "prevControl": {
+        "x": 1.536588888888888,
+        "y": 1.257833333333331
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": "End To Blue Human Station"
+      "linkedName": "CenterShoot"
     }
   ],
   "rotationTargets": [],
   "constraintZones": [
     {
       "name": "Constraints Zone",
-      "minWaypointRelativePos": 0.7832545577312625,
-      "maxWaypointRelativePos": 1.0,
+      "minWaypointRelativePos": 1.00472653612424,
+      "maxWaypointRelativePos": 1.3180283592167508,
       "constraints": {
-        "maxVelocity": 1.0,
+        "maxVelocity": 1.5,
         "maxAcceleration": 3.0,
         "maxAngularVelocity": 540.0,
         "maxAngularAcceleration": 720.0,
@@ -56,13 +72,13 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": -0.356041678951911
+    "rotation": 0.47155955407617717
   },
   "reversed": false,
-  "folder": null,
+  "folder": "Extras",
   "idealStartingState": {
-    "velocity": 0,
-    "rotation": 90.51849968729069
+    "velocity": 1.5,
+    "rotation": 0.0
   },
   "useDefaultConstraints": true
 }

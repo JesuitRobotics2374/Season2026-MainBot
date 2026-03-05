@@ -8,12 +8,16 @@ import com.pathplanner.lib.commands.PathPlannerAuto;
 
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
+import edu.wpi.first.net.WebServer;
+import edu.wpi.first.wpilibj.Filesystem;
+import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.TimedRobot;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import frc.robot.align.alignUtils.Target;
-import frc.robot.align.preciseAligning.CanAlign;
 import frc.robot.align.preciseAligning.ClimbAlign;
 
 public class Robot extends TimedRobot {
@@ -23,14 +27,16 @@ public class Robot extends TimedRobot {
 
   private final Target testTarget = new Target(31, new Transform3d(1.575, 0.0, 0, new Rotation3d(0, 0, 0)));
 
-   private final SequentialCommandGroup climbAlign;
 
   public Robot() {
     m_core = new Core();
-
-    climbAlign = new SequentialCommandGroup(
-            new ClimbAlign(m_core.drivetrain, m_core.vision, testTarget),
-            new CanAlign(m_core.drivetrain, m_core.vision, testTarget.requestFiducialID().get(), true));
+  }
+  
+  @Override
+  public void robotInit() {
+    // Starts the web server on port 5800 and points it to the 'deploy' folder
+    // This allows the Elastic dashboard to "Get" the layout from the robot
+    WebServer.start(5800, Filesystem.getDeployDirectory().getPath());
   }
 
   @Override
@@ -38,6 +44,8 @@ public class Robot extends TimedRobot {
      CommandScheduler.getInstance().run(); 
 
     m_core.drivetrain.passGlobalEstimates(m_core.vision.getGlobalFieldPoses());
+
+    SmartDashboard.putNumber("Battery Voltage", RobotController.getBatteryVoltage());
   }
 
   @Override
@@ -55,7 +63,9 @@ public class Robot extends TimedRobot {
 
     if (m_autonomousCommand != null) {
       //CommandScheduler.getInstance().schedule(new SequentialCommandGroup(m_autonomousCommand, climbAlign));
-      m_core.drivetrain.resetPose((((PathPlannerAuto) m_core.getAutonomousCommand()).getStartingPose()));
+      if (m_autonomousCommand instanceof PathPlannerAuto) {
+        m_core.drivetrain.resetPose(((PathPlannerAuto) m_autonomousCommand).getStartingPose());
+      }
       CommandScheduler.getInstance().schedule(m_autonomousCommand);
     }
 
@@ -65,7 +75,11 @@ public class Robot extends TimedRobot {
   public void autonomousPeriodic() {}
 
   @Override
-  public void autonomousExit() {}
+  public void autonomousExit() {
+    CommandScheduler.getInstance().schedule(new InstantCommand(() -> m_core.intake.stop()));
+    CommandScheduler.getInstance().schedule(m_core.intake.stopPivot());
+    CommandScheduler.getInstance().schedule(new InstantCommand(() -> m_core.shooter.stopAll()));
+  }
 
   @Override
   public void teleopInit() {

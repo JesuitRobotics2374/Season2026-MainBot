@@ -1,7 +1,5 @@
 package frc.robot.subsystems;
 
-import java.io.Console;
-
 import org.apache.commons.math4.legacy.fitting.PolynomialCurveFitter;
 import org.apache.commons.math4.legacy.fitting.WeightedObservedPoints;
 
@@ -10,7 +8,6 @@ import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
-import com.ctre.phoenix6.controls.PositionVoltage;
 import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
@@ -60,17 +57,19 @@ public class ShooterSubsystem extends SubsystemBase {
     // Adjusts shooting angle
     private final TalonFX hood;
 
+    // Safety lock: when true, hood will never be commanded to move.
+    private static final boolean HOOD_DISABLED = true;
+
     // References to other subsystems
     private HopperSubsystem m_hopper;
     private DriveSubsystem m_drivetrain;
 
     // Reusable velocity control request to prevent object allocation in loops
     private final VelocityVoltage velocityRequest = new VelocityVoltage(0).withSlot(0);
-    private final PositionVoltage positionRequest = new PositionVoltage(0).withSlot(0);
 
     // Target speeds
     private double targetRPM = 2000;
-    private double targetRPMKicker = 2000;
+    private double targetRPMKicker = 2500;
 
     // Shooter limits and constants
     private static final double MAX_RPM = 5400.0;
@@ -80,22 +79,28 @@ public class ShooterSubsystem extends SubsystemBase {
 
     private double hoodTargetPos;
 
+    private final MotionMagicVoltage hoodMotionMagicRequest = new MotionMagicVoltage(0).withSlot(0);
+
     // Auto-shoot state flags
-    private boolean doAutoShoot = true;
+    private boolean doAutoRange = true;
     private boolean autoShooting = false;
     private final boolean useTable = true;
+    private final boolean useVelBased = false;
     private boolean isRed;
 
     // Polynomial shooter curve storage
 
     // Distance (from shooter), RPM Shooter, RPM Kicker, Hood
-    private double[][] shooterValues = { { 2.06, 2400, 2000, 0 },
-            { 2.50, 2600, 2000, 0 },
-            { 2.92, 3000, 2000, 0 },
-            { 3.50, 3200, 2000, 0 },
-            { 4.00, 3400, 2000 } };
+    private double[][] shooterValues = {
+            { 1.51, 2000, 2500, 0 },
+            { 2.00, 2300, 2500, 0 },
+            { 2.52, 2600, 2500, 0 },
+            { 3.00, 2800, 2500, 0 },
+            { 3.52, 3000, 2500, 0 },
+            { 4.00, 3200, 2500, 0 } };
     private double[] shooterCoeffs = {};
     private double[] kickerCoeffs = {};
+    private double[] velCoeffs = {};
 
     // Toggle state tracking
     private boolean isShooting = false;
@@ -131,9 +136,9 @@ public class ShooterSubsystem extends SubsystemBase {
         controlCfg.CurrentLimits.StatorCurrentLimit = CURRENT_LIMIT / 0.75;
 
         // PID + Feedforward tuning
-        controlCfg.Slot0.kP = 0.09;
-        controlCfg.Slot0.kI = 0;
-        controlCfg.Slot0.kD = 0.001;
+        controlCfg.Slot0.kP = 0.18;
+        controlCfg.Slot0.kI = 0.001;
+        controlCfg.Slot0.kD = 0.002;
         controlCfg.Slot0.kV = 0.12; // ~12V feedforward
 
         // Kicker configuration
@@ -146,9 +151,9 @@ public class ShooterSubsystem extends SubsystemBase {
         controlCfgKicker.CurrentLimits.StatorCurrentLimitEnable = true;
         controlCfgKicker.CurrentLimits.StatorCurrentLimit = KICKER_CURRENT_LIMIT / 0.5;
 
-        controlCfgKicker.Slot0.kP = 0.09;
-        controlCfgKicker.Slot0.kI = 0;
-        controlCfgKicker.Slot0.kD = 0.001;
+        controlCfgKicker.Slot0.kP = 0.18;
+        controlCfgKicker.Slot0.kI = 0.001;
+        controlCfgKicker.Slot0.kD = 0.002;
         controlCfgKicker.Slot0.kV = 0.12;
 
         // Apply configurations
@@ -185,8 +190,6 @@ public class ShooterSubsystem extends SubsystemBase {
         hood.getConfigurator().apply(slot0Configs);
         hood.getConfigurator().apply(motionMagicConfigs);
 
-        // setZeroHood();
-
         if (!useTable) {
             calculateShooterCurves();
         }
@@ -202,11 +205,14 @@ public class ShooterSubsystem extends SubsystemBase {
 
         WeightedObservedPoints shooterPoints = new WeightedObservedPoints();
         WeightedObservedPoints kickerPoints = new WeightedObservedPoints();
+        WeightedObservedPoints velPoints = new WeightedObservedPoints();
 
         for (int i = 0; i < shooterValues.length; i++) {
             double[] values = shooterValues[i];
             shooterPoints.add(values[0], values[1]);
             kickerPoints.add(values[0], values[2]);
+            velPoints.add(Ballistics.CalculateNeededShooterSpeed(values[0], 0, 0, Constants.HOOD_ZERO_ANGLE),
+                    values[1]);
         }
 
         PolynomialCurveFitter fitterShooter = PolynomialCurveFitter.create(3);
@@ -214,6 +220,9 @@ public class ShooterSubsystem extends SubsystemBase {
 
         PolynomialCurveFitter fitterKicker = PolynomialCurveFitter.create(3);
         kickerCoeffs = fitterKicker.fit(kickerPoints.toList());
+
+        PolynomialCurveFitter fitterVel = PolynomialCurveFitter.create(3);
+        velCoeffs = fitterVel.fit(velPoints.toList());
     }
 
     /**
@@ -244,29 +253,42 @@ public class ShooterSubsystem extends SubsystemBase {
         targetRPMKicker = RPM;
     }
 
-    // private void updateHoodPos() {
-    // MotionMagicVoltage m_request = new MotionMagicVoltage(hoodTargetPos);
+    private void updateHoodPos() {
+        if (HOOD_DISABLED) {
+            hood.stopMotor();
+            return;
+        }
+        hood.setControl(hoodMotionMagicRequest.withPosition(hoodTargetPos));
+    }
 
-    // hood.setControl(m_request);
-    // }
+    private double hoodPercentToMotorPosition(double hoodPercent) {
+        double clampedPercent = MathUtil.clamp(hoodPercent, 0.0, 1.0);
+        return MathUtil.interpolate(Constants.HOOD_MIN_SETPOINT, Constants.HOOD_MAX_SETPOINT, clampedPercent);
+    }
 
-    // private void setHoodPos(double pos) {
-    // hoodTargetPos = pos;
+    private double hoodMotorPositionToPercent(double motorPosition) {
+        double percent = (motorPosition - Constants.HOOD_MIN_SETPOINT)
+                / (Constants.HOOD_MAX_SETPOINT - Constants.HOOD_MIN_SETPOINT);
+        return MathUtil.clamp(percent, 0.0, 1.0);
+    }
 
-    // updateHoodPos();
-    // }
+    private double hoodPercentToReleaseAngleRadians(double hoodPercent) {
+        double clampedPercent = MathUtil.clamp(hoodPercent, 0.0, 1.0);
+        return MathUtil.interpolate(Constants.HOOD_ZERO_ANGLE, Constants.HOOD_LOWEST_ANGLE, clampedPercent);
+    }
 
-    // private void hoodChangeBy(double deltaPos) {
-    // hoodTargetPos += deltaPos;
-    // updateHoodPos();
-    // }
+    private double getCurrentHoodReleaseAngleRadians() {
+        return hoodPercentToReleaseAngleRadians(hoodMotorPositionToPercent(getHoodPosition()));
+    }
 
-    // private void setZeroHood() {
-    // hood.setPosition(0.0);
-    // hoodTargetPos = 0;
-
-    // updateHoodPos();
-    // }
+    public void setHoodPositionPercent(double hoodPercent) {
+        if (HOOD_DISABLED) {
+            hood.stopMotor();
+            return;
+        }
+        hoodTargetPos = hoodPercentToMotorPosition(hoodPercent);
+        updateHoodPos();
+    }
 
     /**
      * Applies closed-loop velocity control to kicker motor.
@@ -327,10 +349,11 @@ public class ShooterSubsystem extends SubsystemBase {
     /**
      * Stops all shooter-related motors and hopper.
      */
-    private void stopAll() {
+    public void stopAll() {
         control.stopMotor();
         kicker.stopMotor();
         m_hopper.stopMotor();
+        autoShooting = false;
     }
 
     /**
@@ -369,17 +392,9 @@ public class ShooterSubsystem extends SubsystemBase {
         }
     }
 
-    // public Command hoodPosCommand(double pos) {
-    // return new InstantCommand(() -> hoodPosCommand(pos), this);
-    // }
-
-    // public Command hoodChangeCommand(double deltaPos) {
-    // return new InstantCommand(() -> hoodChangeBy(deltaPos), this);
-    // }
-
-    // public Command zeroHoodCommand() {
-    // return new InstantCommand(() -> setZeroHood(), this);
-    // }
+    public Command hoodPosCommand(double pos) {
+        return new InstantCommand(() -> setHoodPositionPercent(pos), this);
+    }
 
     /**
      * Adjusts shooter RPM by delta amount.
@@ -414,7 +429,12 @@ public class ShooterSubsystem extends SubsystemBase {
      * Toggles auto range mode.
      */
     public void toggleAutoRange() {
-        doAutoShoot = !doAutoShoot;
+        doAutoRange = !doAutoRange;
+
+        if (doAutoRange == false) {
+            autoShooting = false;
+            existingAutoShootCommand.cancel();
+        }
     }
 
     /**
@@ -518,7 +538,11 @@ public class ShooterSubsystem extends SubsystemBase {
      */
     @Override
     public void periodic() {
-        if (doAutoShoot) {
+        if (HOOD_DISABLED) {
+            hood.stopMotor();
+        }
+
+        if (doAutoRange) {
             if (isFirstCycleAuto) {
                 storedRPM = targetRPM;
                 isFirstCycleAuto = false;
@@ -529,14 +553,24 @@ public class ShooterSubsystem extends SubsystemBase {
             double shooterRPM = 0;
             double kickerRPM = 0;
 
+            ChassisSpeeds robotSpeeds = m_drivetrain.getCurrentRobotChassisSpeeds();
+
             if (useTable) {
                 double best[] = bestPoint(distToHub);
 
                 shooterRPM = best[1];
                 kickerRPM = best[2];
             } else {
-                shooterRPM = getValueFromCurve(distToHub, shooterCoeffs);
-                kickerRPM = getValueFromCurve(distToHub, kickerCoeffs);
+                if (useVelBased) {
+                    shooterRPM = getValueFromCurve(
+                            Ballistics.CalculateNeededShooterSpeed(distToHub, robotSpeeds.vxMetersPerSecond,
+                                    robotSpeeds.vyMetersPerSecond, getCurrentHoodReleaseAngleRadians()),
+                            velCoeffs);
+                    kickerRPM = getValueFromCurve(distToHub, kickerCoeffs);
+                } else {
+                    shooterRPM = getValueFromCurve(distToHub, shooterCoeffs);
+                    kickerRPM = getValueFromCurve(distToHub, kickerCoeffs);
+                }
             }
 
             targetRPM = shooterRPM;
@@ -570,11 +604,32 @@ public class ShooterSubsystem extends SubsystemBase {
      * @return Absolute field translation
      */
     private Translation2d getAbsoluteTranslation(boolean isRed) {
-        if (isRed) {
-            return new Translation2d(11.915394, 4.034536);
-        } else {
-            return new Translation2d(4.625594, 4.034536);
+        Translation2d hubTarget = isRed
+                ? new Translation2d(Constants.HUB_RED_X, Constants.HUB_Y)
+                : new Translation2d(Constants.HUB_BLUE_X, Constants.HUB_Y);
+
+        double robotX = m_drivetrain.getRobotX();
+        Translation2d robotTranslation = new Translation2d(robotX, m_drivetrain.getRobotY());
+
+        boolean beyondHub = isRed
+                ? robotX < Constants.HUB_RED_X
+                : robotX > Constants.HUB_BLUE_X;
+
+        if (!beyondHub) {
+            return hubTarget;
         }
+
+        Translation2d nearCorner = isRed
+                ? Constants.RED_SIDE_CORNER_NEAR
+                : Constants.BLUE_SIDE_CORNER_NEAR;
+        Translation2d farCorner = isRed
+                ? Constants.RED_SIDE_CORNER_FAR
+                : Constants.BLUE_SIDE_CORNER_FAR;
+
+        double nearDistance = robotTranslation.getDistance(nearCorner);
+        double farDistance = robotTranslation.getDistance(farCorner);
+
+        return nearDistance <= farDistance ? nearCorner : farCorner;
     }
 
     private double[] bestPoint(double distanceMeters) {

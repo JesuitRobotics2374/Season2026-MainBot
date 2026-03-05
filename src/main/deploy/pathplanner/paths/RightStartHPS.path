@@ -8,8 +8,8 @@
       },
       "prevControl": null,
       "nextControl": {
-        "x": 2.4233333333333342,
-        "y": 0.5876037882390234
+        "x": 3.3986336871720377,
+        "y": 0.7446533793515588
       },
       "isLocked": false,
       "linkedName": "Start Blue Right"
@@ -20,8 +20,8 @@
         "y": 0.575722222222222
       },
       "prevControl": {
-        "x": 1.659712598280305,
-        "y": 0.5757222222222221
+        "x": 0.9226888888888887,
+        "y": 1.1701333333333321
       },
       "nextControl": null,
       "isLocked": false,
@@ -44,7 +44,18 @@
       }
     }
   ],
-  "pointTowardsZones": [],
+  "pointTowardsZones": [
+    {
+      "fieldPosition": {
+        "x": 4.625,
+        "y": 4.05
+      },
+      "rotationOffset": 0.0,
+      "minWaypointRelativePos": 0.10755395683453041,
+      "maxWaypointRelativePos": 0.75,
+      "name": "Point Towards Hub"
+    }
+  ],
   "eventMarkers": [],
   "globalConstraints": {
     "maxVelocity": 3.0,

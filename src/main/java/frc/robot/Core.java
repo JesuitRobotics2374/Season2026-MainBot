@@ -6,6 +6,8 @@ package frc.robot;
 
 import static edu.wpi.first.units.Units.*;
 
+import java.util.jar.Attributes.Name;
+
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 
@@ -15,6 +17,7 @@ import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
@@ -27,7 +30,6 @@ import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.align.alignUtils.Target;
 import frc.robot.align.driverAssist.FixYawToHub;
-import frc.robot.align.preciseAligning.CanAlign;
 import frc.robot.align.preciseAligning.ClimbAlign;
 import frc.robot.subsystems.drivetrain.TunerConstants;
 import frc.robot.subsystems.HopperSubsystem;
@@ -46,7 +48,7 @@ import com.pathplanner.lib.commands.PathPlannerAuto;
 
 public class Core {
     //Swerve Stuff
-    private double MaxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond) * 0.5; // kSpeedAt12Volts desired top speed
+    private double MaxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond) * 0.7; // kSpeedAt12Volts desired top speed
     private double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond) * 0.65; // 3/4 of a rotation per second
                                                                                       // max angular velocity
     private Command pathfindingCommand;
@@ -90,11 +92,13 @@ public class Core {
     private boolean hubYawAlign = false;
 
     private static final double TranslationalAccelerationLimit = 10; // meters per second^2
-    private static final double RotationalAccelerationLimit = Math.PI * 5.5; // radians per second^2
+    private static final double RotationalAccelerationLimit = Math.PI * 7.5; // radians per second^2
 
     private final SlewRateLimiter xRateLimiter = new SlewRateLimiter(TranslationalAccelerationLimit);
     private final SlewRateLimiter yRateLimiter = new SlewRateLimiter(TranslationalAccelerationLimit);
     private final SlewRateLimiter omegaRateLimiter = new SlewRateLimiter(RotationalAccelerationLimit);
+
+    private final SwerveRequest.SwerveDriveBrake brake = new SwerveRequest.SwerveDriveBrake();
 
     public Core() {
         configureBindings();
@@ -107,13 +111,15 @@ public class Core {
 
     public void configureAutoCommands() {
         NamedCommands.registerCommand("Shoot", new InstantCommand(() -> shooter.autoShoot())); //WILL WORK WHEN EHTAN'S CODE IS PUSHED IN
-        NamedCommands.registerCommand("Stop Shoot", shooter.stopShooterCommand()); //^^
+        NamedCommands.registerCommand("Stop Shoot", new InstantCommand(() -> shooter.stopAll())); //^^
         
-        NamedCommands.registerCommand("Start Intake", intake.intakeCommand());
+        NamedCommands.registerCommand("Start Intake", new InstantCommand(() -> intake.rotate(4000)));
         NamedCommands.registerCommand("Stop Intake", intake.stopCommand());
 
         NamedCommands.registerCommand("Deploy Intake", intake.lowerManual());
         NamedCommands.registerCommand("Stop Deploy", intake.stopPivot());
+        
+        NamedCommands.registerCommand("Fluctuate Intake", intake.fluctuatingIntakeCommand());
     }
 
     public void configureShuffleBoard() {
@@ -134,8 +140,11 @@ public class Core {
     
         Tab.addDouble("Drivetrain X", () -> drivetrain.getEstimator().getX());
         Tab.addDouble("Drivetrain Y", () -> drivetrain.getEstimator().getY());
-        Tab.addDouble("Dist To Hub", () -> shooter.getDistToHub());
+        Tab.addDouble("Dist To Hub", () -> Math.round(shooter.getDistToHub()*100)/100);
         Tab.addDouble("Time", () -> DriverStation.getMatchTime());
+
+        Tab.addBoolean("Our Hub Active", () -> getIsOurHubActive());
+        Tab.addString("Hub Warnings", () -> getHubActivityStatus());
 
         SmartDashboard.putData("Auto Chooser", autoChooser);
     }
@@ -144,13 +153,55 @@ public class Core {
         return autoChooser.getSelected();
     }
 
+    String hubActivityStatus = "";
+
+    public boolean getIsOurHubActive() {
+        String gameData = DriverStation.getGameSpecificMessage();
+        Alliance ourAlliance = (DriverStation.getAlliance()).get();
+        if (gameData.length() == 0) {
+            hubActivityStatus = "NOT READY";
+            return false;
+        }
+        if (ourAlliance == null) {
+            hubActivityStatus = "NO STATION";
+            return false;
+        }
+        switch (gameData.charAt(0)) {
+            case 'B':
+                if (ourAlliance == Alliance.Blue) {
+                    return true;
+                }
+            case 'R':
+                if (ourAlliance == Alliance.Red) {
+                    return true;
+                }
+            default:
+                hubActivityStatus = "BAD DATA";
+                return false;
+        }
+    }
+    
+    public String getHubActivityStatus() {
+        return hubActivityStatus;
+    }
+
     private void configureBindings() {
         // Note that X is defined as forward according to WPILib convention,
         // and Y is defined as to the left according to WPILib convention.
         drivetrain.setDefaultCommand(
             // Drivetrain will execute this command periodically
             drivetrain.applyRequest(() -> {
-                double axisScale = getAxisMovementScale();
+                double axisScale = 1;
+
+                if (getBumpAxisMovementScale()) {
+                    axisScale = 0.7;
+                }
+
+                double triggerScale = getTriggerAxisMovementScale();
+
+                if (triggerScale != 1) {
+                    axisScale = triggerScale;
+                }
 
                 double driverVelocityX = driveController.getLeftY() * MaxSpeed * axisScale;
                 double driverVelocityY = driveController.getLeftX() * MaxSpeed * axisScale;
@@ -163,7 +214,7 @@ public class Core {
                 //     Math.abs(driverRotationalRate) > 0.05;
                 boolean driverActive = Math.abs(driveController.getRightX()) > 0.1 || !hubYawAlign;
 
-                double desiredRotationalRate = driverActive ? driverRotationalRate : calculateRotationalRate();
+                double desiredRotationalRate = driverActive ? driverRotationalRate : -calculateRotationalRate();
 
                     return drive
                         .withVelocityX(-driverVelocityX) // Limit translational acceleration forward/backward
@@ -176,6 +227,8 @@ public class Core {
 
         // reset the field-centric heading on left bumper press
         driveController.back().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
+
+         driveController.a().whileTrue(drivetrain.applyRequest(() -> brake));
 
         driveController.leftTrigger().onTrue(new InstantCommand(() -> {
             CommandScheduler.getInstance().schedule(fixYawToHub);
@@ -190,9 +243,10 @@ public class Core {
         
         operatorController.a().toggleOnTrue(intake.intakeCommand());
         operatorController.b().onTrue(hopper.changeRPMCommand(100));
-        operatorController.x().onTrue(hopper.changeRPMCommand(-100));
+        operatorController.x().toggleOnTrue(intake.purgeCommand());
         operatorController.y().onTrue(new InstantCommand(() -> shooter.autoShoot()));
 
+        
         operatorController.povUp().whileTrue(intake.raiseManual()).onFalse(intake.stopPivot());
         operatorController.povRight().onTrue(intake.changeTargetRPMCommand(100));
         operatorController.povDown().whileTrue(intake.lowerManual()).onFalse(intake.stopPivot());
@@ -210,8 +264,12 @@ public class Core {
         drivetrain.registerTelemetry(logger::telemeterize);
     }
 
-    public double getAxisMovementScale() {
+    public double getTriggerAxisMovementScale() {
         return (1 - (driveController.getRightTriggerAxis() * 0.75));
+    }
+
+    public boolean getBumpAxisMovementScale() {
+        return driveController.rightBumper().getAsBoolean();
     }
 
     private double calculateRotationalRate() {

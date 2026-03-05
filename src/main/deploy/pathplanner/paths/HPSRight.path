@@ -3,34 +3,45 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 3.592666666666667,
-        "y": 7.504022222222222
+        "x": 0.4452111111111111,
+        "y": 0.575722222222222
       },
       "prevControl": null,
       "nextControl": {
-        "x": 3.4367555555555556,
-        "y": 7.065522222222221
+        "x": 1.517100000000001,
+        "y": 0.5952111111111105
       },
       "isLocked": false,
-      "linkedName": "Start Blue Left"
+      "linkedName": "End To Blue Human Station"
     },
     {
       "anchor": {
-        "x": 2.7838777777777786,
-        "y": 6.919355555555556
+        "x": 2.2479333333333336,
+        "y": 1.754799999999999
       },
       "prevControl": {
-        "x": 3.2808444444444445,
-        "y": 7.0168
+        "x": 1.8776444444444444,
+        "y": 0.8680555555555554
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": null
+      "linkedName": "RightShoot"
     }
   ],
   "rotationTargets": [],
   "constraintZones": [],
-  "pointTowardsZones": [],
+  "pointTowardsZones": [
+    {
+      "fieldPosition": {
+        "x": 4.625,
+        "y": 4.05
+      },
+      "rotationOffset": 0.0,
+      "minWaypointRelativePos": 0.25,
+      "maxWaypointRelativePos": 0.75,
+      "name": "Point Towards Zone"
+    }
+  ],
   "eventMarkers": [],
   "globalConstraints": {
     "maxVelocity": 3.0,
@@ -42,13 +53,13 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": -60.04280074605384
+    "rotation": 38.0
   },
   "reversed": false,
   "folder": null,
   "idealStartingState": {
     "velocity": 0,
-    "rotation": -90.0
+    "rotation": -0.356041678951911
   },
   "useDefaultConstraints": true
 }

@@ -3,39 +3,55 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 3.582922222222223,
-        "y": 0.575722222222222
+        "x": 2.2284444444444444,
+        "y": 3.8888333333333325
       },
       "prevControl": null,
       "nextControl": {
-        "x": 2.4233333333333342,
-        "y": 0.5876037882390234
+        "x": 2.2284444444444444,
+        "y": 2.8888333333333325
       },
       "isLocked": false,
-      "linkedName": "Start Blue Right"
+      "linkedName": "CenterShoot"
     },
     {
       "anchor": {
-        "x": 0.4452111111111111,
-        "y": 0.575722222222222
+        "x": 4.664555555555555,
+        "y": 2.5928222222222224
       },
       "prevControl": {
-        "x": 1.659712598280305,
-        "y": 0.5757222222222221
+        "x": 3.79559289696257,
+        "y": 2.610201475394082
+      },
+      "nextControl": {
+        "x": 6.126222222222222,
+        "y": 2.5635888888888894
+      },
+      "isLocked": false,
+      "linkedName": null
+    },
+    {
+      "anchor": {
+        "x": 6.613851640513552,
+        "y": 1.6090014265335255
+      },
+      "prevControl": {
+        "x": 6.0260663882210785,
+        "y": 2.4180184209084725
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": "End To Blue Human Station"
+      "linkedName": "NZRightStart"
     }
   ],
   "rotationTargets": [],
   "constraintZones": [
     {
       "name": "Constraints Zone",
-      "minWaypointRelativePos": 0.7832545577312625,
-      "maxWaypointRelativePos": 1.0,
+      "minWaypointRelativePos": 0.6855967078189297,
+      "maxWaypointRelativePos": 1.123456790123457,
       "constraints": {
-        "maxVelocity": 1.0,
+        "maxVelocity": 1.5,
         "maxAcceleration": 3.0,
         "maxAngularVelocity": 540.0,
         "maxAngularAcceleration": 720.0,
@@ -55,14 +71,14 @@
     "unlimited": false
   },
   "goalEndState": {
-    "velocity": 0,
-    "rotation": -0.356041678951911
+    "velocity": 2.0,
+    "rotation": 156.58788583069736
   },
   "reversed": false,
-  "folder": null,
+  "folder": "Extras",
   "idealStartingState": {
     "velocity": 0,
-    "rotation": 90.51849968729069
+    "rotation": 0.47155955407617717
   },
   "useDefaultConstraints": true
 }

@@ -3,32 +3,37 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 3.592666666666667,
-        "y": 7.504022222222222
+        "x": 0.3903566333808839,
+        "y": 6.022866666666666
       },
       "prevControl": null,
       "nextControl": {
-        "x": 3.4367555555555556,
-        "y": 7.065522222222221
+        "x": 1.6048,
+        "y": 6.022866666666666
       },
       "isLocked": false,
-      "linkedName": "Start Blue Left"
+      "linkedName": "Depot Intake"
     },
     {
       "anchor": {
-        "x": 2.7838777777777786,
-        "y": 6.919355555555556
+        "x": 1.9361111111111113,
+        "y": 6.4906
       },
       "prevControl": {
-        "x": 3.2808444444444445,
-        "y": 7.0168
+        "x": 1.6437777777777778,
+        "y": 6.022866666666666
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": null
+      "linkedName": "LeftShoot"
     }
   ],
-  "rotationTargets": [],
+  "rotationTargets": [
+    {
+      "waypointRelativePos": 0.2388059701492532,
+      "rotationDegrees": -90.67902649042388
+    }
+  ],
   "constraintZones": [],
   "pointTowardsZones": [],
   "eventMarkers": [],
@@ -42,13 +47,13 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": -60.04280074605384
+    "rotation": -45.27590049754999
   },
   "reversed": false,
   "folder": null,
   "idealStartingState": {
     "velocity": 0,
-    "rotation": -90.0
+    "rotation": -90.33408239174854
   },
   "useDefaultConstraints": true
 }

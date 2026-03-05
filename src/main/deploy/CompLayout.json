@@ -1,0 +1,386 @@
+{
+  "version": 1.0,
+  "grid_size": 128,
+  "tabs": [
+    {
+      "name": "Teleoperated",
+      "grid_layout": {
+        "layouts": [],
+        "containers": [
+          {
+            "title": "Speed Kicker",
+            "x": 384.0,
+            "y": 128.0,
+            "width": 256.0,
+            "height": 128.0,
+            "type": "Large Text Display",
+            "properties": {
+              "topic": "/Shuffleboard/Test/Speed Kicker",
+              "period": 0.06,
+              "data_type": "double"
+            }
+          },
+          {
+            "title": "Speed Shooter",
+            "x": 128.0,
+            "y": 128.0,
+            "width": 256.0,
+            "height": 128.0,
+            "type": "Large Text Display",
+            "properties": {
+              "topic": "/Shuffleboard/Test/Speed Shooter",
+              "period": 0.06,
+              "data_type": "double"
+            }
+          },
+          {
+            "title": "Target Speed Kicker",
+            "x": 384.0,
+            "y": 256.0,
+            "width": 256.0,
+            "height": 128.0,
+            "type": "Large Text Display",
+            "properties": {
+              "topic": "/Shuffleboard/Test/Target Speed Kicker",
+              "period": 0.06,
+              "data_type": "double"
+            }
+          },
+          {
+            "title": "Target Speed Shooter",
+            "x": 128.0,
+            "y": 256.0,
+            "width": 256.0,
+            "height": 128.0,
+            "type": "Large Text Display",
+            "properties": {
+              "topic": "/Shuffleboard/Test/Target Speed Shooter",
+              "period": 0.06,
+              "data_type": "double"
+            }
+          },
+          {
+            "title": "Kicking",
+            "x": 1024.0,
+            "y": 128.0,
+            "width": 256.0,
+            "height": 128.0,
+            "type": "Boolean Box",
+            "properties": {
+              "topic": "/Shuffleboard/Test/Kicking",
+              "period": 0.06,
+              "data_type": "boolean",
+              "true_color": 4283215696,
+              "false_color": 4294198070,
+              "true_icon": "None",
+              "false_icon": "None"
+            }
+          },
+          {
+            "title": "Rolling",
+            "x": 1152.0,
+            "y": 256.0,
+            "width": 256.0,
+            "height": 128.0,
+            "type": "Boolean Box",
+            "properties": {
+              "topic": "/Shuffleboard/Test/Rolling",
+              "period": 0.06,
+              "data_type": "boolean",
+              "true_color": 4283215696,
+              "false_color": 4294198070,
+              "true_icon": "None",
+              "false_icon": "None"
+            }
+          },
+          {
+            "title": "Shooting",
+            "x": 896.0,
+            "y": 256.0,
+            "width": 256.0,
+            "height": 128.0,
+            "type": "Boolean Box",
+            "properties": {
+              "topic": "/Shuffleboard/Test/Shooting",
+              "period": 0.06,
+              "data_type": "boolean",
+              "true_color": 4283215696,
+              "false_color": 4294198070,
+              "true_icon": "None",
+              "false_icon": "None"
+            }
+          },
+          {
+            "title": "Intaking",
+            "x": 1024.0,
+            "y": 384.0,
+            "width": 256.0,
+            "height": 128.0,
+            "type": "Boolean Box",
+            "properties": {
+              "topic": "/Shuffleboard/Test/Intaking",
+              "period": 0.06,
+              "data_type": "boolean",
+              "true_color": 4283215696,
+              "false_color": 4294198070,
+              "true_icon": "None",
+              "false_icon": "None"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "Autonomous",
+      "grid_layout": {
+        "layouts": [],
+        "containers": [
+          {
+            "title": "Auto Chooser",
+            "x": 512.0,
+            "y": 128.0,
+            "width": 384.0,
+            "height": 256.0,
+            "type": "ComboBox Chooser",
+            "properties": {
+              "topic": "/SmartDashboard/Auto Chooser",
+              "period": 0.06,
+              "sort_options": false
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "Comp",
+      "grid_layout": {
+        "layouts": [
+          {
+            "title": "Intake",
+            "x": 0.0,
+            "y": 0.0,
+            "width": 256.0,
+            "height": 384.0,
+            "type": "List Layout",
+            "properties": {
+              "label_position": "TOP"
+            },
+            "children": [
+              {
+                "title": "Intaking",
+                "x": 512.0,
+                "y": 128.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Boolean Box",
+                "properties": {
+                  "topic": "/Shuffleboard/Intake/Intaking",
+                  "period": 0.06,
+                  "data_type": "boolean",
+                  "true_color": 4283215696,
+                  "false_color": 4294198070,
+                  "true_icon": "None",
+                  "false_icon": "None"
+                }
+              },
+              {
+                "title": "Speed Intake",
+                "x": 512.0,
+                "y": 256.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Large Text Display",
+                "properties": {
+                  "topic": "/Shuffleboard/Intake/Speed Intake",
+                  "period": 0.06,
+                  "data_type": "double"
+                }
+              },
+              {
+                "title": "Target Speed Intake",
+                "x": 512.0,
+                "y": 384.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Large Text Display",
+                "properties": {
+                  "topic": "/Shuffleboard/Intake/Target Speed Intake",
+                  "period": 0.06,
+                  "data_type": "double"
+                }
+              }
+            ]
+          },
+          {
+            "title": "Kicker",
+            "x": 256.0,
+            "y": 0.0,
+            "width": 256.0,
+            "height": 384.0,
+            "type": "List Layout",
+            "properties": {
+              "label_position": "TOP"
+            },
+            "children": [
+              {
+                "title": "Kicking",
+                "x": 512.0,
+                "y": 0.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Boolean Box",
+                "properties": {
+                  "topic": "/Shuffleboard/Shooter/Kicking",
+                  "period": 0.06,
+                  "data_type": "boolean",
+                  "true_color": 4283215696,
+                  "false_color": 4294198070,
+                  "true_icon": "None",
+                  "false_icon": "None"
+                }
+              },
+              {
+                "title": "Speed Kicker",
+                "x": 512.0,
+                "y": 128.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Large Text Display",
+                "properties": {
+                  "topic": "/Shuffleboard/Shooter/Speed Kicker",
+                  "period": 0.06,
+                  "data_type": "double"
+                }
+              },
+              {
+                "title": "Target Speed Kicker",
+                "x": 512.0,
+                "y": 128.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Large Text Display",
+                "properties": {
+                  "topic": "/Shuffleboard/Shooter/Target Speed Kicker",
+                  "period": 0.06,
+                  "data_type": "double"
+                }
+              }
+            ]
+          },
+          {
+            "title": "Shooter",
+            "x": 512.0,
+            "y": 0.0,
+            "width": 256.0,
+            "height": 384.0,
+            "type": "List Layout",
+            "properties": {
+              "label_position": "TOP"
+            },
+            "children": [
+              {
+                "title": "Shooting",
+                "x": 768.0,
+                "y": 128.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Boolean Box",
+                "properties": {
+                  "topic": "/Shuffleboard/Shooter/Shooting",
+                  "period": 0.06,
+                  "data_type": "boolean",
+                  "true_color": 4283215696,
+                  "false_color": 4294198070,
+                  "true_icon": "None",
+                  "false_icon": "None"
+                }
+              },
+              {
+                "title": "Speed Shooter",
+                "x": 768.0,
+                "y": 128.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Large Text Display",
+                "properties": {
+                  "topic": "/Shuffleboard/Shooter/Speed Shooter",
+                  "period": 0.06,
+                  "data_type": "double"
+                }
+              },
+              {
+                "title": "Target Speed Shooter",
+                "x": 640.0,
+                "y": 256.0,
+                "width": 128.0,
+                "height": 128.0,
+                "type": "Large Text Display",
+                "properties": {
+                  "topic": "/Shuffleboard/Shooter/Target Speed Shooter",
+                  "period": 0.06,
+                  "data_type": "double"
+                }
+              }
+            ]
+          }
+        ],
+        "containers": [
+          {
+            "title": "Dist To Hub",
+            "x": 768.0,
+            "y": 256.0,
+            "width": 128.0,
+            "height": 128.0,
+            "type": "Text Display",
+            "properties": {
+              "topic": "/Shuffleboard/Tab/Dist To Hub",
+              "period": 0.06,
+              "data_type": "double",
+              "show_submit_button": false
+            }
+          },
+          {
+            "title": "Time",
+            "x": 1024.0,
+            "y": 256.0,
+            "width": 128.0,
+            "height": 128.0,
+            "type": "Text Display",
+            "properties": {
+              "topic": "/Shuffleboard/Tab/Time",
+              "period": 0.06,
+              "data_type": "double",
+              "show_submit_button": false
+            }
+          },
+          {
+            "title": "Auto Chooser",
+            "x": 768.0,
+            "y": 0.0,
+            "width": 384.0,
+            "height": 256.0,
+            "type": "ComboBox Chooser",
+            "properties": {
+              "topic": "/SmartDashboard/Auto Chooser",
+              "period": 0.06,
+              "sort_options": false
+            }
+          },
+          {
+            "title": "photonvision_Port_1181_Input_MJPEG_Server",
+            "x": 1152.0,
+            "y": 0.0,
+            "width": 384.0,
+            "height": 384.0,
+            "type": "Camera Stream",
+            "properties": {
+              "topic": "/CameraPublisher/photonvision_Port_1181_Input_MJPEG_Server",
+              "period": 0.06,
+              "rotation_turns": 0
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

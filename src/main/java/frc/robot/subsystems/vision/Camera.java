@@ -42,6 +42,7 @@ public class Camera {
     private static final Matrix<N3, N1> kSingleTagStdDevs = VecBuilder.fill(0.9, 0.9, 12);
     private static final Matrix<N3, N1> kMultiTagStdDevs = VecBuilder.fill(0.25, 0.25, 4);
     private static final double GLOBAL_DISTANCE_SCALAR = 25.0;
+    private static final double MAX_ACCEPTED_POSE_AMBIGUITY = 0.2;
 
     // Camera constants - FOR THE COLOR CAM ONLY
     private static final double IMAGE_WIDTH = 640.0;
@@ -142,7 +143,7 @@ public class Camera {
         if (unreadResults.size() == 0) { // If there are no unread results, ignore changing anything
             return;
         } else {
-            latestResult = unreadResults.get(0); // Update latestResult to the most recent unread result
+            latestResult = unreadResults.get(unreadResults.size() - 1); // Update latestResult to the most recent unread result
         }
     }
 
@@ -183,7 +184,7 @@ public class Camera {
         // pose using the latest
         // result
 
-        if (robotToCameraTransform.getRotation().getZ() > 90) { // do not consider backwards facing cameras
+        if (Math.abs(robotToCameraTransform.getRotation().getZ()) > Math.PI / 2.0) { // do not consider backwards facing cameras
             return null;
         }
 
@@ -214,6 +215,13 @@ public class Camera {
 
         // Count valid tags and compute average distance
         for (var tgt : targets) {
+            if (tgt.getPoseAmbiguity() > MAX_ACCEPTED_POSE_AMBIGUITY) {
+                return VecBuilder.fill(
+                        Double.MAX_VALUE,
+                        Double.MAX_VALUE,
+                        Double.MAX_VALUE);
+            }
+
             var tagPose = poseEstimator.getFieldTags().getTagPose(tgt.getFiducialId());
             if (tagPose.isEmpty())
                 continue;
