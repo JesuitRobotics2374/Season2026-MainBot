@@ -98,6 +98,8 @@ public class Core {
     private final SlewRateLimiter yRateLimiter = new SlewRateLimiter(TranslationalAccelerationLimit);
     private final SlewRateLimiter omegaRateLimiter = new SlewRateLimiter(RotationalAccelerationLimit);
 
+    private final SwerveRequest.SwerveDriveBrake brake = new SwerveRequest.SwerveDriveBrake();
+
     public Core() {
         configureBindings();
 
@@ -192,7 +194,7 @@ public class Core {
                 double axisScale = 1;
 
                 if (getBumpAxisMovementScale()) {
-                    axisScale = 0.6;
+                    axisScale = 0.7;
                 }
 
                 double triggerScale = getTriggerAxisMovementScale();
@@ -225,6 +227,8 @@ public class Core {
 
         // reset the field-centric heading on left bumper press
         driveController.back().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
+
+         driveController.a().whileTrue(drivetrain.applyRequest(() -> brake));
 
         driveController.leftTrigger().onTrue(new InstantCommand(() -> {
             CommandScheduler.getInstance().schedule(fixYawToHub);

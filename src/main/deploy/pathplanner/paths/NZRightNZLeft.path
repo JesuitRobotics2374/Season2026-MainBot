@@ -9,7 +9,7 @@
       "prevControl": null,
       "nextControl": {
         "x": 7.658889323724123,
-        "y": 0.17063045315141356
+        "y": 0.17063045315141334
       },
       "isLocked": false,
       "linkedName": "NZRightStart"
@@ -80,7 +80,7 @@
     "rotation": -178.60281897290076
   },
   "reversed": false,
-  "folder": null,
+  "folder": "Extras",
   "idealStartingState": {
     "velocity": 2.0,
     "rotation": 156.58788583069736

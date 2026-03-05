@@ -57,6 +57,9 @@ public class ShooterSubsystem extends SubsystemBase {
     // Adjusts shooting angle
     private final TalonFX hood;
 
+    // Safety lock: when true, hood will never be commanded to move.
+    private static final boolean HOOD_DISABLED = true;
+
     // References to other subsystems
     private HopperSubsystem m_hopper;
     private DriveSubsystem m_drivetrain;
@@ -251,6 +254,10 @@ public class ShooterSubsystem extends SubsystemBase {
     }
 
     private void updateHoodPos() {
+        if (HOOD_DISABLED) {
+            hood.stopMotor();
+            return;
+        }
         hood.setControl(hoodMotionMagicRequest.withPosition(hoodTargetPos));
     }
 
@@ -275,6 +282,10 @@ public class ShooterSubsystem extends SubsystemBase {
     }
 
     public void setHoodPositionPercent(double hoodPercent) {
+        if (HOOD_DISABLED) {
+            hood.stopMotor();
+            return;
+        }
         hoodTargetPos = hoodPercentToMotorPosition(hoodPercent);
         updateHoodPos();
     }
@@ -419,6 +430,11 @@ public class ShooterSubsystem extends SubsystemBase {
      */
     public void toggleAutoRange() {
         doAutoRange = !doAutoRange;
+
+        if (doAutoRange == false) {
+            autoShooting = false;
+            existingAutoShootCommand.cancel();
+        }
     }
 
     /**
@@ -522,6 +538,10 @@ public class ShooterSubsystem extends SubsystemBase {
      */
     @Override
     public void periodic() {
+        if (HOOD_DISABLED) {
+            hood.stopMotor();
+        }
+
         if (doAutoRange) {
             if (isFirstCycleAuto) {
                 storedRPM = targetRPM;

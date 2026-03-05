@@ -18,10 +18,10 @@ public class Constants {
 
     // Placeholder corner targets for "beyond hub" shooting fallback.
     // Replace with tuned/scouted values once tested on-field.
-    public static final Translation2d BLUE_SIDE_CORNER_NEAR = new Translation2d(1.20, 1.00);
-    public static final Translation2d BLUE_SIDE_CORNER_FAR = new Translation2d(1.20, 7.00);
-    public static final Translation2d RED_SIDE_CORNER_NEAR = new Translation2d(15.30, 1.00);
-    public static final Translation2d RED_SIDE_CORNER_FAR = new Translation2d(15.30, 7.00);
+    public static final Translation2d BLUE_SIDE_CORNER_NEAR = new Translation2d(1.00, 1.00);
+    public static final Translation2d BLUE_SIDE_CORNER_FAR = new Translation2d(1.00, 7.00);
+    public static final Translation2d RED_SIDE_CORNER_NEAR = new Translation2d(15.54, 1.00);
+    public static final Translation2d RED_SIDE_CORNER_FAR = new Translation2d(15.54, 7.00);
 
     // Real world release angles
     public static final double HOOD_ZERO_ANGLE = Math.toRadians(63.7);

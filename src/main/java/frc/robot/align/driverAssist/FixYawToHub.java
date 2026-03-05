@@ -53,8 +53,8 @@ public class FixYawToHub extends Command {
                 : new Translation2d(Constants.HUB_BLUE_X, Constants.HUB_Y);
 
         boolean beyondHub = isRed
-                ? robotX < Constants.HUB_RED_X
-                : robotX > Constants.HUB_BLUE_X;
+                ? robotX < Constants.HUB_RED_X - 1.75
+                : robotX > Constants.HUB_BLUE_X + 1.75;
 
         if (!beyondHub) {
             return hubTarget;
