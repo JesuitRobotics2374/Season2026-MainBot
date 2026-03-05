@@ -42,6 +42,7 @@ public class Camera {
     private static final Matrix<N3, N1> kSingleTagStdDevs = VecBuilder.fill(0.9, 0.9, 12);
     private static final Matrix<N3, N1> kMultiTagStdDevs = VecBuilder.fill(0.25, 0.25, 4);
     private static final double GLOBAL_DISTANCE_SCALAR = 25.0;
+    private static final double MAX_ACCEPTED_POSE_AMBIGUITY = 0.2;
 
     // Camera constants - FOR THE COLOR CAM ONLY
     private static final double IMAGE_WIDTH = 640.0;
@@ -214,6 +215,13 @@ public class Camera {
 
         // Count valid tags and compute average distance
         for (var tgt : targets) {
+            if (tgt.getPoseAmbiguity() > MAX_ACCEPTED_POSE_AMBIGUITY) {
+                return VecBuilder.fill(
+                        Double.MAX_VALUE,
+                        Double.MAX_VALUE,
+                        Double.MAX_VALUE);
+            }
+
             var tagPose = poseEstimator.getFieldTags().getTagPose(tgt.getFiducialId());
             if (tagPose.isEmpty())
                 continue;

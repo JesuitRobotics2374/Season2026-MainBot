@@ -17,6 +17,7 @@ import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
@@ -137,14 +138,49 @@ public class Core {
     
         Tab.addDouble("Drivetrain X", () -> drivetrain.getEstimator().getX());
         Tab.addDouble("Drivetrain Y", () -> drivetrain.getEstimator().getY());
-        Tab.addDouble("Dist To Hub", () -> shooter.getDistToHub());
+        Tab.addDouble("Dist To Hub", () -> Math.round(shooter.getDistToHub()*100)/100);
         Tab.addDouble("Time", () -> DriverStation.getMatchTime());
+
+        Tab.addBoolean("Our Hub Active", () -> getIsOurHubActive());
+        Tab.addString("Hub Warnings", () -> getHubActivityStatus());
 
         SmartDashboard.putData("Auto Chooser", autoChooser);
     }
 
     public Command getAutonomousCommand() {
         return autoChooser.getSelected();
+    }
+
+    String hubActivityStatus = "";
+
+    public boolean getIsOurHubActive() {
+        String gameData = DriverStation.getGameSpecificMessage();
+        Alliance ourAlliance = (DriverStation.getAlliance()).get();
+        if (gameData.length() == 0) {
+            hubActivityStatus = "NOT READY";
+            return false;
+        }
+        if (ourAlliance == null) {
+            hubActivityStatus = "NO STATION";
+            return false;
+        }
+        switch (gameData.charAt(0)) {
+            case 'B':
+                if (ourAlliance == Alliance.Blue) {
+                    return true;
+                }
+            case 'R':
+                if (ourAlliance == Alliance.Red) {
+                    return true;
+                }
+            default:
+                hubActivityStatus = "BAD DATA";
+                return false;
+        }
+    }
+    
+    public String getHubActivityStatus() {
+        return hubActivityStatus;
     }
 
     private void configureBindings() {

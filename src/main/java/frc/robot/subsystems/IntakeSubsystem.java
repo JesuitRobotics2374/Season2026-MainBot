@@ -33,7 +33,7 @@ public class IntakeSubsystem extends SubsystemBase {
   private boolean raised;
   private boolean lowered;
 
-  private double MAX_RPM = 5000;
+  private double MAX_RPM = 6300;
   private double targetRPM = 4000;
 
   private double purgeRPM = -2000;
