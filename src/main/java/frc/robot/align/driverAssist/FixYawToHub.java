@@ -10,6 +10,8 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.subsystems.drivetrain.DriveSubsystem;
 import frc.robot.utils.Constants;
@@ -35,7 +37,6 @@ public class FixYawToHub extends Command {
     private static final double MAX_LEAD_TIME_SECONDS = 0.25;
 
     private final DriveSubsystem drivetrain;
-    private final boolean isRed;
 
     private Translation2d absoluteTargetTranslation;
 
@@ -45,6 +46,8 @@ public class FixYawToHub extends Command {
     boolean finishedOverride;
 
     private Translation2d getAbsoluteTranslation(Pose2d robotPose) {
+        boolean isRed = (DriverStation.getAlliance()).get() == Alliance.Red;
+
         double robotX = robotPose.getX();
         Translation2d robotTranslation = robotPose.getTranslation();
 
@@ -120,12 +123,11 @@ public class FixYawToHub extends Command {
                 .getRadians();    
 }
 
-    public FixYawToHub(DriveSubsystem drivetrain, boolean isRed) {
+    public FixYawToHub(DriveSubsystem drivetrain) {
         System.out.println("YAW LOCK CREATED");
         finishedOverride = false;
 
         this.drivetrain = drivetrain;
-    this.isRed = isRed;
 
         // Yaw PID coefficients
         yawController = new PIDController(3, 0.0, 2);

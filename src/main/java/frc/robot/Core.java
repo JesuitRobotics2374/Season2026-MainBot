@@ -73,7 +73,7 @@ public class Core {
 
     public final HopperSubsystem hopper = new HopperSubsystem();
 
-    public final ShooterSubsystem shooter = new ShooterSubsystem(hopper, false, drivetrain);
+    public final ShooterSubsystem shooter = new ShooterSubsystem(hopper, drivetrain);
 
     public final IntakeSubsystem intake = new IntakeSubsystem();
 
@@ -85,7 +85,7 @@ public class Core {
 
     //Driver assist
     
-    private final FixYawToHub fixYawToHub = new FixYawToHub(drivetrain, false);
+    private final FixYawToHub fixYawToHub = new FixYawToHub(drivetrain);
 
     private final Target testTarget = new Target(31, new Transform3d(1.575, 0.0, 0, new Rotation3d(0, 0, 0)));
 
@@ -140,11 +140,13 @@ public class Core {
     
         Tab.addDouble("Drivetrain X", () -> drivetrain.getEstimator().getX());
         Tab.addDouble("Drivetrain Y", () -> drivetrain.getEstimator().getY());
-        Tab.addDouble("Dist To Hub", () -> Math.round(shooter.getDistToHub()*100)/100);
+        Tab.addDouble("Dist To Hub", () -> (double)Math.round(shooter.getDistToHub()*100) / 100.0);
         Tab.addDouble("Time", () -> DriverStation.getMatchTime());
 
         Tab.addBoolean("Our Hub Active", () -> getIsOurHubActive());
         Tab.addString("Hub Warnings", () -> getHubActivityStatus());
+        
+        Tab.addBoolean("Is Passing", () -> shooter.getIsBeyondHub());
 
         SmartDashboard.putData("Auto Chooser", autoChooser);
     }

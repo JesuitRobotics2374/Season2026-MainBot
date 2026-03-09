@@ -18,6 +18,8 @@ import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.FunctionalCommand;
@@ -86,7 +88,6 @@ public class ShooterSubsystem extends SubsystemBase {
     private boolean autoShooting = false;
     private final boolean useTable = true;
     private final boolean useVelBased = false;
-    private boolean isRed;
 
     // Polynomial shooter curve storage
 
@@ -97,7 +98,12 @@ public class ShooterSubsystem extends SubsystemBase {
             { 2.52, 2600, 2500, 0 },
             { 3.00, 2800, 2500, 0 },
             { 3.52, 3000, 2500, 0 },
-            { 4.00, 3200, 2500, 0 } };
+            { 4.00, 3200, 2500, 0 },
+            { 4.52, 3400, 2500, 0 },
+            { 5.00, 3600, 2500, 0 },
+            { 5.52, 3800, 2500, 0 },
+            { 6.00, 4000, 2500, 0 },
+            { 6.52, 4200, 2500, 0 } };
     private double[] shooterCoeffs = {};
     private double[] kickerCoeffs = {};
     private double[] velCoeffs = {};
@@ -106,14 +112,15 @@ public class ShooterSubsystem extends SubsystemBase {
     private boolean isShooting = false;
     private boolean isKicking = false;
 
+    private static final double comp_dist_offset = 0.6; // meters
+
     /**
      * ShooterSubsystem Constructor
      *
      * @param m_hopper     Hopper subsystem reference
-     * @param isRed        Alliance color flag
      * @param m_drivetrain Drivetrain subsystem reference
      */
-    public ShooterSubsystem(HopperSubsystem m_hopper, boolean isRed, DriveSubsystem m_drivetrain) {
+    public ShooterSubsystem(HopperSubsystem m_hopper, DriveSubsystem m_drivetrain) {
 
         this.m_hopper = m_hopper;
         this.m_drivetrain = m_drivetrain;
@@ -193,8 +200,6 @@ public class ShooterSubsystem extends SubsystemBase {
         if (!useTable) {
             calculateShooterCurves();
         }
-
-        this.isRed = isRed;
     }
 
     /**
@@ -548,7 +553,7 @@ public class ShooterSubsystem extends SubsystemBase {
                 isFirstCycleAuto = false;
             }
 
-            double distToHub = getDistToHub();
+            double distToHub = getDistToHub() + comp_dist_offset;
 
             double shooterRPM = 0;
             double kickerRPM = 0;
@@ -587,6 +592,7 @@ public class ShooterSubsystem extends SubsystemBase {
      * @return Distance in meters
      */
     public double getDistToHub() {
+        boolean isRed = (DriverStation.getAlliance()).get() == Alliance.Red;
         Translation2d absoluteTargetTranslation = getAbsoluteTranslation(isRed);
 
         double delta_x = absoluteTargetTranslation.getX() - m_drivetrain.getRobotX();
@@ -595,6 +601,12 @@ public class ShooterSubsystem extends SubsystemBase {
         double hyp = Math.sqrt(delta_x * delta_x + delta_y * delta_y);
 
         return hyp;
+    }
+
+    private boolean beyondHubDash = false;
+
+    public boolean getIsBeyondHub() {
+        return beyondHubDash;
     }
 
     /**
@@ -614,6 +626,8 @@ public class ShooterSubsystem extends SubsystemBase {
         boolean beyondHub = isRed
                 ? robotX < Constants.HUB_RED_X
                 : robotX > Constants.HUB_BLUE_X;
+
+        beyondHubDash = beyondHub;
 
         if (!beyondHub) {
             return hubTarget;
