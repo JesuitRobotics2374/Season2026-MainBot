@@ -16,8 +16,7 @@ public class Constants {
     public static final double HUB_BLUE_X = 4.625594;
     public static final double HUB_Y = 4.034536;
 
-    // Placeholder corner targets for "beyond hub" shooting fallback.
-    // Replace with tuned/scouted values once tested on-field.
+    // Corner targets for "beyond hub" passing feature.
     public static final Translation2d BLUE_SIDE_CORNER_NEAR = new Translation2d(1.00, 1.00);
     public static final Translation2d BLUE_SIDE_CORNER_FAR = new Translation2d(1.00, 7.00);
     public static final Translation2d RED_SIDE_CORNER_NEAR = new Translation2d(15.54, 1.00);
@@ -30,6 +29,37 @@ public class Constants {
     // Motor-recognized values
     public static final double HOOD_MIN_SETPOINT = 0.0;
     public static final double HOOD_MAX_SETPOINT = 0.20;
+
+    // Shooter constants
+    public static final double DEFAULT_KICKER_RPM = 2500.0;
+        public static final double[][] SHOOTER_LOOKUP_TABLE = {
+            { 1.51, 2000, 0 },
+            { 2.00, 2300, 0 },
+            { 2.52, 2600, 0 },
+            { 3.00, 2800, 0 },
+            { 3.52, 3000, 0 },
+            { 4.00, 3200, 0 } };
+
+        // Shoot-on-the-move (SOTM) constants
+        public static final boolean ENABLE_SHOOT_ON_MOVE = true;
+        public static final double SOTM_PHASE_DELAY_SECONDS = 0.03;
+        public static final double SOTM_VELOCITY_BLEND_SETPOINT_WEIGHT = 0.5;
+        public static final int SOTM_LOOKAHEAD_ITERATIONS = 20;
+        public static final double SOTM_MIN_DISTANCE_METERS = 1.2;
+        public static final double SOTM_MAX_DISTANCE_METERS = 6.0;
+        public static final double SOTM_DRIVE_YAW_TOLERANCE_RAD = Math.toRadians(5.0);
+        public static final double SOTM_DRIVE_KP = 8.0;
+        public static final double SOTM_DRIVE_KD = 0.5;
+
+        // Distance (m), TOF (s)
+        public static final double[][] SOTM_TOF_TABLE = {
+            { 1.4, 0.89 },
+            { 1.9, 0.95 },
+            { 2.5, 1.03 },
+            { 3.0, 1.10 },
+            { 3.5, 1.16 },
+            { 4.2, 1.24 },
+            { 5.0, 1.35 } };
     
     public static final double AUTO_X_OFFSET = 0;
     public static final double AUTO_ROLL_OFFSET = 0;

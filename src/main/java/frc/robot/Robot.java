@@ -44,6 +44,8 @@ public class Robot extends TimedRobot {
      CommandScheduler.getInstance().run(); 
 
     m_core.drivetrain.passGlobalEstimates(m_core.vision.getGlobalFieldPoses());
+    m_core.publishSotmTelemetry();
+    m_core.clearLaunchCalculatorCache();
 
     SmartDashboard.putNumber("Battery Voltage", RobotController.getBatteryVoltage());
   }

@@ -18,6 +18,7 @@ import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.FunctionalCommand;
@@ -26,6 +27,10 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.subsystems.drivetrain.DriveSubsystem;
 import frc.robot.utils.Ballistics;
 import frc.robot.utils.Constants;
+import frc.robot.utils.aiming.AimingUtil;
+import frc.robot.utils.aiming.LaunchCalculator;
+import frc.robot.utils.aiming.LaunchingParameters;
+import frc.robot.utils.aiming.ShooterLookupTable;
 
 /**
  * ShooterSubsystem
@@ -69,13 +74,16 @@ public class ShooterSubsystem extends SubsystemBase {
 
     // Target speeds
     private double targetRPM = 2000;
-    private double targetRPMKicker = 2500;
+    private double targetRPMKicker = Constants.DEFAULT_KICKER_RPM;
 
     // Shooter limits and constants
     private static final double MAX_RPM = 5400.0;
     private static final double RPM_TO_RPS = 1.0 / 60.0; // CTRE uses rotations per second
     private static final double CURRENT_LIMIT = 60.0; // Amps
     private static final double KICKER_CURRENT_LIMIT = 60; // Amps
+    private static final double HOOD_POSITION_TOLERANCE = 0.02;
+    private static final double MIN_LAUNCH_READY_TIME_SECS = 0.15;
+    private static final double MIN_COMMAND_RPM_FOR_FEED = 300.0;
 
     private double hoodTargetPos;
 
@@ -86,21 +94,23 @@ public class ShooterSubsystem extends SubsystemBase {
     private boolean autoShooting = false;
     private final boolean useTable = true;
     private final boolean useVelBased = false;
-    private boolean isRed;
 
     // Polynomial shooter curve storage
 
-    // Distance (from shooter), RPM Shooter, RPM Kicker, Hood
-    private double[][] shooterValues = {
-            { 1.51, 2000, 2500, 0 },
-            { 2.00, 2300, 2500, 0 },
-            { 2.52, 2600, 2500, 0 },
-            { 3.00, 2800, 2500, 0 },
-            { 3.52, 3000, 2500, 0 },
-            { 4.00, 3200, 2500, 0 } };
+        // Distance (from shooter), RPM Shooter, Hood Percent
+        private final double[][] shooterValues = {
+            { 1.51, 2000, 0 },
+            { 2.00, 2300, 0 },
+            { 2.52, 2600, 0 },
+            { 3.00, 2800, 0 },
+            { 3.52, 3000, 0 },
+            { 4.00, 3200, 0 } };
     private double[] shooterCoeffs = {};
-    private double[] kickerCoeffs = {};
     private double[] velCoeffs = {};
+    private final ShooterLookupTable shooterLookupTable;
+    private final LaunchCalculator launchCalculator;
+
+    private final Timer launchReadyTimer = new Timer();
 
     // Toggle state tracking
     private boolean isShooting = false;
@@ -110,13 +120,13 @@ public class ShooterSubsystem extends SubsystemBase {
      * ShooterSubsystem Constructor
      *
      * @param m_hopper     Hopper subsystem reference
-     * @param isRed        Alliance color flag
      * @param m_drivetrain Drivetrain subsystem reference
      */
-    public ShooterSubsystem(HopperSubsystem m_hopper, boolean isRed, DriveSubsystem m_drivetrain) {
+    public ShooterSubsystem(HopperSubsystem m_hopper, DriveSubsystem m_drivetrain, LaunchCalculator launchCalculator) {
 
         this.m_hopper = m_hopper;
         this.m_drivetrain = m_drivetrain;
+        this.launchCalculator = launchCalculator;
 
         // CAN IDs
         kicker = new TalonFX(33);
@@ -194,7 +204,8 @@ public class ShooterSubsystem extends SubsystemBase {
             calculateShooterCurves();
         }
 
-        this.isRed = isRed;
+        shooterLookupTable = new ShooterLookupTable(shooterValues);
+
     }
 
     /**
@@ -204,22 +215,17 @@ public class ShooterSubsystem extends SubsystemBase {
     private void calculateShooterCurves() {
 
         WeightedObservedPoints shooterPoints = new WeightedObservedPoints();
-        WeightedObservedPoints kickerPoints = new WeightedObservedPoints();
         WeightedObservedPoints velPoints = new WeightedObservedPoints();
 
         for (int i = 0; i < shooterValues.length; i++) {
             double[] values = shooterValues[i];
             shooterPoints.add(values[0], values[1]);
-            kickerPoints.add(values[0], values[2]);
             velPoints.add(Ballistics.CalculateNeededShooterSpeed(values[0], 0, 0, Constants.HOOD_ZERO_ANGLE),
                     values[1]);
         }
 
         PolynomialCurveFitter fitterShooter = PolynomialCurveFitter.create(3);
         shooterCoeffs = fitterShooter.fit(shooterPoints.toList());
-
-        PolynomialCurveFitter fitterKicker = PolynomialCurveFitter.create(3);
-        kickerCoeffs = fitterKicker.fit(kickerPoints.toList());
 
         PolynomialCurveFitter fitterVel = PolynomialCurveFitter.create(3);
         velCoeffs = fitterVel.fit(velPoints.toList());
@@ -364,16 +370,23 @@ public class ShooterSubsystem extends SubsystemBase {
             () -> {
                 rotate(getTargetRPM());
                 setKickerControl();
+                launchReadyTimer.stop();
+                launchReadyTimer.reset();
             },
             () -> {
                 rotate(getTargetRPM());
                 setKickerControl();
-                if (isVelocityWithinTolerance()) {
+
+                if (isLaunchReadyStable()) {
                     m_hopper.spinForwards();
+                } else {
+                    m_hopper.stopMotor();
                 }
             },
             interrupted -> {
                 stopAll();
+                launchReadyTimer.stop();
+                launchReadyTimer.reset();
             },
             () -> false,
             this);
@@ -521,6 +534,32 @@ public class ShooterSubsystem extends SubsystemBase {
         return controlReady && followerReady;
     }
 
+    private boolean isHoodWithinTolerance() {
+        return Math.abs(getHoodPosition() - hoodTargetPos) <= HOOD_POSITION_TOLERANCE;
+    }
+
+    private boolean isLaunchReadyNow() {
+        boolean shooterCommanded = Math.abs(getTargetRPM()) >= MIN_COMMAND_RPM_FOR_FEED;
+        boolean hoodReady = HOOD_DISABLED || isHoodWithinTolerance();
+        boolean driveReady = !Constants.ENABLE_SHOOT_ON_MOVE || launchCalculator.atDriveGoal();
+        boolean launchValid = !Constants.ENABLE_SHOOT_ON_MOVE || launchCalculator.getParameters().isValid();
+        return shooterCommanded && isVelocityWithinTolerance() && hoodReady && driveReady && launchValid;
+    }
+
+    private boolean isLaunchReadyStable() {
+        if (!isLaunchReadyNow()) {
+            launchReadyTimer.stop();
+            launchReadyTimer.reset();
+            return false;
+        }
+
+        if (!launchReadyTimer.isRunning()) {
+            launchReadyTimer.restart();
+        }
+
+        return launchReadyTimer.hasElapsed(MIN_LAUNCH_READY_TIME_SECS);
+    }
+
     /**
      * @return Total supply current of shooter motors
      */
@@ -551,25 +590,36 @@ public class ShooterSubsystem extends SubsystemBase {
             double distToHub = getDistToHub();
 
             double shooterRPM = 0;
-            double kickerRPM = 0;
+            double kickerRPM = Constants.DEFAULT_KICKER_RPM;
 
             ChassisSpeeds robotSpeeds = m_drivetrain.getCurrentRobotChassisSpeeds();
 
             if (useTable) {
-                double best[] = bestPoint(distToHub);
+                if (Constants.ENABLE_SHOOT_ON_MOVE) {
+                    LaunchingParameters parameters = launchCalculator.getParameters();
+                    shooterRPM = parameters.flywheelSpeed();
+                    if (!HOOD_DISABLED) {
+                        double hoodPercent = (parameters.hoodAngle() - Constants.HOOD_ZERO_ANGLE)
+                                / (Constants.HOOD_LOWEST_ANGLE - Constants.HOOD_ZERO_ANGLE);
+                        setHoodPositionPercent(hoodPercent);
+                    }
+                } else {
+                    ShooterLookupTable.ShotSetpoint setpoint = shooterLookupTable.sample(distToHub);
 
-                shooterRPM = best[1];
-                kickerRPM = best[2];
+                    shooterRPM = setpoint.shooterRPM();
+
+                    if (!HOOD_DISABLED) {
+                        setHoodPositionPercent(setpoint.hoodPercent());
+                    }
+                }
             } else {
                 if (useVelBased) {
                     shooterRPM = getValueFromCurve(
                             Ballistics.CalculateNeededShooterSpeed(distToHub, robotSpeeds.vxMetersPerSecond,
                                     robotSpeeds.vyMetersPerSecond, getCurrentHoodReleaseAngleRadians()),
                             velCoeffs);
-                    kickerRPM = getValueFromCurve(distToHub, kickerCoeffs);
                 } else {
                     shooterRPM = getValueFromCurve(distToHub, shooterCoeffs);
-                    kickerRPM = getValueFromCurve(distToHub, kickerCoeffs);
                 }
             }
 
@@ -587,70 +637,8 @@ public class ShooterSubsystem extends SubsystemBase {
      * @return Distance in meters
      */
     public double getDistToHub() {
-        Translation2d absoluteTargetTranslation = getAbsoluteTranslation(isRed);
-
-        double delta_x = absoluteTargetTranslation.getX() - m_drivetrain.getRobotX();
-        double delta_y = absoluteTargetTranslation.getY() - m_drivetrain.getRobotY();
-
-        double hyp = Math.sqrt(delta_x * delta_x + delta_y * delta_y);
-
-        return hyp;
-    }
-
-    /**
-     * Returns field position of scoring target based on alliance.
-     *
-     * @param isRed Alliance color
-     * @return Absolute field translation
-     */
-    private Translation2d getAbsoluteTranslation(boolean isRed) {
-        Translation2d hubTarget = isRed
-                ? new Translation2d(Constants.HUB_RED_X, Constants.HUB_Y)
-                : new Translation2d(Constants.HUB_BLUE_X, Constants.HUB_Y);
-
-        double robotX = m_drivetrain.getRobotX();
-        Translation2d robotTranslation = new Translation2d(robotX, m_drivetrain.getRobotY());
-
-        boolean beyondHub = isRed
-                ? robotX < Constants.HUB_RED_X
-                : robotX > Constants.HUB_BLUE_X;
-
-        if (!beyondHub) {
-            return hubTarget;
-        }
-
-        Translation2d nearCorner = isRed
-                ? Constants.RED_SIDE_CORNER_NEAR
-                : Constants.BLUE_SIDE_CORNER_NEAR;
-        Translation2d farCorner = isRed
-                ? Constants.RED_SIDE_CORNER_FAR
-                : Constants.BLUE_SIDE_CORNER_FAR;
-
-        double nearDistance = robotTranslation.getDistance(nearCorner);
-        double farDistance = robotTranslation.getDistance(farCorner);
-
-        return nearDistance <= farDistance ? nearCorner : farCorner;
-    }
-
-    private double[] bestPoint(double distanceMeters) {
-
-        if (shooterValues.length == 0) {
-            return new double[] { 0, 0, 0, 0 };
-        }
-
-        double[] closestRow = shooterValues[0];
-        double smallestError = Math.abs(distanceMeters - shooterValues[0][0]);
-
-        for (int i = 1; i < shooterValues.length; i++) {
-            double error = Math.abs(distanceMeters - shooterValues[i][0]);
-
-            if (error < smallestError) {
-                smallestError = error;
-                closestRow = shooterValues[i];
-            }
-        }
-
-        return closestRow;
+        Pose2d robotPose = m_drivetrain.getEstimator();
+        return AimingUtil.getShooterDistanceToTarget(robotPose);
     }
 
     /**

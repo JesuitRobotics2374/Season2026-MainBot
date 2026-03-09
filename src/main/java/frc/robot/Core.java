@@ -6,6 +6,7 @@ package frc.robot;
 
 import static edu.wpi.first.units.Units.*;
 
+import java.util.Optional;
 import java.util.jar.Attributes.Name;
 
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
@@ -15,6 +16,7 @@ import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
@@ -39,6 +41,8 @@ import frc.robot.subsystems.ShooterSubsystem;
 import frc.robot.subsystems.drivetrain.DriveSubsystem;
 import frc.robot.subsystems.vision.VisionSubsystem;
 import frc.robot.utils.Telemetry;
+import frc.robot.utils.aiming.LaunchCalculator;
+import frc.robot.utils.aiming.SotmTelemetry;
 
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.path.PathConstraints;
@@ -59,6 +63,7 @@ public class Core {
             .withDriveRequestType(DriveRequestType.OpenLoopVoltage); // Use open-loop control for drive motors
 
     private final Telemetry logger = new Telemetry(MaxSpeed);
+    private final SotmTelemetry sotmTelemetry = new SotmTelemetry();
 
     //Controllers
 
@@ -71,9 +76,11 @@ public class Core {
 
     public final VisionSubsystem vision = new VisionSubsystem();
 
+    public final LaunchCalculator launchCalculator = new LaunchCalculator(drivetrain);
+
     public final HopperSubsystem hopper = new HopperSubsystem();
 
-    public final ShooterSubsystem shooter = new ShooterSubsystem(hopper, false, drivetrain);
+    public final ShooterSubsystem shooter = new ShooterSubsystem(hopper, drivetrain, launchCalculator);
 
     public final IntakeSubsystem intake = new IntakeSubsystem();
 
@@ -85,7 +92,7 @@ public class Core {
 
     //Driver assist
     
-    private final FixYawToHub fixYawToHub = new FixYawToHub(drivetrain, false);
+    private final FixYawToHub fixYawToHub = new FixYawToHub(drivetrain, launchCalculator);
 
     private final Target testTarget = new Target(31, new Transform3d(1.575, 0.0, 0, new Rotation3d(0, 0, 0)));
 
@@ -157,22 +164,22 @@ public class Core {
 
     public boolean getIsOurHubActive() {
         String gameData = DriverStation.getGameSpecificMessage();
-        Alliance ourAlliance = (DriverStation.getAlliance()).get();
+        Optional<Alliance> ourAlliance = DriverStation.getAlliance();
         if (gameData.length() == 0) {
             hubActivityStatus = "NOT READY";
             return false;
         }
-        if (ourAlliance == null) {
+        if (ourAlliance.isEmpty()) {
             hubActivityStatus = "NO STATION";
             return false;
         }
         switch (gameData.charAt(0)) {
             case 'B':
-                if (ourAlliance == Alliance.Blue) {
+                if (ourAlliance.get() == Alliance.Blue) {
                     return true;
                 }
             case 'R':
-                if (ourAlliance == Alliance.Red) {
+                if (ourAlliance.get() == Alliance.Red) {
                     return true;
                 }
             default:
@@ -215,6 +222,11 @@ public class Core {
                 boolean driverActive = Math.abs(driveController.getRightX()) > 0.1 || !hubYawAlign;
 
                 double desiredRotationalRate = driverActive ? driverRotationalRate : -calculateRotationalRate();
+
+                drivetrain.setCommandedRobotChassisSpeeds(new ChassisSpeeds(
+                        -driverVelocityX,
+                        -driverVelocityY,
+                        desiredRotationalRate));
 
                     return drive
                         .withVelocityX(-driverVelocityX) // Limit translational acceleration forward/backward
@@ -274,6 +286,15 @@ public class Core {
 
     private double calculateRotationalRate() {
         return fixYawToHub.getRotationalRate();
+    }
+
+    public void publishSotmTelemetry() {
+        var params = launchCalculator.getParameters();
+        sotmTelemetry.publish(params, frc.robot.utils.Constants.ENABLE_SHOOT_ON_MOVE, launchCalculator.atDriveGoal());
+    }
+
+    public void clearLaunchCalculatorCache() {
+        launchCalculator.clearCachedParameters();
     }
 
     public void doPathfind(Pose2d target) {

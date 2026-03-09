@@ -1,7 +1,5 @@
 package frc.robot.align.driverAssist;
 
-import org.opencv.dnn.DetectionModel;
-
 import com.ctre.phoenix6.Utils;
 
 import edu.wpi.first.math.controller.PIDController;
@@ -13,6 +11,9 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.subsystems.drivetrain.DriveSubsystem;
 import frc.robot.utils.Constants;
+import frc.robot.utils.aiming.AimingUtil;
+import frc.robot.utils.aiming.LaunchCalculator;
+import frc.robot.utils.aiming.LaunchingParameters;
 
 public class FixYawToHub extends Command {
 
@@ -35,7 +36,7 @@ public class FixYawToHub extends Command {
     private static final double MAX_LEAD_TIME_SECONDS = 0.25;
 
     private final DriveSubsystem drivetrain;
-    private final boolean isRed;
+    private final LaunchCalculator launchCalculator;
 
     private Translation2d absoluteTargetTranslation;
 
@@ -44,88 +45,49 @@ public class FixYawToHub extends Command {
 
     boolean finishedOverride;
 
-    private Translation2d getAbsoluteTranslation(Pose2d robotPose) {
-        double robotX = robotPose.getX();
-        Translation2d robotTranslation = robotPose.getTranslation();
-
-        Translation2d hubTarget = isRed
-                ? new Translation2d(Constants.HUB_RED_X, Constants.HUB_Y)
-                : new Translation2d(Constants.HUB_BLUE_X, Constants.HUB_Y);
-
-        boolean beyondHub = isRed
-                ? robotX < Constants.HUB_RED_X - 1.75
-                : robotX > Constants.HUB_BLUE_X + 1.75;
-
-        if (!beyondHub) {
-            return hubTarget;
-        }
-
-        Translation2d nearCorner = isRed
-                ? Constants.RED_SIDE_CORNER_NEAR
-                : Constants.BLUE_SIDE_CORNER_NEAR;
-        Translation2d farCorner = isRed
-                ? Constants.RED_SIDE_CORNER_FAR
-                : Constants.BLUE_SIDE_CORNER_FAR;
-
-        double nearDistance = robotTranslation.getDistance(nearCorner);
-        double farDistance = robotTranslation.getDistance(farCorner);
-
-        return nearDistance <= farDistance ? nearCorner : farCorner;
-    }
-
-    private double printClock = 0;
-
     private double calculateRelativeTheta(Pose2d robotPose) {
+        Translation2d shooterFieldPos = AimingUtil.getShooterFieldPosition(robotPose);
 
-        // --- 1️⃣ Shooter offset in robot frame ---
-        Translation2d shooterOffset = new Translation2d(
-            Constants.CENTER_TO_SHOOTER_X,
-            Constants.CENTER_TO_SHOOTER_Y
-        );
-
-        // --- 2️⃣ Shooter position in field frame ---
-        Translation2d shooterFieldPos =
-            robotPose.getTranslation().plus(
-                shooterOffset.rotateBy(robotPose.getRotation())
-            );
-
-        // --- 3️⃣ Latency / estimator lead compensation ---
+        // --- Latency / estimator lead compensation ---
         double dt = Utils.getCurrentTimeSeconds()
                 - drivetrain.getTimeSinceLastEstimatorUpdate();
 
         dt = Math.max(0.0, Math.min(dt, MAX_LEAD_TIME_SECONDS));
 
-        ChassisSpeeds robotSpeeds = drivetrain.getCurrentRobotChassisSpeeds();
+        ChassisSpeeds robotRelativeSpeeds = drivetrain.getCurrentRobotChassisSpeeds();
+        ChassisSpeeds fieldRelativeSpeeds = ChassisSpeeds.fromRobotRelativeSpeeds(
+                robotRelativeSpeeds,
+                robotPose.getRotation());
 
         Translation2d predictedShooterPos =
             shooterFieldPos.plus(
                 new Translation2d(
-                    robotSpeeds.vxMetersPerSecond * dt,
-                    robotSpeeds.vyMetersPerSecond * dt
+                    fieldRelativeSpeeds.vxMetersPerSecond * dt,
+                    fieldRelativeSpeeds.vyMetersPerSecond * dt
                 )
             );
         
-    absoluteTargetTranslation = getAbsoluteTranslation(robotPose);
+        absoluteTargetTranslation = AimingUtil.getTargetTranslation(robotPose);
 
-        // --- 4️⃣ Vector from shooter → hub ---
+        // --- Vector from shooter to hub ---
         Translation2d toHub =
             absoluteTargetTranslation.minus(predictedShooterPos);
 
-        // --- 5️⃣ Desired field heading ---
+        // --- Desired field heading ---
         Rotation2d desiredHeading = toHub.getAngle();
 
-        // --- 6️⃣ Angular error (desired - current) ---
+        // --- Angular error (desired - current) ---
         return desiredHeading
                 .minus(robotPose.getRotation())
                 .getRadians();    
 }
 
-    public FixYawToHub(DriveSubsystem drivetrain, boolean isRed) {
+    public FixYawToHub(DriveSubsystem drivetrain, LaunchCalculator launchCalculator) {
         System.out.println("YAW LOCK CREATED");
         finishedOverride = false;
 
         this.drivetrain = drivetrain;
-    this.isRed = isRed;
+        this.launchCalculator = launchCalculator;
 
         // Yaw PID coefficients
         yawController = new PIDController(3, 0.0, 2);
@@ -146,6 +108,18 @@ public class FixYawToHub extends Command {
 
     @Override
     public void execute() {
+        if (Constants.ENABLE_SHOOT_ON_MOVE) {
+            LaunchingParameters parameters = launchCalculator.getParameters();
+            double measuredOmega = drivetrain.getCurrentRobotChassisSpeeds().omegaRadiansPerSecond;
+            double omegaOutput = parameters.driveVelocity()
+                + (parameters.driveAngle().minus(drivetrain.getState().Pose.getRotation()).getRadians()
+                    * Constants.SOTM_DRIVE_KP)
+                + ((parameters.driveVelocity() - measuredOmega) * Constants.SOTM_DRIVE_KD);
+
+            dtheta = Math.max(-MAX_ANGULAR_SPEED, Math.min(omegaOutput, MAX_ANGULAR_SPEED));
+            dtheta = yawRateLimiter.calculate(dtheta);
+            return;
+        }
 
         error_yaw = calculateRelativeTheta(drivetrain.getState().Pose);
 
@@ -250,19 +224,19 @@ public class FixYawToHub extends Command {
 
 //     private double calculateRelativeTheta(Pose2d robotPose) {
 
-//         // --- 1️⃣ Shooter offset in robot frame ---
+//         // --- Shooter offset in robot frame ---
 //         Translation2d shooterOffset = new Translation2d(
 //             Constants.CENTER_TO_SHOOTER_X,
 //             Constants.CENTER_TO_SHOOTER_Y
 //         );
 
-//         // --- 2️⃣ Shooter position in field frame ---
+//         // --- Shooter position in field frame ---
 //         Translation2d shooterFieldPos =
 //             robotPose.getTranslation().plus(
 //                 shooterOffset.rotateBy(robotPose.getRotation())
 //             );
 
-//         // --- 3️⃣ Latency / estimator lead compensation ---
+//         // --- Latency / estimator lead compensation ---
 //         double dt = Utils.getCurrentTimeSeconds()
 //                 - drivetrain.getTimeSinceLastEstimatorUpdate();
 
@@ -284,14 +258,14 @@ public class FixYawToHub extends Command {
 //                 )
 //             );
 
-//         // --- 4️⃣ Vector from shooter → hub ---
+//         // --- Vector from shooter → hub ---
 //         Translation2d toHub =
 //             absoluteTargetTranslation.minus(predictedShooterPos);
 
-//         // --- 5️⃣ Desired field heading ---
+//         // --- Desired field heading ---
 //         Rotation2d desiredHeading = toHub.getAngle();
 
-//         // --- 6️⃣ Angular error (desired - current) ---
+//         // --- Angular error (desired - current) ---
 //         return desiredHeading
 //                 .minus(robotPose.getRotation())
 //                 .getRadians();

@@ -54,6 +54,7 @@ public class DriveSubsystem extends TunerSwerveDrivetrain implements Subsystem {
 
     private RobotConfig config;
     private final SwerveRequest.ApplyRobotSpeeds autoRequest = new SwerveRequest.ApplyRobotSpeeds();
+    private ChassisSpeeds commandedRobotChassisSpeeds = new ChassisSpeeds();
 
     private double timeSinceLastEstimatorUpdate;
 
@@ -244,6 +245,14 @@ public class DriveSubsystem extends TunerSwerveDrivetrain implements Subsystem {
 
     public ChassisSpeeds getCurrentRobotChassisSpeeds() {
         return getKinematics().toChassisSpeeds(getState().ModuleStates);
+    }
+
+    public void setCommandedRobotChassisSpeeds(ChassisSpeeds speeds) {
+        commandedRobotChassisSpeeds = speeds;
+    }
+
+    public ChassisSpeeds getCommandedRobotChassisSpeeds() {
+        return commandedRobotChassisSpeeds;
     }
 
     private Rotation2d getGyroscopeRotation() {
