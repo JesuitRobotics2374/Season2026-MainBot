@@ -113,7 +113,7 @@ public class Core {
         NamedCommands.registerCommand("Shoot", new InstantCommand(() -> shooter.autoShoot())); //WILL WORK WHEN EHTAN'S CODE IS PUSHED IN
         NamedCommands.registerCommand("Stop Shoot", new InstantCommand(() -> shooter.stopAll())); //^^
         
-        NamedCommands.registerCommand("Start Intake", new InstantCommand(() -> intake.rotate(4000)));
+        NamedCommands.registerCommand("Start Intake", new InstantCommand(() -> intake.rotate(0))); //4000
         NamedCommands.registerCommand("Stop Intake", intake.stopCommand());
 
         NamedCommands.registerCommand("Deploy Intake", intake.lowerManual());

@@ -3,16 +3,16 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 3.7155920114122676,
-        "y": 7.405520684736091
+        "x": 3.5731777777777776,
+        "y": 7.387088888888888
       },
       "prevControl": null,
       "nextControl": {
-        "x": 8.03710413694722,
-        "y": 7.521968616262482
+        "x": 7.899711111111111,
+        "y": 7.465044444444444
       },
       "isLocked": false,
-      "linkedName": "LeftTrenchShoot"
+      "linkedName": "Start Blue Left"
     },
     {
       "anchor": {
@@ -53,7 +53,7 @@
   "folder": null,
   "idealStartingState": {
     "velocity": 0,
-    "rotation": -75.60640703150948
+    "rotation": -90.0
   },
   "useDefaultConstraints": true
 }
