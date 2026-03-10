@@ -3,25 +3,25 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 6.613851640513552,
-        "y": 1.6090014265335255
+        "x": 8.5,
+        "y": 1.1993666666666671
       },
       "prevControl": null,
       "nextControl": {
-        "x": 7.365962066429878,
-        "y": 0.3063079559441806
+        "x": 9.252110425916328,
+        "y": -0.10332680392267779
       },
       "isLocked": false,
       "linkedName": "NZRightStart"
     },
     {
       "anchor": {
-        "x": 7.880222222222223,
-        "y": 3.4893111111111113
+        "x": 8.5,
+        "y": 3.450333333333333
       },
       "prevControl": {
-        "x": 8.118160107354058,
-        "y": 2.139898308964648
+        "x": 8.737937885131835,
+        "y": 2.10092053118687
       },
       "nextControl": null,
       "isLocked": false,
@@ -67,7 +67,7 @@
   "folder": "Extras",
   "idealStartingState": {
     "velocity": 2.0,
-    "rotation": 156.58788583069736
+    "rotation": 180.0
   },
   "useDefaultConstraints": true
 }

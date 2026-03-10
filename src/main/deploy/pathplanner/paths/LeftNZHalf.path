@@ -8,8 +8,8 @@
       },
       "prevControl": null,
       "nextControl": {
-        "x": 9.491339843400247,
-        "y": 7.765107081442278
+        "x": 8.46458063624002,
+        "y": 6.15610862543219
       },
       "isLocked": false,
       "linkedName": "LeftNZStart"
@@ -20,35 +20,16 @@
         "y": 4.6366476462196875
       },
       "prevControl": {
-        "x": 8.54939729681161,
-        "y": 5.780915764745913
+        "x": 8.705999903896226,
+        "y": 5.570228072716889
       },
       "nextControl": null,
       "isLocked": false,
       "linkedName": "NZLeftHalf"
     }
   ],
-  "rotationTargets": [
-    {
-      "waypointRelativePos": 0.40157480314960864,
-      "rotationDegrees": 0.0
-    }
-  ],
-  "constraintZones": [
-    {
-      "name": "Constraints Zone",
-      "minWaypointRelativePos": 0.4580246913580241,
-      "maxWaypointRelativePos": 0.8794238683127583,
-      "constraints": {
-        "maxVelocity": 1.5,
-        "maxAcceleration": 3.0,
-        "maxAngularVelocity": 540.0,
-        "maxAngularAcceleration": 720.0,
-        "nominalVoltage": 12.0,
-        "unlimited": false
-      }
-    }
-  ],
+  "rotationTargets": [],
+  "constraintZones": [],
   "pointTowardsZones": [],
   "eventMarkers": [],
   "globalConstraints": {
@@ -60,13 +41,13 @@
     "unlimited": false
   },
   "goalEndState": {
-    "velocity": 2.0,
+    "velocity": 0,
     "rotation": 0.0
   },
   "reversed": false,
-  "folder": "Extras",
+  "folder": null,
   "idealStartingState": {
-    "velocity": 0,
+    "velocity": 2.0,
     "rotation": 0.0
   },
   "useDefaultConstraints": true
