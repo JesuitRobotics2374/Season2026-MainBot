@@ -72,6 +72,7 @@ public class FixYawToHub extends Command {
         // --- Vector from shooter to hub ---
         Translation2d toHub =
             absoluteTargetTranslation.minus(predictedShooterPos);
+            
 
         // --- Desired field heading ---
         Rotation2d desiredHeading = toHub.getAngle();
@@ -126,8 +127,8 @@ public class FixYawToHub extends Command {
         // Normalize yaw error to -π to π range
         error_yaw = Rotation2d.fromRadians(error_yaw).getRadians();
 
-        // Calculate PID outputs
-        dtheta = yawController.calculate(error_yaw);
+        // Calculate PID output from yaw error to zero error setpoint.
+        dtheta = yawController.calculate(error_yaw, 0.0);
 
         // Apply minimum command if needed
         if (Math.abs(error_yaw) > YAW_TOLERANCE && Math.abs(dtheta) < MIN_ANGULAR_COMMAND) {

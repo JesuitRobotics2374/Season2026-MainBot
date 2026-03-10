@@ -5,16 +5,15 @@
 package frc.robot.subsystems;
 
 import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.FunctionalCommand;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.utils.Constants;
 
 import com.ctre.phoenix6.configs.MotionMagicConfigs;
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
-import com.ctre.phoenix6.configs.TalonFXConfigurator;
 import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.controls.VelocityVoltage;
@@ -30,8 +29,15 @@ public class IntakeSubsystem extends SubsystemBase {
   private final TalonFX intakeFollower;
 
   private final VelocityVoltage velocityRequest = new VelocityVoltage(0).withSlot(0);
+  private final MotionMagicVoltage pivotRequest = new MotionMagicVoltage(0).withSlot(0);
   private boolean raised;
   private boolean lowered;
+
+  // Pivot motion limits in mechanism rotations (motor sensor rotations).
+  // Tune these based on your zeroing process and physical hard stops.
+  private static final double PIVOT_MIN_ROT = 0.0; // lowered
+  private static final double PIVOT_MAX_ROT = 0.38; // raised
+  private static final double PIVOT_CMD_EPSILON_ROT = 0.002;
 
   private double MAX_RPM = 6300;
   private double targetRPM = 4000;
@@ -42,7 +48,7 @@ public class IntakeSubsystem extends SubsystemBase {
   private final double RPM_TO_RPS = 1.0 / 60.0;
   private static final double CURRENT_LIMIT = 60.0; // Amps
 
-  private double targetPos; // the target position of the pivotMotor
+  private double targetPos; // target position of the pivot motor in rotations
 
   private boolean isIntaking;
   private boolean isPurging;
@@ -71,31 +77,34 @@ public class IntakeSubsystem extends SubsystemBase {
     intakeFollower.setControl(new Follower(intakeControl.getDeviceID(), MotorAlignmentValue.Opposed));
 
     TalonFXConfiguration talonFXConfigs = new TalonFXConfiguration();
-    // Slot0Configs slot0Configs = talonFXConfigs.Slot0;
-    // MotionMagicConfigs motionMagicConfigs = talonFXConfigs.MotionMagic;
+    Slot0Configs slot0Configs = talonFXConfigs.Slot0;
+    MotionMagicConfigs motionMagicConfigs = talonFXConfigs.MotionMagic;
 
-    // slot0Configs.kG = 0.2; // Output of voltage to overcome gravity
-    // slot0Configs.kV = 2; // Output per unit target velocity, perhaps not needed
-    // slot0Configs.kA = 0.3; // Output per unit target acceleration, perhaps not needed
-    // slot0Configs.kP = 15; // Controls the response to position error—how much the motor reacts to the
-    //                       // difference between the current position and the target position.
-    // slot0Configs.kI = 1.5; // Addresses steady-state error, which occurs when the motor doesn’t quite reach
-    // // the target position due to forces like gravity or friction.
-    // slot0Configs.kD = 0.3; // Responds to the rate of change of the error, damping the motion as the motor
-    //                        // approaches the target. This reduces overshooting and oscillations.
+    slot0Configs.kG = 0.2; // Output of voltage to overcome gravity
+    slot0Configs.kV = 2; // Output per unit target velocity, perhaps not needed
+    slot0Configs.kA = 0.3; // Output per unit target acceleration, perhaps not needed
+    slot0Configs.kP = 15; // Controls the response to position error—how much the motor reacts to the
+                          // difference between the current position and the target position.
+    slot0Configs.kI = 1.5; // Addresses steady-state error, which occurs when the motor doesn’t quite reach
+    // the target position due to forces like gravity or friction.
+    slot0Configs.kD = 0.3; // Responds to the rate of change of the error, damping the motion as the motor
+                           // approaches the target. This reduces overshooting and oscillations.
 
     talonFXConfigs.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
     talonFXConfigs.MotorOutput.NeutralMode = NeutralModeValue.Brake;
 
-    // motionMagicConfigs.MotionMagicCruiseVelocity = 80; // Target velocity in rps
-    // motionMagicConfigs.MotionMagicAcceleration = 68; // Target acceleration in rps/s
-    // motionMagicConfigs.MotionMagicJerk = 400; // Target jerk in rps/s/s
+    motionMagicConfigs.MotionMagicCruiseVelocity = 80; // Target velocity in rps
+    motionMagicConfigs.MotionMagicAcceleration = 68; // Target acceleration in rps/s
+    motionMagicConfigs.MotionMagicJerk = 400; // Target jerk in rps/s/s
 
     pivotMotor.getConfigurator().apply(talonFXConfigs);
-    // pivotMotor.getConfigurator().apply(slot0Configs);
-    // pivotMotor.getConfigurator().apply(motionMagicConfigs);
+    pivotMotor.getConfigurator().apply(slot0Configs);
+    pivotMotor.getConfigurator().apply(motionMagicConfigs);
 
     //setZero();
+    pivotMotor.setPosition(PIVOT_MIN_ROT);
+    targetPos = PIVOT_MIN_ROT;
+    pivotMotor.setControl(pivotRequest.withPosition(targetPos));
 
     raised = true;
     lowered = false;
@@ -174,6 +183,28 @@ public class IntakeSubsystem extends SubsystemBase {
 
   public Command stopPivot() {
     return new InstantCommand(() -> pivotMotor.set(0));
+  }
+
+  public void setPivotPositionRotations(double positionRotations) {
+    double clamped = MathUtil.clamp(positionRotations, PIVOT_MIN_ROT, PIVOT_MAX_ROT);
+    if (Math.abs(clamped - targetPos) < PIVOT_CMD_EPSILON_ROT) {
+      return;
+    }
+
+    targetPos = clamped;
+    pivotMotor.setControl(pivotRequest.withPosition(targetPos));
+
+    lowered = targetPos <= (PIVOT_MIN_ROT + 0.01);
+    raised = targetPos >= (PIVOT_MAX_ROT - 0.01);
+  }
+
+  /**
+   * Sets intake pivot with a normalized input where 0 = fully lowered, 1 = fully raised.
+   */
+  public void setPivotNormalized(double normalizedPosition) {
+    double normalized = MathUtil.clamp(normalizedPosition, 0.0, 1.0);
+    double positionRot = MathUtil.interpolate(PIVOT_MIN_ROT, PIVOT_MAX_ROT, normalized);
+    setPivotPositionRotations(positionRot);
   }
 
   public Command intakeCommand() {

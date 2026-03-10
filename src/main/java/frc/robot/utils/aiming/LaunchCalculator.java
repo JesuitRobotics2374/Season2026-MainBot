@@ -81,8 +81,7 @@ public class LaunchCalculator {
             lookaheadDistance = target.getDistance(lookaheadShooterPosition);
         }
 
-        Pose2d lookaheadRobotPose = new Pose2d(lookaheadRobotPosition, estimatedPose.getRotation());
-        Rotation2d driveAngle = getDriveAngleWithShooterOffset(lookaheadRobotPose, target);
+        Rotation2d driveAngle = getDriveAngleWithShooterOffset(lookaheadRobotPosition, target);
 
         ShooterLookupTable.ShotSetpoint setpoint = shooterLookupTable.sample(lookaheadDistance);
         double hoodPercent = MathUtil.clamp(setpoint.hoodPercent(), 0.0, 1.0);
@@ -171,13 +170,20 @@ public class LaunchCalculator {
         return Math.abs(yawError) <= Constants.SOTM_DRIVE_YAW_TOLERANCE_RAD;
     }
 
-    private static Rotation2d getDriveAngleWithShooterOffset(Pose2d robotPose, Translation2d target) {
-        Rotation2d fieldToTargetAngle = target.minus(robotPose.getTranslation()).getAngle();
-        double robotToShooterY = Constants.CENTER_TO_SHOOTER_Y;
-        double distance = target.getDistance(robotPose.getTranslation());
-        Rotation2d offsetAngle = new Rotation2d(
-                Math.asin(MathUtil.clamp(robotToShooterY / Math.max(distance, 1e-6), -1.0, 1.0)));
-        return fieldToTargetAngle.plus(offsetAngle);
+        private static Rotation2d getDriveAngleWithShooterOffset(Translation2d robotTranslation, Translation2d target) {
+                // Solve theta such that shooter heading equals the angle from shooter position to target.
+                // Shooter position depends on theta because shooter is offset from robot center.
+                Rotation2d theta = target.minus(robotTranslation).getAngle();
+                Translation2d shooterOffset = new Translation2d(
+                                Constants.CENTER_TO_SHOOTER_X,
+                                Constants.CENTER_TO_SHOOTER_Y);
+
+                for (int i = 0; i < 8; i++) {
+                        Translation2d shooterPos = robotTranslation.plus(shooterOffset.rotateBy(theta));
+                        theta = target.minus(shooterPos).getAngle();
+                }
+
+                return theta;
     }
 
     private boolean isPassingTarget(Translation2d target) {

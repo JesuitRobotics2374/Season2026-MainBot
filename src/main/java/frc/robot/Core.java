@@ -17,6 +17,7 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
@@ -69,6 +70,7 @@ public class Core {
 
     private final CommandXboxController driveController = new CommandXboxController(0);
     private final CommandXboxController operatorController = new CommandXboxController(1);
+    private final CommandXboxController customController = new CommandXboxController(2);
 
     //Subsystems
 
@@ -221,7 +223,7 @@ public class Core {
                 //     Math.abs(driverRotationalRate) > 0.05;
                 boolean driverActive = Math.abs(driveController.getRightX()) > 0.1 || !hubYawAlign;
 
-                double desiredRotationalRate = driverActive ? driverRotationalRate : -calculateRotationalRate();
+                double desiredRotationalRate = driverActive ? driverRotationalRate : calculateRotationalRate();
 
                 drivetrain.setCommandedRobotChassisSpeeds(new ChassisSpeeds(
                         -driverVelocityX,
@@ -329,6 +331,19 @@ public class Core {
             DriverStation.reportError("Pathing failed: " + e.getMessage(), e.getStackTrace());
             return Commands.none();
         }
+    }
+
+    public void periodic() {
+        // Set the intake pivot based on the X axis of the custom controller. 1 = fully raised, 0 = fully lowered.
+        // Note that the X axis is a fixed slider not a joystick.
+        double rawPivotInput = customController.getLeftX();
+
+        // Support either a 0..1 slider signal or a -1..1 axis signal.
+        double normalizedPivot = (rawPivotInput >= 0.0 && rawPivotInput <= 1.0)
+                ? rawPivotInput
+                : (rawPivotInput + 1.0) * 0.5;
+
+        intake.setPivotNormalized(MathUtil.clamp(normalizedPivot * 20, 0.0, 1.0));
     }
 
 

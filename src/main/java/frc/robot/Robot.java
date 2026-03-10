@@ -92,6 +92,7 @@ public class Robot extends TimedRobot {
 
   @Override
   public void teleopPeriodic() {
+    m_core.periodic();
   }
 
   @Override

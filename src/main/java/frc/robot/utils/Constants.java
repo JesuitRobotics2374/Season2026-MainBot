@@ -48,18 +48,13 @@ public class Constants {
         public static final double SOTM_MIN_DISTANCE_METERS = 1.2;
         public static final double SOTM_MAX_DISTANCE_METERS = 6.0;
         public static final double SOTM_DRIVE_YAW_TOLERANCE_RAD = Math.toRadians(5.0);
-        public static final double SOTM_DRIVE_KP = 8.0;
-        public static final double SOTM_DRIVE_KD = 0.5;
+        public static final double SOTM_DRIVE_KP = 12.0;
+        public static final double SOTM_DRIVE_KD = 2.5;
 
         // Distance (m), TOF (s)
         public static final double[][] SOTM_TOF_TABLE = {
-            { 1.4, 0.89 },
-            { 1.9, 0.95 },
-            { 2.5, 1.03 },
-            { 3.0, 1.10 },
-            { 3.5, 1.16 },
-            { 4.2, 1.24 },
-            { 5.0, 1.35 } };
+            { 2.5, 1.05 },
+            { 4.0, 1.35 } };
     
     public static final double AUTO_X_OFFSET = 0;
     public static final double AUTO_ROLL_OFFSET = 0;
@@ -68,6 +63,6 @@ public class Constants {
     public static final double AUTO_Z_OFFSET = 0;
     public static final double AUTO_YAW_OFFSET = 0;
 
-    public static final double DEFAULT_DRIVE_CURRENT = 40;
+    public static final double DEFAULT_DRIVE_CURRENT = 100;
     public static final double DEFAULT_STEER_CURRENT = 30;
 }

@@ -6,6 +6,7 @@ import edu.wpi.first.networktables.BooleanPublisher;
 import edu.wpi.first.networktables.DoublePublisher;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.networktables.StructArrayPublisher;
 import edu.wpi.first.networktables.StructPublisher;
 
 public class SotmTelemetry {
@@ -26,6 +27,13 @@ public class SotmTelemetry {
             .getStructTopic("ShooterToTargetVectorM", Translation3d.struct).publish();
     private final StructPublisher<Translation3d> lookaheadToTargetPub = table
             .getStructTopic("LookaheadToTargetVectorM", Translation3d.struct).publish();
+
+    private final StructArrayPublisher<Pose3d> shooterToTargetLinePub = table
+            .getStructArrayTopic("ShooterToTargetLine3d", Pose3d.struct).publish();
+    private final StructArrayPublisher<Pose3d> lookaheadToTargetLinePub = table
+            .getStructArrayTopic("LookaheadToTargetLine3d", Pose3d.struct).publish();
+    private final StructArrayPublisher<Pose3d> compensationLinePub = table
+            .getStructArrayTopic("CompensationLine3d", Pose3d.struct).publish();
 
     private final DoublePublisher distancePub = table.getDoubleTopic("DistanceM").publish();
     private final DoublePublisher distanceRawPub = table.getDoubleTopic("DistanceNoLookaheadM").publish();
@@ -56,6 +64,11 @@ public class SotmTelemetry {
         compensationPub.set(params.compensationVector());
         shooterToTargetPub.set(params.shooterToTargetVector());
         lookaheadToTargetPub.set(params.lookaheadToTargetVector());
+
+        // Publish explicit start->end line segments so field visualization has both endpoints.
+        shooterToTargetLinePub.set(new Pose3d[] { params.shooterPose(), params.targetPose() });
+        lookaheadToTargetLinePub.set(new Pose3d[] { params.lookaheadShooterPose(), params.targetPose() });
+        compensationLinePub.set(new Pose3d[] { params.shooterPose(), params.lookaheadShooterPose() });
 
         distancePub.set(params.distance());
         distanceRawPub.set(params.distanceNoLookahead());
