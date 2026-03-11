@@ -3,48 +3,57 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 7.7,
-        "y": 3.5282888888888877
+        "x": 3.6219,
+        "y": 2.095855555555554
       },
       "prevControl": null,
       "nextControl": {
-        "x": 7.752094453300079,
-        "y": 3.2328465629852254
+        "x": 3.3685444444444443,
+        "y": 2.0373888888888882
       },
       "isLocked": false,
-      "linkedName": "NZRightHalf2"
+      "linkedName": "RightBumpStart"
     },
     {
       "anchor": {
-        "x": 7.7,
-        "y": 1.1993666666666671
+        "x": 4.430688888888889,
+        "y": 0.6439333333333332
       },
       "prevControl": {
-        "x": 7.838918542133545,
-        "y": 1.9872128690764335
+        "x": 2.3453777777777773,
+        "y": 0.6147000000000001
       },
       "nextControl": {
-        "x": 7.561081457866456,
-        "y": 0.4115204642569008
+        "x": 7.395848289624992,
+        "y": 0.6855009884838386
       },
       "isLocked": false,
-      "linkedName": "NZRightStart2"
+      "linkedName": null
     },
     {
       "anchor": {
-        "x": 4.1,
-        "y": 0.6634222222222217
+        "x": 8.503866666666667,
+        "y": 1.316299999999999
       },
       "prevControl": {
-        "x": 5.1,
-        "y": 0.6634222222222216
+        "x": 8.503866666666667,
+        "y": 0.5162999999999989
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": "RightTrenchShoot"
+      "linkedName": "NZRightStart"
     }
   ],
-  "rotationTargets": [],
+  "rotationTargets": [
+    {
+      "waypointRelativePos": 0.75,
+      "rotationDegrees": 90.0
+    },
+    {
+      "waypointRelativePos": 1.05,
+      "rotationDegrees": 90.0
+    }
+  ],
   "constraintZones": [],
   "pointTowardsZones": [],
   "eventMarkers": [],
@@ -57,14 +66,14 @@
     "unlimited": true
   },
   "goalEndState": {
-    "velocity": 1.0,
-    "rotation": 75.52904727476295
+    "velocity": 2.5,
+    "rotation": 180.0
   },
   "reversed": false,
   "folder": null,
   "idealStartingState": {
-    "velocity": 0,
-    "rotation": 180.0
+    "velocity": 0.0,
+    "rotation": 90.51849968729069
   },
   "useDefaultConstraints": true
 }
