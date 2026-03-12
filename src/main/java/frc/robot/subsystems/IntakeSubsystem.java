@@ -258,14 +258,14 @@ public class IntakeSubsystem extends SubsystemBase {
         () -> {
           // Pulse logic: 0.4s ON, 0.2s OFF (Total 0.6s cycle)
           if ((timer.get() % 0.5) < 0.25) {
-            pivotMotor.set(-0.1);
+            setPivotNormalized(1.0);
           } else {
-            pivotMotor.set(0.1);
+            setPivotNormalized(0);
           }
         },
         // 3. End: Stop the motor when the command is interrupted/finished
         interrupted -> {
-          pivotMotor.stopMotor();
+          setPivotNormalized(0);
         },
         // 4. isFinished: Return false so it runs until you release the button
         () -> false,
