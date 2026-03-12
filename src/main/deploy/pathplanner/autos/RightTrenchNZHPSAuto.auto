@@ -15,19 +15,7 @@
                     {
                       "type": "named",
                       "data": {
-                        "name": "Deploy Intake"
-                      }
-                    },
-                    {
-                      "type": "wait",
-                      "data": {
-                        "waitTime": 1.5
-                      }
-                    },
-                    {
-                      "type": "named",
-                      "data": {
-                        "name": "Stop Deploy"
+                        "name": "Deploy Intake Full"
                       }
                     }
                   ]

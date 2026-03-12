@@ -126,6 +126,7 @@ public class Core {
         NamedCommands.registerCommand("Stop Intake", intake.stopCommand());
 
         NamedCommands.registerCommand("Deploy Intake", new InstantCommand(() -> intake.setPivotNormalized(0.5)));
+        NamedCommands.registerCommand("Deploy Intake Full", new InstantCommand(() -> intake.setPivotNormalized(0)));
         NamedCommands.registerCommand("Stop Deploy", new InstantCommand(() -> intake.stopPivot()));
         
         NamedCommands.registerCommand("Fluctuate Intake", intake.fluctuatingIntakeCommand());
