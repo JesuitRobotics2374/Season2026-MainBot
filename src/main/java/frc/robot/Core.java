@@ -149,7 +149,7 @@ public class Core {
     
         Tab.addDouble("Drivetrain X", () -> drivetrain.getEstimator().getX());
         Tab.addDouble("Drivetrain Y", () -> drivetrain.getEstimator().getY());
-        Tab.addDouble("Dist To Hub", () -> Math.round(shooter.getDistToHub()*100)/100);
+        Tab.addDouble("Dist To Hub", () -> Math.round((double)shooter.getDistToHub()*100.0)/100.0);
         Tab.addDouble("Time", () -> DriverStation.getMatchTime());
 
         Tab.addBoolean("Our Hub Active", () -> getIsOurHubActive());
@@ -254,6 +254,7 @@ public class Core {
 
         // OPERATOR BINDINGS
 
+        driveController.b().onTrue(new InstantCommand(() -> {intake.setPivotZero();}));
         
         operatorController.a().toggleOnTrue(intake.intakeCommand());
         operatorController.b().onTrue(hopper.changeRPMCommand(100));
@@ -261,9 +262,11 @@ public class Core {
         operatorController.y().onTrue(new InstantCommand(() -> shooter.autoShoot()));
 
         
-        operatorController.povUp().whileTrue(intake.raiseManual()).onFalse(intake.stopPivot());
+        operatorController.povUp().onTrue(intake.addPositionCommand(1));
+        //operatorController.povUp().whileTrue(intake.raiseManual()).onFalse(intake.stopPivot());
         operatorController.povRight().onTrue(intake.changeTargetRPMCommand(100));
-        operatorController.povDown().whileTrue(intake.lowerManual()).onFalse(intake.stopPivot());
+        operatorController.povDown().onTrue(intake.addPositionCommand(-1));
+        //operatorController.povDown().whileTrue(intake.lowerManual()).onFalse(intake.stopPivot());
         operatorController.povLeft().onTrue(intake.changeTargetRPMCommand(-100));
 
         operatorController.rightBumper().onTrue(new InstantCommand(() -> shooter.changeKickerTargetRPM(100)));
@@ -339,11 +342,9 @@ public class Core {
         double rawPivotInput = customController.getLeftX();
 
         // Support either a 0..1 slider signal or a -1..1 axis signal.
-        double normalizedPivot = (rawPivotInput >= 0.0 && rawPivotInput <= 1.0)
-                ? rawPivotInput
-                : (rawPivotInput + 1.0) * 0.5;
+        double normalizedPivot = (rawPivotInput + 1.0) * 0.5;
 
-        intake.setPivotNormalized(MathUtil.clamp(normalizedPivot * 20, 0.0, 1.0));
+        intake.setPivotNormalized(MathUtil.clamp(normalizedPivot, 0.0, 1.0));
     }
 
 

@@ -35,8 +35,8 @@ public class IntakeSubsystem extends SubsystemBase {
 
   // Pivot motion limits in mechanism rotations (motor sensor rotations).
   // Tune these based on your zeroing process and physical hard stops.
-  private static final double PIVOT_MIN_ROT = 0.0; // lowered
-  private static final double PIVOT_MAX_ROT = 0.38; // raised
+  private static final double PIVOT_MIN_ROT = -22; // lowered
+  private static final double PIVOT_MAX_ROT = 0; // raised
   private static final double PIVOT_CMD_EPSILON_ROT = 0.002;
 
   private double MAX_RPM = 6300;
@@ -80,61 +80,60 @@ public class IntakeSubsystem extends SubsystemBase {
     Slot0Configs slot0Configs = talonFXConfigs.Slot0;
     MotionMagicConfigs motionMagicConfigs = talonFXConfigs.MotionMagic;
 
-    slot0Configs.kG = 0.2; // Output of voltage to overcome gravity
+    slot0Configs.kG = 0.1; // Output of voltage to overcome gravity
     slot0Configs.kV = 2; // Output per unit target velocity, perhaps not needed
     slot0Configs.kA = 0.3; // Output per unit target acceleration, perhaps not needed
     slot0Configs.kP = 15; // Controls the response to position error—how much the motor reacts to the
                           // difference between the current position and the target position.
-    slot0Configs.kI = 1.5; // Addresses steady-state error, which occurs when the motor doesn’t quite reach
+    slot0Configs.kI = 0.01; // Addresses steady-state error, which occurs when the motor doesn’t quite reach
     // the target position due to forces like gravity or friction.
-    slot0Configs.kD = 0.3; // Responds to the rate of change of the error, damping the motion as the motor
+    slot0Configs.kD = 0.1; // Responds to the rate of change of the error, damping the motion as the motor
                            // approaches the target. This reduces overshooting and oscillations.
 
-    talonFXConfigs.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
+    talonFXConfigs.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
     talonFXConfigs.MotorOutput.NeutralMode = NeutralModeValue.Brake;
 
-    motionMagicConfigs.MotionMagicCruiseVelocity = 80; // Target velocity in rps
-    motionMagicConfigs.MotionMagicAcceleration = 68; // Target acceleration in rps/s
-    motionMagicConfigs.MotionMagicJerk = 400; // Target jerk in rps/s/s
+    motionMagicConfigs.MotionMagicCruiseVelocity = 50; // Target velocity in rps
+    motionMagicConfigs.MotionMagicAcceleration = 70; // Target acceleration in rps/s
+    motionMagicConfigs.MotionMagicJerk = 100; // Target jerk in rps/s/s
 
     pivotMotor.getConfigurator().apply(talonFXConfigs);
     pivotMotor.getConfigurator().apply(slot0Configs);
     pivotMotor.getConfigurator().apply(motionMagicConfigs);
 
-    //setZero();
-    pivotMotor.setPosition(PIVOT_MIN_ROT);
-    targetPos = PIVOT_MIN_ROT;
+    targetPos = PIVOT_MAX_ROT;
+
+    setPivotZero();
     pivotMotor.setControl(pivotRequest.withPosition(targetPos));
 
     raised = true;
     lowered = false;
   }
 
-  // private void updateIntakePos() {
+  private void updateIntakePos() {
 
-  //   MotionMagicVoltage m_request = new MotionMagicVoltage(targetPos);
+    MotionMagicVoltage m_request = new MotionMagicVoltage(targetPos);
 
-  //   pivotMotor.setControl(m_request);
-  // }
+    pivotMotor.setControl(m_request);
+  }
 
-  // private void intakeChangeBy(double deltaPos) {
-  //   targetPos += deltaPos;
+  private void intakeChangeBy(double deltaPos) {
+    targetPos += deltaPos;
 
-  //   updateIntakePos();
-  // }
+    updateIntakePos();
+  }
 
-  // private void setPositionIntake(double pos) {
-  //   targetPos = pos;
+  private void setPositionIntake(double pos) {
+    targetPos = pos;
 
-  //   updateIntakePos();
-  // }
+    updateIntakePos();
+  }
 
-  // private void setZero() {
-  //   pivotMotor.setPosition(0.0);
-  //   targetPos = 0;
-
-  //   updateIntakePos();
-  // }
+  public void setPivotZero() {
+    pivotMotor.setPosition(0.0);
+    targetPos = 0;
+    updateIntakePos();
+  }
 
   public void stop() {
     intakeControl.stopMotor();
@@ -165,9 +164,13 @@ public class IntakeSubsystem extends SubsystemBase {
   //   return new InstantCommand(() -> intakeChangeBy(delta), this);
   // }
 
-  // public Command setPositionCommand(double pos) {
-  //   return new InstantCommand(() -> setPositionIntake(pos), this);
-  // }
+  public Command setPositionCommand(double pos) {
+    return new InstantCommand(() -> setPositionIntake(pos), this);
+  }
+
+  public Command addPositionCommand(double pos) {
+    return new InstantCommand(() -> intakeChangeBy(pos), this);
+  }
 
   // public Command zeroPivotCommand() {
   //   return new InstantCommand(() -> setZero(), this);

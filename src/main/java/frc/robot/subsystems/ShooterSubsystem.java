@@ -99,12 +99,13 @@ public class ShooterSubsystem extends SubsystemBase {
 
         // Distance (from shooter), RPM Shooter, Hood Percent
         private final double[][] shooterValues = {
-            { 1.51, 2000, 0 },
-            { 2.00, 2300, 0 },
-            { 2.52, 2600, 0 },
-            { 3.00, 2800, 0 },
-            { 3.52, 3000, 0 },
-            { 4.00, 3200, 0 } };
+            { 1.40, 2300, 0 },
+            { 1.75, 2500, 0 },
+            { 2.00, 2600, 0 },
+            { 2.50, 2800, 0 },
+            { 3.00, 3100, 0 },
+            { 3.50, 3300, 0 },
+            { 4.00, 3500, 0 } };
     private double[] shooterCoeffs = {};
     private double[] velCoeffs = {};
     private final ShooterLookupTable shooterLookupTable;
@@ -377,7 +378,7 @@ public class ShooterSubsystem extends SubsystemBase {
                 rotate(getTargetRPM());
                 setKickerControl();
 
-                if (isLaunchReadyStable()) {
+                if (isLaunchReadyStable() || !doAutoRange) {
                     m_hopper.spinForwards();
                 } else {
                     m_hopper.stopMotor();
