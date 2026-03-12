@@ -3,32 +3,37 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 3.524455555555555,
-        "y": 7.406577777777777
+        "x": 7.802266666666666,
+        "y": 4.736599999999999
       },
       "prevControl": null,
       "nextControl": {
-        "x": 3.774455555555555,
-        "y": 7.406577777777777
+        "x": 7.672880076081787,
+        "y": 5.370594293865905
       },
       "isLocked": false,
-      "linkedName": "LeftStartAngled"
+      "linkedName": "NZLeftHalf2"
     },
     {
       "anchor": {
-        "x": 3.524455555555555,
-        "y": 7.406577777777777
+        "x": 3.7155920114122676,
+        "y": 7.405520684736091
       },
       "prevControl": {
-        "x": 3.274455555555555,
-        "y": 7.406577777777777
+        "x": 8.38644793152639,
+        "y": 7.845435092724679
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": "LeftStartAngled"
+      "linkedName": "LeftTrenchShoot"
     }
   ],
-  "rotationTargets": [],
+  "rotationTargets": [
+    {
+      "waypointRelativePos": 0.9022482893450645,
+      "rotationDegrees": -90.0
+    }
+  ],
   "constraintZones": [],
   "pointTowardsZones": [],
   "eventMarkers": [],
@@ -42,13 +47,13 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": -78.75268583931457
+    "rotation": -75.60640703150948
   },
   "reversed": false,
-  "folder": "Stationary",
+  "folder": null,
   "idealStartingState": {
-    "velocity": 0.0,
-    "rotation": -78.75268583931457
+    "velocity": 0,
+    "rotation": 0.0
   },
   "useDefaultConstraints": true
 }

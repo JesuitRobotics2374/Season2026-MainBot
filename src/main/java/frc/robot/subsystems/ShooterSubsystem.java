@@ -117,6 +117,8 @@ public class ShooterSubsystem extends SubsystemBase {
     private boolean isShooting = false;
     private boolean isKicking = false;
 
+    private static final double comp_dist_offset = 0.6; // meters
+
     /**
      * ShooterSubsystem Constructor
      *
@@ -588,7 +590,7 @@ public class ShooterSubsystem extends SubsystemBase {
                 isFirstCycleAuto = false;
             }
 
-            double distToHub = getDistToHub();
+            double distToHub = getDistToHub() + comp_dist_offset;
 
             double shooterRPM = 0;
             double kickerRPM = Constants.DEFAULT_KICKER_RPM;
