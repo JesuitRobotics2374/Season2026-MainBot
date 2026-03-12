@@ -3,13 +3,13 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 0.47444444444819345,
+        "x": 0.45495555555555567,
         "y": 0.6634222222222217
       },
       "prevControl": null,
       "nextControl": {
-        "x": 1.5463333333370843,
-        "y": 0.6829111111111101
+        "x": 1.4001666666666666,
+        "y": 1.5014444444444437
       },
       "isLocked": false,
       "linkedName": "End To Blue Human Station"
@@ -20,8 +20,8 @@
         "y": 1.7742888888888877
       },
       "prevControl": {
-        "x": 1.8776444444444444,
-        "y": 0.887544444444444
+        "x": 1.9750888888888891,
+        "y": 1.6768444444444435
       },
       "nextControl": null,
       "isLocked": false,
@@ -30,18 +30,7 @@
   ],
   "rotationTargets": [],
   "constraintZones": [],
-  "pointTowardsZones": [
-    {
-      "fieldPosition": {
-        "x": 4.625,
-        "y": 4.05
-      },
-      "rotationOffset": 0.0,
-      "minWaypointRelativePos": 0.25,
-      "maxWaypointRelativePos": 0.75,
-      "name": "Point Towards Zone"
-    }
-  ],
+  "pointTowardsZones": [],
   "eventMarkers": [],
   "globalConstraints": {
     "maxVelocity": 3.0,
@@ -59,7 +48,7 @@
   "folder": null,
   "idealStartingState": {
     "velocity": 0,
-    "rotation": -0.356041678951911
+    "rotation": -0.6820603931726366
   },
   "useDefaultConstraints": true
 }

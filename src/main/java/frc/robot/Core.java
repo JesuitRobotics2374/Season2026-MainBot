@@ -122,11 +122,11 @@ public class Core {
         NamedCommands.registerCommand("Shoot", new InstantCommand(() -> shooter.autoShoot())); //WILL WORK WHEN EHTAN'S CODE IS PUSHED IN
         NamedCommands.registerCommand("Stop Shoot", new InstantCommand(() -> shooter.stopAll())); //^^
         
-        NamedCommands.registerCommand("Start Intake", new InstantCommand(() -> intake.rotate(0))); //4000
+        NamedCommands.registerCommand("Start Intake", new InstantCommand(() -> intake.rotate(4000))); //4000
         NamedCommands.registerCommand("Stop Intake", intake.stopCommand());
 
-        NamedCommands.registerCommand("Deploy Intake", intake.lowerManual());
-        NamedCommands.registerCommand("Stop Deploy", intake.stopPivot());
+        NamedCommands.registerCommand("Deploy Intake", new InstantCommand(() -> intake.setPivotNormalized(0.5)));
+        NamedCommands.registerCommand("Stop Deploy", new InstantCommand(() -> intake.stopPivot()));
         
         NamedCommands.registerCommand("Fluctuate Intake", intake.fluctuatingIntakeCommand());
     }
@@ -342,12 +342,12 @@ public class Core {
     public void periodic() {
         // Set the intake pivot based on the X axis of the custom controller. 1 = fully raised, 0 = fully lowered.
         // Note that the X axis is a fixed slider not a joystick.
-        double rawPivotInput = customController.getLeftX();
+        //double rawPivotInput = customController.getLeftX();
 
         // Support either a 0..1 slider signal or a -1..1 axis signal.
-        double normalizedPivot = (rawPivotInput + 1.0) * 0.5;
+        //double normalizedPivot = (rawPivotInput + 1.0) * 0.5;
 
-        intake.setPivotNormalized(MathUtil.clamp(normalizedPivot, 0.0, 1.0));
+        //intake.setPivotNormalized(MathUtil.clamp(normalizedPivot, 0.0, 1.0));
     }
 
 

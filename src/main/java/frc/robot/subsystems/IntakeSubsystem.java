@@ -35,7 +35,7 @@ public class IntakeSubsystem extends SubsystemBase {
 
   // Pivot motion limits in mechanism rotations (motor sensor rotations).
   // Tune these based on your zeroing process and physical hard stops.
-  private static final double PIVOT_MIN_ROT = -22; // lowered
+  private static final double PIVOT_MIN_ROT = -24; // lowered
   private static final double PIVOT_MAX_ROT = 0; // raised
   private static final double PIVOT_CMD_EPSILON_ROT = 0.002;
 

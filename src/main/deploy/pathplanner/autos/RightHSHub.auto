@@ -23,18 +23,6 @@
                       "data": {
                         "name": "Deploy Intake"
                       }
-                    },
-                    {
-                      "type": "wait",
-                      "data": {
-                        "waitTime": 0.5
-                      }
-                    },
-                    {
-                      "type": "named",
-                      "data": {
-                        "name": "Stop Deploy"
-                      }
                     }
                   ]
                 }
