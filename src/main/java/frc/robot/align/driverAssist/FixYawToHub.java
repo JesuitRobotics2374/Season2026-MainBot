@@ -8,6 +8,8 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.subsystems.drivetrain.DriveSubsystem;
 import frc.robot.utils.Constants;
@@ -44,6 +46,39 @@ public class FixYawToHub extends Command {
     private double error_yaw;
 
     boolean finishedOverride;
+
+    // private Translation2d getAbsoluteTranslation(Pose2d robotPose) {
+    //     boolean isRed = (DriverStation.getAlliance()).get() == Alliance.Red;
+
+    //     double robotX = robotPose.getX();
+    //     Translation2d robotTranslation = robotPose.getTranslation();
+
+    //     Translation2d hubTarget = isRed
+    //             ? new Translation2d(Constants.HUB_RED_X, Constants.HUB_Y)
+    //             : new Translation2d(Constants.HUB_BLUE_X, Constants.HUB_Y);
+
+    //     boolean beyondHub = isRed
+    //             ? robotX < Constants.HUB_RED_X - 1.75
+    //             : robotX > Constants.HUB_BLUE_X + 1.75;
+
+    //     if (!beyondHub) {
+    //         return hubTarget;
+    //     }
+
+    //     Translation2d nearCorner = isRed
+    //             ? Constants.RED_SIDE_CORNER_NEAR
+    //             : Constants.BLUE_SIDE_CORNER_NEAR;
+    //     Translation2d farCorner = isRed
+    //             ? Constants.RED_SIDE_CORNER_FAR
+    //             : Constants.BLUE_SIDE_CORNER_FAR;
+
+    //     double nearDistance = robotTranslation.getDistance(nearCorner);
+    //     double farDistance = robotTranslation.getDistance(farCorner);
+
+    //     return nearDistance <= farDistance ? nearCorner : farCorner;
+    // }
+
+    // private double printClock = 0;
 
     private double calculateRelativeTheta(Pose2d robotPose) {
         Translation2d shooterFieldPos = AimingUtil.getShooterFieldPosition(robotPose);
@@ -89,6 +124,7 @@ public class FixYawToHub extends Command {
 
         this.drivetrain = drivetrain;
         this.launchCalculator = launchCalculator;
+
 
         // Yaw PID coefficients
         yawController = new PIDController(3, 0.0, 2);

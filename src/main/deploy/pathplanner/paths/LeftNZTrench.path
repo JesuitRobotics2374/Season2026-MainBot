@@ -8,58 +8,49 @@
       },
       "prevControl": null,
       "nextControl": {
-        "x": 8.091984059763732,
-        "y": 3.608315409870769
+        "x": 8.705999903896222,
+        "y": 5.991747093163869
       },
       "isLocked": false,
       "linkedName": "NZLeftHalf"
     },
     {
       "anchor": {
-        "x": 4.557366666666667,
-        "y": 5.59411111111111
+        "x": 8.347631954350925,
+        "y": 6.538630527817404
       },
       "prevControl": {
-        "x": 6.58421111111111,
-        "y": 5.662322222222222
+        "x": 8.43761237608847,
+        "y": 6.14888250190331
       },
       "nextControl": {
-        "x": 3.083943431716081,
-        "y": 5.544524752242581
+        "x": 8.291394190764958,
+        "y": 6.782223044013713
       },
       "isLocked": false,
-      "linkedName": null
+      "linkedName": "LeftNZStart"
     },
     {
       "anchor": {
-        "x": 2.2284444444444444,
-        "y": 3.8888333333333325
+        "x": 3.7155920114122676,
+        "y": 7.405520684736091
       },
       "prevControl": {
-        "x": 2.2284444444444444,
-        "y": 4.762602580248287
+        "x": 7.8947788873038505,
+        "y": 7.612539229671897
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": "CenterShoot"
+      "linkedName": "LeftTrenchShoot"
     }
   ],
-  "rotationTargets": [],
-  "constraintZones": [
+  "rotationTargets": [
     {
-      "name": "Constraints Zone",
-      "minWaypointRelativePos": 0.8732510288065827,
-      "maxWaypointRelativePos": 1.1662551440329174,
-      "constraints": {
-        "maxVelocity": 1.5,
-        "maxAcceleration": 3.0,
-        "maxAngularVelocity": 540.0,
-        "maxAngularAcceleration": 720.0,
-        "nominalVoltage": 12.0,
-        "unlimited": false
-      }
+      "waypointRelativePos": 1.85,
+      "rotationDegrees": -90.0
     }
   ],
+  "constraintZones": [],
   "pointTowardsZones": [],
   "eventMarkers": [],
   "globalConstraints": {
@@ -72,12 +63,12 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": 0.47155955407617717
+    "rotation": -75.60640703150948
   },
   "reversed": false,
-  "folder": "Extras",
+  "folder": null,
   "idealStartingState": {
-    "velocity": 2.0,
+    "velocity": 0,
     "rotation": 0.0
   },
   "useDefaultConstraints": true

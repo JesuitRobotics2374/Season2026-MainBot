@@ -16,11 +16,12 @@ public class Constants {
     public static final double HUB_BLUE_X = 4.625594;
     public static final double HUB_Y = 4.034536;
 
-    // Corner targets for "beyond hub" passing feature.
-    public static final Translation2d BLUE_SIDE_CORNER_NEAR = new Translation2d(1.00, 1.00);
-    public static final Translation2d BLUE_SIDE_CORNER_FAR = new Translation2d(1.00, 7.00);
-    public static final Translation2d RED_SIDE_CORNER_NEAR = new Translation2d(15.54, 1.00);
-    public static final Translation2d RED_SIDE_CORNER_FAR = new Translation2d(15.54, 7.00);
+    // Placeholder corner targets for "beyond hub" shooting fallback.
+    // Replace with tuned/scouted values once tested on-field.
+    public static final Translation2d BLUE_SIDE_CORNER_NEAR = new Translation2d(1.00, 2.00);
+    public static final Translation2d BLUE_SIDE_CORNER_FAR = new Translation2d(1.00, 6.00);
+    public static final Translation2d RED_SIDE_CORNER_NEAR = new Translation2d(15.54, 2.00);
+    public static final Translation2d RED_SIDE_CORNER_FAR = new Translation2d(15.54, 6.00);
 
     // Real world release angles
     public static final double HOOD_ZERO_ANGLE = Math.toRadians(63.7);

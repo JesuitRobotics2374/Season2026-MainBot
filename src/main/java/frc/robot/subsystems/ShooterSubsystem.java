@@ -19,6 +19,8 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.FunctionalCommand;
@@ -116,6 +118,8 @@ public class ShooterSubsystem extends SubsystemBase {
     // Toggle state tracking
     private boolean isShooting = false;
     private boolean isKicking = false;
+
+    private static final double comp_dist_offset = 0.6; // meters
 
     /**
      * ShooterSubsystem Constructor
@@ -588,7 +592,7 @@ public class ShooterSubsystem extends SubsystemBase {
                 isFirstCycleAuto = false;
             }
 
-            double distToHub = getDistToHub();
+            double distToHub = getDistToHub() + comp_dist_offset;
 
             double shooterRPM = 0;
             double kickerRPM = Constants.DEFAULT_KICKER_RPM;

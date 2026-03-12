@@ -122,7 +122,7 @@ public class Core {
         NamedCommands.registerCommand("Shoot", new InstantCommand(() -> shooter.autoShoot())); //WILL WORK WHEN EHTAN'S CODE IS PUSHED IN
         NamedCommands.registerCommand("Stop Shoot", new InstantCommand(() -> shooter.stopAll())); //^^
         
-        NamedCommands.registerCommand("Start Intake", new InstantCommand(() -> intake.rotate(4000)));
+        NamedCommands.registerCommand("Start Intake", new InstantCommand(() -> intake.rotate(0))); //4000
         NamedCommands.registerCommand("Stop Intake", intake.stopCommand());
 
         NamedCommands.registerCommand("Deploy Intake", intake.lowerManual());
@@ -149,11 +149,14 @@ public class Core {
     
         Tab.addDouble("Drivetrain X", () -> drivetrain.getEstimator().getX());
         Tab.addDouble("Drivetrain Y", () -> drivetrain.getEstimator().getY());
+
         Tab.addDouble("Dist To Hub", () -> Math.round((double)shooter.getDistToHub()*100.0)/100.0);
         Tab.addDouble("Time", () -> DriverStation.getMatchTime());
 
         Tab.addBoolean("Our Hub Active", () -> getIsOurHubActive());
         Tab.addString("Hub Warnings", () -> getHubActivityStatus());
+        
+        // Tab.addBoolean("Is Passing", () -> shooter.getIsBeyondHub());
 
         SmartDashboard.putData("Auto Chooser", autoChooser);
     }
