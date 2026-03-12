@@ -8,8 +8,8 @@
       },
       "prevControl": null,
       "nextControl": {
-        "x": 1.390422222222222,
-        "y": 1.4137444444444442
+        "x": 1.517100000000002,
+        "y": 0.5952111111111105
       },
       "isLocked": false,
       "linkedName": "End To Blue Human Station"
@@ -20,8 +20,8 @@
         "y": 1.7742888888888877
       },
       "prevControl": {
-        "x": 1.9750888888888891,
-        "y": 1.6768444444444435
+        "x": 1.8776444444444444,
+        "y": 0.887544444444444
       },
       "nextControl": null,
       "isLocked": false,
@@ -30,7 +30,18 @@
   ],
   "rotationTargets": [],
   "constraintZones": [],
-  "pointTowardsZones": [],
+  "pointTowardsZones": [
+    {
+      "fieldPosition": {
+        "x": 4.625,
+        "y": 4.05
+      },
+      "rotationOffset": 0.0,
+      "minWaypointRelativePos": 0.25,
+      "maxWaypointRelativePos": 0.75,
+      "name": "Point Towards Zone"
+    }
+  ],
   "eventMarkers": [],
   "globalConstraints": {
     "maxVelocity": 3.0,
