@@ -29,7 +29,7 @@ public class Constants {
 
     // Motor-recognized values
     public static final double HOOD_MIN_SETPOINT = 0.0;
-    public static final double HOOD_MAX_SETPOINT = 0.20;
+    public static final double HOOD_MAX_SETPOINT = 0.642;
 
     // Shooter constants
     public static final double DEFAULT_KICKER_RPM = 2500.0;
@@ -65,6 +65,6 @@ public class Constants {
     public static final double AUTO_Z_OFFSET = 0;
     public static final double AUTO_YAW_OFFSET = 0;
 
-    public static final double DEFAULT_DRIVE_CURRENT = 100;
+    public static final double DEFAULT_DRIVE_CURRENT = 50;
     public static final double DEFAULT_STEER_CURRENT = 30;
 }

@@ -88,6 +88,7 @@ public class ShooterSubsystem extends SubsystemBase {
     private static final double MIN_COMMAND_RPM_FOR_FEED = 300.0;
 
     private double hoodTargetPos;
+    private boolean hoodAtMax = false;
 
     private final MotionMagicVoltage hoodMotionMagicRequest = new MotionMagicVoltage(0).withSlot(0);
 
@@ -184,26 +185,29 @@ public class ShooterSubsystem extends SubsystemBase {
         Slot0Configs slot0Configs = talonFXConfigs.Slot0;
         MotionMagicConfigs motionMagicConfigs = talonFXConfigs.MotionMagic;
 
-        slot0Configs.kG = 0.001; // Output of voltage to overcome gravity
-        slot0Configs.kV = 0; // Output per unit target velocity, perhaps not needed
-        slot0Configs.kA = 0.0; // Output per unit target acceleration, perhaps not needed
-        slot0Configs.kP = 0.01; // Controls the response to position error—how much the motor reacts to the
-                                // difference between the current position and the target position.
-        slot0Configs.kI = 0.01; // Addresses steady-state error, which occurs when the motor doesn’t quite reach
-        // the target position due to forces like gravity or friction.
-        slot0Configs.kD = 0.01; // Responds to the rate of change of the error, damping the motion as the motor
-                                // approaches the target. This reduces overshooting and oscillations.
+        // Hood Motion Magic gains (voltage output mode).
+        slot0Configs.kG = 0.22;
+        slot0Configs.kV = 0.0;
+        slot0Configs.kA = 0.0;
+        slot0Configs.kP = 8.0;
+        slot0Configs.kI = 0.0;
+        slot0Configs.kD = 0.15;
 
         talonFXConfigs.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
         talonFXConfigs.MotorOutput.NeutralMode = NeutralModeValue.Brake;
 
-        motionMagicConfigs.MotionMagicCruiseVelocity = 1; // Target velocity in rps
-        motionMagicConfigs.MotionMagicAcceleration = 5; // Target acceleration in rps/s
-        motionMagicConfigs.MotionMagicJerk = 50; // Target jerk in rps/s/s
+        motionMagicConfigs.MotionMagicCruiseVelocity = 0.8; // Target velocity in rps
+        motionMagicConfigs.MotionMagicAcceleration = 2.0; // Target acceleration in rps/s
+        motionMagicConfigs.MotionMagicJerk = 20.0; // Target jerk in rps/s/s
 
         hood.getConfigurator().apply(talonFXConfigs);
         hood.getConfigurator().apply(slot0Configs);
         hood.getConfigurator().apply(motionMagicConfigs);
+
+        // Assumes the hood starts at the mechanical minimum at startup.
+        hood.setPosition(Constants.HOOD_MIN_SETPOINT);
+        hoodTargetPos = Constants.HOOD_MIN_SETPOINT;
+        hoodAtMax = false;
 
         if (!useTable) {
             calculateShooterCurves();
@@ -298,7 +302,23 @@ public class ShooterSubsystem extends SubsystemBase {
             return;
         }
         hoodTargetPos = hoodPercentToMotorPosition(hoodPercent);
+        hoodAtMax = hoodPercent >= 0.5;
         updateHoodPos();
+    }
+
+    public void toggleHoodMinMax() {
+        if (HOOD_DISABLED) {
+            hood.stopMotor();
+            return;
+        }
+
+        hoodAtMax = !hoodAtMax;
+        hoodTargetPos = hoodAtMax ? Constants.HOOD_MAX_SETPOINT : Constants.HOOD_MIN_SETPOINT;
+        updateHoodPos();
+    }
+
+    public Command toggleHoodMinMaxCommand() {
+        return new InstantCommand(this::toggleHoodMinMax, this);
     }
 
     /**
