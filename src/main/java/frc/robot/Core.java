@@ -151,6 +151,8 @@ public class Core {
         shooterTab.addBoolean("Shooting", () -> shooter.isRunning());
         shooterTab.addBoolean("Kicking", () -> shooter.isKicking());
 
+        shooterTab.addBoolean("Hopping", () -> hopper.isRolling());
+
         Tab.addDouble("Drivetrain X", () -> drivetrain.getEstimator().getX());
         Tab.addDouble("Drivetrain Y", () -> drivetrain.getEstimator().getY());
 

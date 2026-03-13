@@ -3,13 +3,13 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 8.503866666666667,
-        "y": 2.8364333333333334
+        "x": 7.081177777777778,
+        "y": 2.9825999999999997
       },
       "prevControl": null,
       "nextControl": {
-        "x": 8.243029899004311,
-        "y": 4.315712151664702
+        "x": 6.820341010115421,
+        "y": 4.4618788183313685
       },
       "isLocked": false,
       "linkedName": "NZRightHalf"
@@ -83,7 +83,7 @@
   "folder": "Extras",
   "idealStartingState": {
     "velocity": 2.0,
-    "rotation": 180.0
+    "rotation": 148.07912378006685
   },
   "useDefaultConstraints": true
 }

@@ -3,13 +3,13 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 4.1,
-        "y": 0.6634222222222217
+        "x": 3.4367555555555556,
+        "y": 0.6926555555555558
       },
       "prevControl": null,
       "nextControl": {
-        "x": 5.1,
-        "y": 0.6634222222222217
+        "x": 4.436755555555555,
+        "y": 0.6926555555555558
       },
       "isLocked": false,
       "linkedName": "RightTrenchShoot"
@@ -25,7 +25,7 @@
       },
       "nextControl": {
         "x": 7.838918542133544,
-        "y": 1.9872128690764337
+        "y": 1.987212869076434
       },
       "isLocked": false,
       "linkedName": "NZRightStart2"
@@ -77,7 +77,7 @@
     "maxAngularVelocity": 540.0,
     "maxAngularAcceleration": 720.0,
     "nominalVoltage": 12.0,
-    "unlimited": true
+    "unlimited": false
   },
   "goalEndState": {
     "velocity": 0,
@@ -87,7 +87,7 @@
   "folder": null,
   "idealStartingState": {
     "velocity": 0,
-    "rotation": 75.52904727476295
+    "rotation": 67.82502919235675
   },
   "useDefaultConstraints": true
 }

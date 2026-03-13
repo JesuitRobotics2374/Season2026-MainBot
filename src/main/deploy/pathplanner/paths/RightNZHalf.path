@@ -3,25 +3,25 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 8.5,
-        "y": 1.2725962910128386
+        "x": 7.081177777777778,
+        "y": 1.287066666666666
       },
       "prevControl": null,
       "nextControl": {
-        "x": 8.5,
-        "y": 2.0725962910128377
+        "x": 7.081177777777778,
+        "y": 2.087066666666665
       },
       "isLocked": false,
       "linkedName": "NZRightStart"
     },
     {
       "anchor": {
-        "x": 8.5,
-        "y": 2.8364333333333334
+        "x": 7.081177777777778,
+        "y": 2.9825999999999997
       },
       "prevControl": {
-        "x": 8.5,
-        "y": 2.536433333333333
+        "x": 7.081177777777778,
+        "y": 2.6825999999999994
       },
       "nextControl": null,
       "isLocked": false,
@@ -33,7 +33,7 @@
   "pointTowardsZones": [],
   "eventMarkers": [],
   "globalConstraints": {
-    "maxVelocity": 3.0,
+    "maxVelocity": 0.7,
     "maxAcceleration": 3.0,
     "maxAngularVelocity": 540.0,
     "maxAngularAcceleration": 720.0,
@@ -42,13 +42,13 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": 180.0
+    "rotation": 148.07912378006685
   },
   "reversed": false,
   "folder": null,
   "idealStartingState": {
-    "velocity": 2.0,
-    "rotation": 180.0
+    "velocity": 0.5,
+    "rotation": 150.48850144290967
   },
-  "useDefaultConstraints": true
+  "useDefaultConstraints": false
 }
