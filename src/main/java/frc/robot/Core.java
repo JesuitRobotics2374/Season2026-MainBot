@@ -299,15 +299,15 @@ public class Core {
         }));
 
         operatorController.a().toggleOnTrue(intake.intakeCommand());
-        operatorController.b().onTrue(hopper.changeRPMCommand(100));
+        operatorController.b().onTrue(shooter.toggleHoodMinMaxCommand());
         operatorController.x().toggleOnTrue(intake.purgeCommand());
         operatorController.y().onTrue(new InstantCommand(() -> shooter.autoShoot()));
-
-        operatorController.povUp().onTrue(intake.addPositionCommand(1));
-        // operatorController.povUp().whileTrue(intake.raiseManual()).onFalse(intake.stopPivot());
+        
+        // operatorController.povUp().onTrue(intake.setPositionCommand(0));
+        operatorController.povUp().whileTrue(intake.lowerManual()).onFalse(intake.stopPivot());
         operatorController.povRight().onTrue(intake.changeTargetRPMCommand(100));
-        operatorController.povDown().onTrue(intake.addPositionCommand(-1));
-        // operatorController.povDown().whileTrue(intake.lowerManual()).onFalse(intake.stopPivot());
+        // operatorController.povDown().onTrue(intake.setPositionCommand(-24));
+        operatorController.povDown().whileTrue(intake.raiseManual()).onFalse(intake.stopPivot());
         operatorController.povLeft().onTrue(intake.changeTargetRPMCommand(-100));
 
         operatorController.rightBumper().onTrue(new InstantCommand(() -> shooter.changeKickerTargetRPM(100)));
