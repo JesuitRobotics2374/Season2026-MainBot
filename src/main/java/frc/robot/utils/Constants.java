@@ -33,14 +33,16 @@ public class Constants {
 
     // Shooter constants
     public static final double DEFAULT_KICKER_RPM = 2500.0;
+    // COLE NOTE (DECREASED BY 100 RPM)
+    public static final double SHOOTER_RPM_ADJUSTMENT = 200;
         public static final double[][] SHOOTER_LOOKUP_TABLE = {
-            { 1.90, 2300, 0 },
-            { 2.25, 2500, 0 },
-            { 2.50, 2600, 0 },
-            { 3.00, 2800, 0 },
-            { 3.50, 3100, 0 },
-            { 4.00, 3300, 0 },
-            { 4.50, 3500, 0 } };
+            { 1.90, 2300 + SHOOTER_RPM_ADJUSTMENT, 0 },
+            { 2.25, 2500 + SHOOTER_RPM_ADJUSTMENT, 0 },
+            { 2.50, 2600 + SHOOTER_RPM_ADJUSTMENT, 0 },
+            { 3.00, 2800 + SHOOTER_RPM_ADJUSTMENT, 0 },
+            { 3.50, 3100 + SHOOTER_RPM_ADJUSTMENT, 0 },
+            { 4.00, 3300 + SHOOTER_RPM_ADJUSTMENT, 0 },
+            { 4.50, 3500 + SHOOTER_RPM_ADJUSTMENT, 0 } };
 
         // Shoot-on-the-move (SOTM) constants
         public static final boolean ENABLE_SHOOT_ON_MOVE = true;
