@@ -8,7 +8,8 @@
   ],
   "autoFolders": [
     "Extras",
-    "Stationary"
+    "Stationary",
+    "compAuto(please start the names with ''comp'')"
   ],
   "defaultMaxVel": 3.0,
   "defaultMaxAccel": 3.0,
