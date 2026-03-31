@@ -1,8 +1,5 @@
 package frc.robot.subsystems;
 
-import org.apache.commons.math4.legacy.fitting.PolynomialCurveFitter;
-import org.apache.commons.math4.legacy.fitting.WeightedObservedPoints;
-
 import com.ctre.phoenix6.configs.MotionMagicConfigs;
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
@@ -16,18 +13,13 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.Timer;
-import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.FunctionalCommand;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.subsystems.drivetrain.DriveSubsystem;
-import frc.robot.utils.Ballistics;
 import frc.robot.utils.Constants;
 import frc.robot.utils.aiming.AimingUtil;
 import frc.robot.utils.aiming.LaunchCalculator;
@@ -90,27 +82,16 @@ public class ShooterSubsystem extends SubsystemBase {
     private double hoodTargetPos;
     private boolean hoodAtMax = false;
 
+    private double shooterAdjustment = 0;
+
     private final MotionMagicVoltage hoodMotionMagicRequest = new MotionMagicVoltage(0).withSlot(0);
 
     // Auto-shoot state flags
     private boolean doAutoRange = true;
     private boolean autoShooting = false;
-    private final boolean useTable = true;
-    private final boolean useVelBased = false;
 
     // Polynomial shooter curve storage
 
-        // Distance (from shooter), RPM Shooter, Hood Percent
-        private final double[][] shooterValues = {
-            { 1.40, 2300, 0 },
-            { 1.75, 2500, 0 },
-            { 2.00, 2600, 0 },
-            { 2.50, 2800, 0 },
-            { 3.00, 3100, 0 },
-            { 3.50, 3300, 0 },
-            { 4.00, 3500, 0 } };
-    private double[] shooterCoeffs = {};
-    private double[] velCoeffs = {};
     private final ShooterLookupTable shooterLookupTable;
     private final LaunchCalculator launchCalculator;
 
@@ -120,7 +101,7 @@ public class ShooterSubsystem extends SubsystemBase {
     private boolean isShooting = false;
     private boolean isKicking = false;
 
-    private static final double comp_dist_offset = 0.6; // meters
+    private static final double comp_dist_offset = 0.0; // meters
 
     /**
      * ShooterSubsystem Constructor
@@ -209,35 +190,7 @@ public class ShooterSubsystem extends SubsystemBase {
         hoodTargetPos = Constants.HOOD_MIN_SETPOINT;
         hoodAtMax = false;
 
-        if (!useTable) {
-            calculateShooterCurves();
-        }
-
-        shooterLookupTable = new ShooterLookupTable(shooterValues);
-
-    }
-
-    /**
-     * Fits a 3rd degree polynomial to shooterValues dataset.
-     * Used for velocity-based RPM interpolation.
-     */
-    private void calculateShooterCurves() {
-
-        WeightedObservedPoints shooterPoints = new WeightedObservedPoints();
-        WeightedObservedPoints velPoints = new WeightedObservedPoints();
-
-        for (int i = 0; i < shooterValues.length; i++) {
-            double[] values = shooterValues[i];
-            shooterPoints.add(values[0], values[1]);
-            velPoints.add(Ballistics.CalculateNeededShooterSpeed(values[0], 0, 0, Constants.HOOD_ZERO_ANGLE),
-                    values[1]);
-        }
-
-        PolynomialCurveFitter fitterShooter = PolynomialCurveFitter.create(3);
-        shooterCoeffs = fitterShooter.fit(shooterPoints.toList());
-
-        PolynomialCurveFitter fitterVel = PolynomialCurveFitter.create(3);
-        velCoeffs = fitterVel.fit(velPoints.toList());
+        shooterLookupTable = new ShooterLookupTable(Constants.SHOOTER_LOOKUP_TABLE);
     }
 
     /**
@@ -593,6 +546,15 @@ public class ShooterSubsystem extends SubsystemBase {
                 follower.getSupplyCurrent().getValueAsDouble();
     }
 
+    /**
+     * Sets the shooter adjustment factor.
+     *
+     * @param adjustment The adjustment factor, in RPM.
+     */
+    public void setShooterAdjustment(double adjustment) {
+        shooterAdjustment = adjustment;
+    }
+
     double storedRPM;
     boolean isFirstCycleAuto = true;
 
@@ -617,38 +579,25 @@ public class ShooterSubsystem extends SubsystemBase {
             double shooterRPM = 0;
             double kickerRPM = Constants.DEFAULT_KICKER_RPM;
 
-            ChassisSpeeds robotSpeeds = m_drivetrain.getCurrentRobotChassisSpeeds();
-
-            if (useTable) {
-                if (Constants.ENABLE_SHOOT_ON_MOVE) {
-                    LaunchingParameters parameters = launchCalculator.getParameters();
-                    shooterRPM = parameters.flywheelSpeed();
-                    if (!HOOD_DISABLED) {
-                        double hoodPercent = (parameters.hoodAngle() - Constants.HOOD_ZERO_ANGLE)
-                                / (Constants.HOOD_LOWEST_ANGLE - Constants.HOOD_ZERO_ANGLE);
-                        setHoodPositionPercent(hoodPercent);
-                    }
-                } else {
-                    ShooterLookupTable.ShotSetpoint setpoint = shooterLookupTable.sample(distToHub);
-
-                    shooterRPM = setpoint.shooterRPM();
-
-                    if (!HOOD_DISABLED) {
-                        setHoodPositionPercent(setpoint.hoodPercent());
-                    }
+            if (Constants.ENABLE_SHOOT_ON_MOVE) {
+                LaunchingParameters parameters = launchCalculator.getParameters();
+                shooterRPM = parameters.flywheelSpeed();
+                if (!HOOD_DISABLED) {
+                    double hoodPercent = (parameters.hoodAngle() - Constants.HOOD_ZERO_ANGLE)
+                            / (Constants.HOOD_LOWEST_ANGLE - Constants.HOOD_ZERO_ANGLE);
+                    setHoodPositionPercent(hoodPercent);
                 }
             } else {
-                if (useVelBased) {
-                    shooterRPM = getValueFromCurve(
-                            Ballistics.CalculateNeededShooterSpeed(distToHub, robotSpeeds.vxMetersPerSecond,
-                                    robotSpeeds.vyMetersPerSecond, getCurrentHoodReleaseAngleRadians()),
-                            velCoeffs);
-                } else {
-                    shooterRPM = getValueFromCurve(distToHub, shooterCoeffs);
+                ShooterLookupTable.ShotSetpoint setpoint = shooterLookupTable.sample(distToHub);
+
+                shooterRPM = setpoint.shooterRPM();
+
+                if (!HOOD_DISABLED) {
+                    setHoodPositionPercent(setpoint.hoodPercent());
                 }
             }
 
-            targetRPM = shooterRPM;
+            targetRPM = shooterRPM + shooterAdjustment;
             targetRPMKicker = kickerRPM;
 
         } else {

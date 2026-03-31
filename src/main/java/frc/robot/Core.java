@@ -388,6 +388,13 @@ public class Core {
         // double normalizedPivot = (rawPivotInput + 1.0) * 0.5;
 
         // intake.setPivotNormalized(MathUtil.clamp(normalizedPivot, 0.0, 1.0));
+
+
+
+        //NOTE THIS MAY NEED TO BE CHANGED AS I DONT KNOW THE VARIABLES FOR THE INTAKE CUSTOM CONTROLLER
+
+        // double shooterAdjustment = customController.getLeftX() * 200; // Scale the adjustment factor as needed
+        // shooter.setShooterAdjustment(shooterAdjustment);
     }
 
 }
