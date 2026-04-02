@@ -41,6 +41,7 @@ import frc.robot.subsystems.PowerManagement;
 import frc.robot.subsystems.ShooterSubsystem;
 import frc.robot.subsystems.drivetrain.DriveSubsystem;
 import frc.robot.subsystems.vision.VisionSubsystem;
+import frc.robot.utils.Constants;
 import frc.robot.utils.Telemetry;
 import frc.robot.utils.aiming.LaunchCalculator;
 import frc.robot.utils.aiming.SotmTelemetry;
@@ -317,7 +318,8 @@ public class Core {
         operatorController.leftBumper().onTrue(new InstantCommand(() -> shooter.changeKickerTargetRPM(-100)));
         operatorController.leftTrigger().onTrue(new InstantCommand(() -> shooter.changeTargetRPM(-100)));
 
-        operatorController.start().onTrue(hopper.pulseCommand());
+        operatorController.start().onTrue
+        (powerManager.toggleDriveBoost());
         operatorController.back().onTrue(new InstantCommand(() -> shooter.toggleAutoRange()));
 
         drivetrain.registerTelemetry(logger::telemeterize);

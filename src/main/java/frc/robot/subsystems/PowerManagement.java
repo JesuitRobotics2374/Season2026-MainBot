@@ -21,6 +21,8 @@ public class PowerManagement extends SubsystemBase {
   private double driveLimit;
   private double steerLimit;
 
+  private boolean isBoosted;
+
   /** Creates a new PowerManagementSubsystem. */
   public PowerManagement(DriveSubsystem drivetrain, HopperSubsystem hopper,
       IntakeSubsystem intake, ShooterSubsystem shooter) {
@@ -31,6 +33,8 @@ public class PowerManagement extends SubsystemBase {
 
     driveLimit = Constants.DEFAULT_DRIVE_CURRENT;
     steerLimit = Constants.DEFAULT_STEER_CURRENT;
+
+    isBoosted = false;
 
     drivetrain.setDriveCurrentLimit(driveLimit, driveLimit / 0.65);
     drivetrain.setSteerCurrentLimit(steerLimit, steerLimit / 0.65);
@@ -46,60 +50,27 @@ public class PowerManagement extends SubsystemBase {
     return driveLimit;
   }
 
-  private boolean lastShooting = false;
-  private boolean lastIntaking = false;
-
   double clock = 0;
 
-  private void asyncUpdateLimits() {
-    Command asyncUpdateLimitsCommand =  new InstantCommand(() -> {
+  public Command toggleDriveBoost() {
+    return new InstantCommand(() -> {
+      if (isBoosted) {
+        driveLimit = Constants.DEFAULT_DRIVE_CURRENT;
+        steerLimit = Constants.DEFAULT_STEER_CURRENT;
+      } else {
+        driveLimit = Constants.BOOSTED_DRIVE_CURRENT;
+        steerLimit = Constants.BOOSTED_STEER_CURRENT;
+      }
+
+      isBoosted = !isBoosted;
+
       drivetrain.setDriveCurrentLimit(driveLimit, driveLimit / 0.65);
       drivetrain.setSteerCurrentLimit(steerLimit, steerLimit / 0.65);
-    });
-    CommandScheduler.getInstance().schedule(asyncUpdateLimitsCommand);
+    }, this);
   }
 
   @Override
   public void periodic() {
-    // clock++;
-    // if (clock == 10) {
-    //   clock = 0;
-    //   //System.out.println("ran periodic");
-    // }
-  
 
-    // boolean currentShooting = shooter.isShooting();
-    // boolean currentIntaking = intake.isIntaking();
-
-    // // Only continue if something changed
-    // if (currentShooting == lastShooting &&
-    //     currentIntaking == lastIntaking) {
-    //   return; // Nothing changed → skip config entirely
-    // }
-
-    // System.out.println("changing configs");
-
-    // // Update stored states
-    // lastShooting = currentShooting;
-    // lastIntaking = currentIntaking;
-
-    // // Determine limits
-    // if (currentShooting && currentIntaking) {
-    //   driveLimit = 20;
-    //   steerLimit = 10;
-    // } else if (currentShooting) {
-    //   driveLimit = 25;
-    //   steerLimit = 15;
-    // } else if (currentIntaking) {
-    //   driveLimit = 30;
-    //   steerLimit = 20;
-    // } else {
-    //   driveLimit = Constants.DEFAULT_DRIVE_CURRENT;
-    //   steerLimit = Constants.DEFAULT_STEER_CURRENT;
-    // }
-
-    // // Apply config ONLY when state changed
-    // asyncUpdateLimits();
   }
-
 }

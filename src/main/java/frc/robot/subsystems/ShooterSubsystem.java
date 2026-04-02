@@ -57,7 +57,7 @@ public class ShooterSubsystem extends SubsystemBase {
     private final TalonFX hood;
 
     // Safety lock: when true, hood will never be commanded to move.
-    private static final boolean HOOD_DISABLED = false;
+    private static final boolean HOOD_DISABLED = true;
 
     // References to other subsystems
     private HopperSubsystem m_hopper;
