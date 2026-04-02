@@ -57,7 +57,7 @@ public class ShooterSubsystem extends SubsystemBase {
     private final TalonFX hood;
 
     // Safety lock: when true, hood will never be commanded to move.
-    private static final boolean HOOD_DISABLED = true;
+    private static final boolean HOOD_DISABLED = false;
 
     // References to other subsystems
     private HopperSubsystem m_hopper;
@@ -190,6 +190,7 @@ public class ShooterSubsystem extends SubsystemBase {
         hoodTargetPos = Constants.HOOD_MIN_SETPOINT;
         hoodAtMax = false;
 
+        zeroHood();
         shooterLookupTable = new ShooterLookupTable(Constants.SHOOTER_LOOKUP_TABLE);
     }
 
@@ -227,6 +228,11 @@ public class ShooterSubsystem extends SubsystemBase {
             return;
         }
         hood.setControl(hoodMotionMagicRequest.withPosition(hoodTargetPos));
+    }
+
+    private void zeroHood() {
+        hood.setPosition(0.0);
+        hoodTargetPos = 0.0; // or Constants.HOOD_MIN_SETPOINT
     }
 
     private double hoodPercentToMotorPosition(double hoodPercent) {
@@ -578,23 +584,27 @@ public class ShooterSubsystem extends SubsystemBase {
 
             double shooterRPM = 0;
             double kickerRPM = Constants.DEFAULT_KICKER_RPM;
+            boolean passingMode = false;
 
             if (Constants.ENABLE_SHOOT_ON_MOVE) {
                 LaunchingParameters parameters = launchCalculator.getParameters();
                 shooterRPM = parameters.flywheelSpeed();
-                if (!HOOD_DISABLED) {
-                    double hoodPercent = (parameters.hoodAngle() - Constants.HOOD_ZERO_ANGLE)
-                            / (Constants.HOOD_LOWEST_ANGLE - Constants.HOOD_ZERO_ANGLE);
-                    setHoodPositionPercent(hoodPercent);
-                }
+                passingMode = parameters.passing();
             } else {
                 ShooterLookupTable.ShotSetpoint setpoint = shooterLookupTable.sample(distToHub);
 
                 shooterRPM = setpoint.shooterRPM();
 
-                if (!HOOD_DISABLED) {
-                    setHoodPositionPercent(setpoint.hoodPercent());
-                }
+                Pose2d robotPose = m_drivetrain.getEstimator();
+                passingMode = AimingUtil.getTargetTranslation(robotPose)
+                        .getDistance(AimingUtil.getHubTargetTranslation()) > 1e-4;
+            }
+
+            if (!HOOD_DISABLED) {
+                double fixedHoodPercent = passingMode
+                        ? Constants.PASSING_FIXED_HOOD_PERCENT
+                        : Constants.HUB_SIDE_FIXED_HOOD_PERCENT;
+                setHoodPositionPercent(fixedHoodPercent);
             }
 
             targetRPM = shooterRPM + shooterAdjustment;

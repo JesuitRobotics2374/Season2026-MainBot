@@ -43,7 +43,6 @@ public class IntakeSubsystem extends SubsystemBase {
   private double targetRPM = 4000;
 
   private double purgeRPM = -2000;
-  private double purgeTime = 0.1; // seconds
 
   private final double RPM_TO_RPS = 1.0 / 60.0;
   private static final double CURRENT_LIMIT = 60.0; // Amps
@@ -51,7 +50,6 @@ public class IntakeSubsystem extends SubsystemBase {
   private double targetPos; // target position of the pivot motor in rotations
 
   private boolean isIntaking;
-  private boolean isPurging;
 
   /** Creates a new Intake. */
   public IntakeSubsystem() {
@@ -156,10 +154,6 @@ public class IntakeSubsystem extends SubsystemBase {
     intakeControl.setControl(velocityRequest.withVelocity(targetRPM * RPM_TO_RPS));
   }
 
-  private boolean isPurgeDone() {
-   return purgeClock > (purgeTime / 0.02);
-  }
-
   // public Command deltaPivotCommand(double delta) {
   //   return new InstantCommand(() -> intakeChangeBy(delta), this);
   // }
@@ -226,23 +220,18 @@ public class IntakeSubsystem extends SubsystemBase {
         this);
   }
 
-  private double purgeClock = 0;
-
   public Command purgeCommand() {
     return new FunctionalCommand(
       () -> {
-        isPurging = true;
         isIntaking = false;
-        purgeClock = 0;
       },
       () -> {
         rotate(purgeRPM);
       },
       interrupted -> {
         stop();
-        isPurging = false;
       },
-      this::isPurgeDone,
+      () -> false,
       this);
   }
 
@@ -277,7 +266,6 @@ public class IntakeSubsystem extends SubsystemBase {
     return new InstantCommand(() -> {
       stop();
       isIntaking = false;
-      isPurging = false;
     }, this);
   }
 
@@ -312,12 +300,7 @@ public class IntakeSubsystem extends SubsystemBase {
 
   @Override
   public void periodic() {
-    if (isPurging) {
-      purgeClock++;
-    }
-    else {
-      purgeClock = 0;
-    }
+    // No periodic updates needed currently.
   }
 
   // private void rotateAtCached() {

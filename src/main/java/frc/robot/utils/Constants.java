@@ -31,6 +31,12 @@ public class Constants {
     public static final double HOOD_MIN_SETPOINT = 0.0;
     public static final double HOOD_MAX_SETPOINT = 0.642;
 
+    // Fixed hood presets (percent in [0, 1]).
+    // HUB_SIDE: used while still targeting hub on our side.
+    // PASSING: used once we cross the hub and target passing corners.
+    public static final double HUB_SIDE_FIXED_HOOD_PERCENT = 0.0;
+    public static final double PASSING_FIXED_HOOD_PERCENT = 0.35;
+
     // Shooter constants
     public static final double DEFAULT_KICKER_RPM = 2500.0;
     // COLE NOTE (DECREASED BY 100 RPM)
