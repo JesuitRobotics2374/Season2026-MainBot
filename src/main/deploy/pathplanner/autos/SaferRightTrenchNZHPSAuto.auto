@@ -69,25 +69,25 @@
           }
         },
         {
-          "type": "sequential",
+          "type": "parallel",
           "data": {
             "commands": [
               {
                 "type": "named",
                 "data": {
-                  "name": "Shoot"
+                  "name": "Force Shoot"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "Compat Fluc On"
                 }
               },
               {
                 "type": "wait",
                 "data": {
                   "waitTime": 1.0
-                }
-              },
-              {
-                "type": "named",
-                "data": {
-                  "name": "Stop Shoot"
                 }
               }
             ]
@@ -110,7 +110,7 @@
                     {
                       "type": "named",
                       "data": {
-                        "name": "Shoot"
+                        "name": "Force Shoot"
                       }
                     },
                     {
@@ -134,7 +134,7 @@
         {
           "type": "wait",
           "data": {
-            "waitTime": 2.0
+            "waitTime": 2.5
           }
         },
         {

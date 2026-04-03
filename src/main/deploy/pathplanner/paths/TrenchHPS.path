@@ -60,8 +60,8 @@
   "pointTowardsZones": [
     {
       "fieldPosition": {
-        "x": 5.0,
-        "y": 4.5
+        "x": 5.8,
+        "y": 4.0
       },
       "rotationOffset": 0.0,
       "minWaypointRelativePos": 0.0,
@@ -86,7 +86,7 @@
   "folder": null,
   "idealStartingState": {
     "velocity": 0,
-    "rotation": 67.82502919235675
+    "rotation": 67.82502919235677
   },
   "useDefaultConstraints": true
 }

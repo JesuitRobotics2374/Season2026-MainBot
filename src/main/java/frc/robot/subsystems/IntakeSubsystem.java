@@ -7,6 +7,7 @@ package frc.robot.subsystems;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.FunctionalCommand;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -35,7 +36,7 @@ public class IntakeSubsystem extends SubsystemBase {
 
   // Pivot motion limits in mechanism rotations (motor sensor rotations).
   // Tune these based on your zeroing process and physical hard stops.
-  private static final double PIVOT_MIN_ROT = -24; // lowered
+  private static final double PIVOT_MIN_ROT = -28.5; // lowered
   private static final double PIVOT_MAX_ROT = 0; // raised
   private static final double PIVOT_CMD_EPSILON_ROT = 0.002;
 
@@ -155,7 +156,7 @@ public class IntakeSubsystem extends SubsystemBase {
   }
 
   // public Command deltaPivotCommand(double delta) {
-  //   return new InstantCommand(() -> intakeChangeBy(delta), this);
+  // return new InstantCommand(() -> intakeChangeBy(delta), this);
   // }
 
   public Command setPositionCommand(double pos) {
@@ -167,7 +168,7 @@ public class IntakeSubsystem extends SubsystemBase {
   }
 
   // public Command zeroPivotCommand() {
-  //   return new InstantCommand(() -> setZero(), this);
+  // return new InstantCommand(() -> setZero(), this);
   // }
 
   public Command raiseManual() {
@@ -196,7 +197,8 @@ public class IntakeSubsystem extends SubsystemBase {
   }
 
   /**
-   * Sets intake pivot with a normalized input where 0 = fully lowered, 1 = fully raised.
+   * Sets intake pivot with a normalized input where 0 = fully lowered, 1 = fully
+   * raised.
    */
   public void setPivotNormalized(double normalizedPosition) {
     double normalized = MathUtil.clamp(normalizedPosition, 0.0, 1.0);
@@ -222,20 +224,20 @@ public class IntakeSubsystem extends SubsystemBase {
 
   public Command purgeCommand() {
     return new FunctionalCommand(
-      () -> {
-        isIntaking = false;
-      },
-      () -> {
-        rotate(purgeRPM);
-      },
-      interrupted -> {
-        stop();
-      },
-      () -> false,
-      this);
+        () -> {
+          isIntaking = false;
+        },
+        () -> {
+          rotate(purgeRPM);
+        },
+        interrupted -> {
+          stop();
+        },
+        () -> false,
+        this);
   }
 
-   public Command fluctuatingIntakeCommand() {
+  public Command fluctuatingIntakeCommand() {
     Timer timer = new Timer();
 
     return new FunctionalCommand(
@@ -260,6 +262,41 @@ public class IntakeSubsystem extends SubsystemBase {
         () -> false,
         // Add the subsystem requirement
         this);
+  }
+
+  Timer timerE = new Timer();
+
+  Command existingFluctuateCommand = new FunctionalCommand(
+      // 1. Initialize: Start the timer when the command begins
+      () -> {
+        timerE.restart();
+      },
+      // 2. Execute: Toggle motor power based on the timer
+      () -> {
+        rotate(getTargetRPM());
+        // Pulse logic: 0.4s ON, 0.2s OFF (Total 0.6s cycle)
+        if ((timerE.get() % 1) < 0.5) {
+          setPivotNormalized(0.4);
+        } else {
+          setPivotNormalized(0);
+        }
+      },
+      // 3. End: Stop the motor when the command is interrupted/finished
+      interrupted -> {
+        stop();
+        setPivotNormalized(0);
+      },
+      // 4. isFinished: Return false so it runs until you release the button
+      () -> false,
+      // Add the subsystem requirement
+      this);
+
+  public void fluctuatingIntakeOn() {
+    CommandScheduler.getInstance().schedule(existingFluctuateCommand);
+  }
+
+  public void fluctuatingIntakeOff() {
+    existingFluctuateCommand.cancel();
   }
 
   public Command stopCommand() {
@@ -304,12 +341,12 @@ public class IntakeSubsystem extends SubsystemBase {
   }
 
   // private void rotateAtCached() {
-  //   if (isIntaking) {
-  //     isIntaking = false;
-  //     stop();
-  //   } else {
-  //     isIntaking = true;
-  //     rotate(targetRPM);
-  //   }
+  // if (isIntaking) {
+  // isIntaking = false;
+  // stop();
+  // } else {
+  // isIntaking = true;
+  // rotate(targetRPM);
+  // }
   // }
 }

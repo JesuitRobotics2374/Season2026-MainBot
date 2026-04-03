@@ -29,7 +29,7 @@ public class Constants {
 
     // Motor-recognized values
     public static final double HOOD_MIN_SETPOINT = 0.0;
-    public static final double HOOD_MAX_SETPOINT = 0.642;
+    public static final double HOOD_MAX_SETPOINT = 0.822;
 
     // Fixed hood presets (percent in [0, 1]).
     // HUB_SIDE: used while still targeting hub on our side.
@@ -48,7 +48,10 @@ public class Constants {
             { 3.00, 2800 + SHOOTER_RPM_ADJUSTMENT, 0 },
             { 3.50, 3100 + SHOOTER_RPM_ADJUSTMENT, 0 },
             { 4.00, 3300 + SHOOTER_RPM_ADJUSTMENT, 0 },
-            { 4.50, 3500 + SHOOTER_RPM_ADJUSTMENT, 0 } };
+            { 4.50, 3500 + SHOOTER_RPM_ADJUSTMENT, 0 },
+            { 5.50, 4400 + SHOOTER_RPM_ADJUSTMENT, 1 },
+            { 6.50, 4800 + SHOOTER_RPM_ADJUSTMENT, 1 },
+            { 9.50, 6000 + SHOOTER_RPM_ADJUSTMENT, 1 } };
 
         // Shoot-on-the-move (SOTM) constants
         public static final boolean ENABLE_SHOOT_ON_MOVE = true;

@@ -122,9 +122,9 @@ public class Core {
     }
 
     public void configureAutoCommands() {
-        NamedCommands.registerCommand("Shoot", new InstantCommand(() -> shooter.autoShoot())); // WILL WORK WHEN EHTAN'S
-                                                                                               // CODE IS PUSHED IN
-        NamedCommands.registerCommand("Stop Shoot", new InstantCommand(() -> shooter.stopAll())); // ^^
+        NamedCommands.registerCommand("Shoot", new InstantCommand(() -> shooter.autoShoot()));
+        NamedCommands.registerCommand("Force Shoot", new InstantCommand(() -> shooter.manualShoot()));
+        NamedCommands.registerCommand("Stop Shoot", new InstantCommand(() -> shooter.stopAll()));
 
         NamedCommands.registerCommand("Start Intake", new InstantCommand(() -> intake.rotate(4000))); // 4000
         NamedCommands.registerCommand("Stop Intake", intake.stopCommand());
@@ -134,6 +134,9 @@ public class Core {
         NamedCommands.registerCommand("Stop Deploy", new InstantCommand(() -> intake.stopPivot()));
 
         NamedCommands.registerCommand("Fluctuate Intake", intake.fluctuatingIntakeCommand());
+
+        NamedCommands.registerCommand("Compat Fluc On", new InstantCommand(() -> intake.fluctuatingIntakeOn()).withTimeout(1.0));
+        NamedCommands.registerCommand("Compat Fluc Off", new InstantCommand(() -> intake.fluctuatingIntakeOff()));
     }
 
     public void configureShuffleBoard() {
@@ -151,6 +154,11 @@ public class Core {
         shooterTab.addDouble("Target Speed Kicker", () -> shooter.getTargetRPMKicker());
         shooterTab.addBoolean("Shooting", () -> shooter.isRunning());
         shooterTab.addBoolean("Kicking", () -> shooter.isKicking());
+        shooterTab.addDouble("Hood Position", () -> shooter.getHoodPosition());
+        shooterTab.addDouble("Hood Target", () -> shooter.getHoodTargetPosition());
+        shooterTab.addBoolean("Hood Manual Override", () -> shooter.isHoodManualOverride());
+        shooterTab.addBoolean("Hood Disabled", () -> shooter.isHoodDisabled());
+        shooterTab.addBoolean("Auto Range Enabled", () -> shooter.isAutoRangeEnabled());
 
         shooterTab.addBoolean("Hopping", () -> hopper.isRolling());
 
