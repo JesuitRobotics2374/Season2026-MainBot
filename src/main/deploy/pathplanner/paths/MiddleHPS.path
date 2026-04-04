@@ -8,50 +8,34 @@
       },
       "prevControl": null,
       "nextControl": {
-        "x": 3.0102652084320582,
-        "y": 2.99347704865561
+        "x": 2.2284444444441056,
+        "y": 2.768222222217188
       },
       "isLocked": false,
       "linkedName": "CenterStart"
     },
     {
       "anchor": {
-        "x": 3.534450784593438,
-        "y": 5.374151212553495
+        "x": 0.4452111111111111,
+        "y": 0.575722222222222
       },
       "prevControl": {
-        "x": 2.4487267622731537,
-        "y": 5.334526248235237
-      },
-      "nextControl": {
-        "x": 5.307047075606277,
-        "y": 5.438844507845934
-      },
-      "isLocked": false,
-      "linkedName": null
-    },
-    {
-      "anchor": {
-        "x": 8.347631954350925,
-        "y": 6.538630527817404
-      },
-      "prevControl": {
-        "x": 7.585207278380093,
-        "y": 5.9641023253412735
+        "x": 1.078599999999661,
+        "y": 1.7255666666616323
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": "LeftNZStart"
+      "linkedName": "End To Blue Human Station"
     }
   ],
   "rotationTargets": [],
   "constraintZones": [
     {
       "name": "Constraints Zone",
-      "minWaypointRelativePos": 1.0797720797720796,
-      "maxWaypointRelativePos": 1.467236467236467,
+      "minWaypointRelativePos": 0.8646090534979407,
+      "maxWaypointRelativePos": 1.0,
       "constraints": {
-        "maxVelocity": 1.5,
+        "maxVelocity": 1.0,
         "maxAcceleration": 3.0,
         "maxAngularVelocity": 540.0,
         "maxAngularAcceleration": 720.0,
@@ -71,11 +55,11 @@
     "unlimited": false
   },
   "goalEndState": {
-    "velocity": 2.0,
-    "rotation": 0.0
+    "velocity": 0,
+    "rotation": -0.356041678951911
   },
   "reversed": false,
-  "folder": "Extras",
+  "folder": null,
   "idealStartingState": {
     "velocity": 0,
     "rotation": 0.567266409565184
