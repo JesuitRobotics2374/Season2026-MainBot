@@ -178,14 +178,8 @@ public class IntakeSubsystem extends SubsystemBase {
     return new InstantCommand(() -> pivotMotor.set(0.2));
   }
 
-  public void holdPivotAtCurrentPosition() {
-    double currentPos = pivotMotor.getPosition().getValueAsDouble();
-    targetPos = MathUtil.clamp(currentPos, PIVOT_MIN_ROT, PIVOT_MAX_ROT);
-    pivotMotor.setControl(pivotRequest.withPosition(targetPos));
-  }
-
   public Command stopPivot() {
-    return new InstantCommand(() -> holdPivotAtCurrentPosition(), this);
+    return new InstantCommand(() -> pivotMotor.set(0));
   }
 
   public void setPivotPositionRotations(double positionRotations) {

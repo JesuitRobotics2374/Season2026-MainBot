@@ -11,13 +11,13 @@
               {
                 "type": "path",
                 "data": {
-                  "pathName": "MiddleHPS"
+                  "pathName": "RightBumpHPS"
                 }
               },
               {
                 "type": "named",
                 "data": {
-                  "name": "Deploy Intake"
+                  "name": "Deploy Intake Full"
                 }
               }
             ]
@@ -26,7 +26,7 @@
         {
           "type": "wait",
           "data": {
-            "waitTime": 3.0
+            "waitTime": 4.0
           }
         },
         {
@@ -64,6 +64,6 @@
     }
   },
   "resetOdom": true,
-  "folder": null,
+  "folder": "compAuto(please start the names with ''comp'')",
   "choreoAuto": false
 }

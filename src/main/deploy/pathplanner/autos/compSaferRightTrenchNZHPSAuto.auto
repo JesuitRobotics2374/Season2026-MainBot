@@ -139,6 +139,6 @@
     }
   },
   "resetOdom": true,
-  "folder": null,
+  "folder": "compAuto(please start the names with ''comp'')",
   "choreoAuto": false
 }
