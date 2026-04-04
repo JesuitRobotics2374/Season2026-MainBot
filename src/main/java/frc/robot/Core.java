@@ -135,7 +135,7 @@ public class Core {
 
         NamedCommands.registerCommand("Fluctuate Intake", intake.fluctuatingIntakeCommand());
 
-        NamedCommands.registerCommand("Compat Fluc On", new InstantCommand(() -> intake.fluctuatingIntakeOn()).withTimeout(1.0));
+        NamedCommands.registerCommand("Compat Fluc On", new InstantCommand(() -> intake.fluctuatingIntakeOn()));
         NamedCommands.registerCommand("Compat Fluc Off", new InstantCommand(() -> intake.fluctuatingIntakeOff()));
     }
 

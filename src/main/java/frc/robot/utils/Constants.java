@@ -49,9 +49,9 @@ public class Constants {
             { 3.50, 3100 + SHOOTER_RPM_ADJUSTMENT, 0 },
             { 4.00, 3300 + SHOOTER_RPM_ADJUSTMENT, 0 },
             { 4.50, 3500 + SHOOTER_RPM_ADJUSTMENT, 0 },
-            { 5.50, 4400 + SHOOTER_RPM_ADJUSTMENT, 1 },
-            { 6.50, 4800 + SHOOTER_RPM_ADJUSTMENT, 1 },
-            { 9.50, 6000 + SHOOTER_RPM_ADJUSTMENT, 1 } };
+            { 5.50, 4400 + SHOOTER_RPM_ADJUSTMENT, 0 },
+            { 6.50, 4800 + SHOOTER_RPM_ADJUSTMENT, 0 },
+            { 9.50, 6000 + SHOOTER_RPM_ADJUSTMENT, 0 } };
 
         // Shoot-on-the-move (SOTM) constants
         public static final boolean ENABLE_SHOOT_ON_MOVE = true;

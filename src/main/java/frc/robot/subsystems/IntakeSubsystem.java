@@ -7,7 +7,6 @@ package frc.robot.subsystems;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.FunctionalCommand;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -36,7 +35,7 @@ public class IntakeSubsystem extends SubsystemBase {
 
   // Pivot motion limits in mechanism rotations (motor sensor rotations).
   // Tune these based on your zeroing process and physical hard stops.
-  private static final double PIVOT_MIN_ROT = -28.5; // lowered
+  private static final double PIVOT_MIN_ROT = -29; // lowered
   private static final double PIVOT_MAX_ROT = 0; // raised
   private static final double PIVOT_CMD_EPSILON_ROT = 0.002;
 
@@ -179,8 +178,14 @@ public class IntakeSubsystem extends SubsystemBase {
     return new InstantCommand(() -> pivotMotor.set(0.2));
   }
 
+  public void holdPivotAtCurrentPosition() {
+    double currentPos = pivotMotor.getPosition().getValueAsDouble();
+    targetPos = MathUtil.clamp(currentPos, PIVOT_MIN_ROT, PIVOT_MAX_ROT);
+    pivotMotor.setControl(pivotRequest.withPosition(targetPos));
+  }
+
   public Command stopPivot() {
-    return new InstantCommand(() -> pivotMotor.set(0));
+    return new InstantCommand(() -> holdPivotAtCurrentPosition(), this);
   }
 
   public void setPivotPositionRotations(double positionRotations) {
@@ -264,39 +269,18 @@ public class IntakeSubsystem extends SubsystemBase {
         this);
   }
 
-  Timer timerE = new Timer();
-
-  Command existingFluctuateCommand = new FunctionalCommand(
-      // 1. Initialize: Start the timer when the command begins
-      () -> {
-        timerE.restart();
-      },
-      // 2. Execute: Toggle motor power based on the timer
-      () -> {
-        rotate(getTargetRPM());
-        // Pulse logic: 0.4s ON, 0.2s OFF (Total 0.6s cycle)
-        if ((timerE.get() % 1) < 0.5) {
-          setPivotNormalized(0.4);
-        } else {
-          setPivotNormalized(0);
-        }
-      },
-      // 3. End: Stop the motor when the command is interrupted/finished
-      interrupted -> {
-        stop();
-        setPivotNormalized(0);
-      },
-      // 4. isFinished: Return false so it runs until you release the button
-      () -> false,
-      // Add the subsystem requirement
-      this);
+  private final Timer compatFluctuateTimer = new Timer();
+  private boolean compatFluctuatingEnabled = false;
 
   public void fluctuatingIntakeOn() {
-    CommandScheduler.getInstance().schedule(existingFluctuateCommand);
+    compatFluctuatingEnabled = true;
+    compatFluctuateTimer.restart();
   }
 
   public void fluctuatingIntakeOff() {
-    existingFluctuateCommand.cancel();
+    compatFluctuatingEnabled = false;
+    stop();
+    setPivotNormalized(0);
   }
 
   public Command stopCommand() {
@@ -337,7 +321,14 @@ public class IntakeSubsystem extends SubsystemBase {
 
   @Override
   public void periodic() {
-    // No periodic updates needed currently.
+    if (compatFluctuatingEnabled) {
+      rotate(getTargetRPM());
+      if ((compatFluctuateTimer.get() % 1) < 0.5) {
+        setPivotNormalized(0.4);
+      } else {
+        setPivotNormalized(0);
+      }
+    }
   }
 
   // private void rotateAtCached() {
