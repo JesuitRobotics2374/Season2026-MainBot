@@ -40,7 +40,7 @@ public class IntakeSubsystem extends SubsystemBase {
   private static final double PIVOT_CMD_EPSILON_ROT = 0.002;
 
   private double MAX_RPM = 6300;
-  private double targetRPM = 4000;
+  private double targetRPM = 5000;
 
   private double purgeRPM = -2000;
 
