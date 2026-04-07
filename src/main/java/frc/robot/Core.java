@@ -56,8 +56,9 @@ public class Core {
     // Swerve Stuff
     private double MaxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond) * 0.7; // kSpeedAt12Volts desired top
                                                                                         // speed
-    private double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond) * 0.65; // 3/4 of a rotation per
+    private double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond); // 3/4 of a rotation per
                                                                                              // second
+
     // max angular velocity
     private Command pathfindingCommand;
 
@@ -102,6 +103,7 @@ public class Core {
     private final Target testTarget = new Target(31, new Transform3d(1.575, 0.0, 0, new Rotation3d(0, 0, 0)));
 
     private boolean hubYawAlign = false;
+    private boolean fastMode = false;
 
     private static final double TranslationalAccelerationLimit = 10; // meters per second^2
     private static final double RotationalAccelerationLimit = Math.PI * 7.5; // radians per second^2
@@ -252,10 +254,6 @@ public class Core {
                 drivetrain.applyRequest(() -> {
                     double axisScale = 1;
 
-                    if (getBumpAxisMovementScale()) {
-                        axisScale = 0.7;
-                    }
-
                     double triggerScale = getTriggerAxisMovementScale();
 
                     if (triggerScale != 1) {
@@ -309,6 +307,8 @@ public class Core {
             intake.setPivotZero();
         }));
 
+        driveController.rightBumper().onTrue(new InstantCommand(() -> toggleFastMode()));
+
         operatorController.a().toggleOnTrue(intake.intakeCommand());
         operatorController.b().onTrue(shooter.toggleHoodMinMaxCommand());
         operatorController.x().toggleOnTrue(intake.purgeCommand());
@@ -339,6 +339,17 @@ public class Core {
 
     public boolean getBumpAxisMovementScale() {
         return driveController.rightBumper().getAsBoolean();
+    }
+
+    public void toggleFastMode() {
+        if (fastMode) {
+            MaxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond) * 0.7;
+        }
+        else {
+            MaxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond) * 0.85;
+        }
+
+        fastMode = !fastMode;
     }
 
     private double calculateRotationalRate() {

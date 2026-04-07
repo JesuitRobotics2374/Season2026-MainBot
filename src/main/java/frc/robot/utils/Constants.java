@@ -42,13 +42,14 @@ public class Constants {
     // COLE NOTE (DECREASED BY 100 RPM)
     public static final double SHOOTER_RPM_ADJUSTMENT = 100;
         public static final double[][] SHOOTER_LOOKUP_TABLE = {
-            { 1.90, 2300 + SHOOTER_RPM_ADJUSTMENT, 0 },
-            { 2.25, 2500 + SHOOTER_RPM_ADJUSTMENT, 0 },
-            { 2.50, 2600 + SHOOTER_RPM_ADJUSTMENT, 0 },
-            { 3.00, 2800 + SHOOTER_RPM_ADJUSTMENT, 0 },
-            { 3.50, 3100 + SHOOTER_RPM_ADJUSTMENT, 0 },
-            { 4.00, 3300 + SHOOTER_RPM_ADJUSTMENT, 0 },
-            { 4.50, 3500 + SHOOTER_RPM_ADJUSTMENT, 0 },
+            { 1.90, 1953 + SHOOTER_RPM_ADJUSTMENT, 0 },
+            { 2.25, 2253 + SHOOTER_RPM_ADJUSTMENT, 0 },
+            { 2.50, 2453 + SHOOTER_RPM_ADJUSTMENT, 0 },
+            { 3.00, 2653 + SHOOTER_RPM_ADJUSTMENT, 0 },
+            { 3.50, 2853 + SHOOTER_RPM_ADJUSTMENT, 0 },
+            { 4.00, 3153 + SHOOTER_RPM_ADJUSTMENT, 0 },
+            { 4.50, 3353 + SHOOTER_RPM_ADJUSTMENT, 0 },
+            { 5.00, 3723 + SHOOTER_RPM_ADJUSTMENT, 0 },
             { 5.50, 4400 + SHOOTER_RPM_ADJUSTMENT, 0 },
             { 6.50, 4800 + SHOOTER_RPM_ADJUSTMENT, 0 },
             { 9.50, 6000 + SHOOTER_RPM_ADJUSTMENT, 0 } };
