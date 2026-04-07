@@ -283,8 +283,20 @@ public class ShooterSubsystem extends SubsystemBase {
         updateHoodPos();
     }
 
+     public void manualToggleHoodMinMax() {
+        hoodManualOverride = true;
+        hoodAtMax = !hoodAtMax;
+        hoodTargetPos = hoodAtMax ? Constants.HOOD_MAX_SETPOINT : Constants.HOOD_MIN_SETPOINT;
+        System.out.printf("[HOOD] B toggle -> %s (target %.3f rot)%n", hoodAtMax ? "MAX" : "MIN", hoodTargetPos);
+        updateHoodPos();
+    }
+
     public Command toggleHoodMinMaxCommand() {
         return new InstantCommand(this::toggleHoodMinMax, this);
+    }
+
+    public Command manualToggleHoodMinMaxCommand() {
+        return new InstantCommand(this::manualToggleHoodMinMax, this);
     }
 
     /**

@@ -173,7 +173,7 @@ public class Core {
         Tab.addBoolean("Our Hub Active", () -> getPhaseInfo().phaseActive);
         Tab.addString("Hub Warnings", () -> getHubActivityStatus());
 
-        // Tab.addBoolean("Is Passing", () -> shooter.getIsBeyondHub());
+        //Tab.addBoolean("Is Passing", () -> shooter.getIsBeyondHub());
 
         SmartDashboard.putData("Auto Chooser", autoChooser);
     }
@@ -310,7 +310,7 @@ public class Core {
         driveController.rightBumper().onTrue(new InstantCommand(() -> toggleFastMode()));
 
         operatorController.a().toggleOnTrue(intake.intakeCommand());
-        operatorController.b().onTrue(shooter.toggleHoodMinMaxCommand());
+        operatorController.b().onTrue(shooter.manualToggleHoodMinMaxCommand());
         operatorController.x().toggleOnTrue(intake.purgeCommand());
         operatorController.y().onTrue(new InstantCommand(() -> shooter.autoShoot()));
         
