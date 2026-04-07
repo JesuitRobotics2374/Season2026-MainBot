@@ -58,7 +58,7 @@ public class ShooterSubsystem extends SubsystemBase {
     private final TalonFX hood;
 
     // Safety lock: when true, hood will never be commanded to move.
-    private static final boolean HOOD_DISABLED = true;
+    private static final boolean AUTO_HOOD_DISABLED = true;
 
     // References to other subsystems
     private HopperSubsystem m_hopper;
@@ -92,6 +92,7 @@ public class ShooterSubsystem extends SubsystemBase {
     private boolean doAutoRange = true;
     private boolean autoShooting = false;
     private boolean manualShooting = false;
+    private boolean hoodDown = true;
 
     // Polynomial shooter curve storage
 
@@ -226,7 +227,7 @@ public class ShooterSubsystem extends SubsystemBase {
     }
 
     private void updateHoodPos() {
-        if (HOOD_DISABLED) {
+        if (AUTO_HOOD_DISABLED) {
             hood.stopMotor();
             return;
         }
@@ -259,7 +260,7 @@ public class ShooterSubsystem extends SubsystemBase {
     }
 
     public void setHoodPositionPercent(double hoodPercent) {
-        if (HOOD_DISABLED) {
+        if (AUTO_HOOD_DISABLED) {
             hood.stopMotor();
             return;
         }
@@ -271,7 +272,7 @@ public class ShooterSubsystem extends SubsystemBase {
     }
 
     public void toggleHoodMinMax() {
-        if (HOOD_DISABLED) {
+        if (AUTO_HOOD_DISABLED) {
             hood.stopMotor();
             return;
         }
@@ -282,13 +283,20 @@ public class ShooterSubsystem extends SubsystemBase {
         System.out.printf("[HOOD] B toggle -> %s (target %.3f rot)%n", hoodAtMax ? "MAX" : "MIN", hoodTargetPos);
         updateHoodPos();
     }
+    
+    public void manualToggleHoodMinMax() {
+        double newPosition = 0;
 
-     public void manualToggleHoodMinMax() {
-        hoodManualOverride = true;
-        hoodAtMax = !hoodAtMax;
-        hoodTargetPos = hoodAtMax ? Constants.HOOD_MAX_SETPOINT : Constants.HOOD_MIN_SETPOINT;
-        System.out.printf("[HOOD] B toggle -> %s (target %.3f rot)%n", hoodAtMax ? "MAX" : "MIN", hoodTargetPos);
-        updateHoodPos();
+        if (hoodDown) {
+            newPosition = Constants.HOOD_MAX_SETPOINT;
+        }
+        else {
+            newPosition = Constants.HOOD_MIN_SETPOINT;
+        }
+
+        hoodDown = !hoodDown;
+        
+        hood.setControl(hoodMotionMagicRequest.withPosition(newPosition));
     }
 
     public Command toggleHoodMinMaxCommand() {
@@ -561,8 +569,8 @@ public class ShooterSubsystem extends SubsystemBase {
         return hoodManualOverride;
     }
 
-    public boolean isHoodDisabled() {
-        return HOOD_DISABLED;
+    public boolean isAutoHoodDisabled() {
+        return AUTO_HOOD_DISABLED;
     }
 
     public boolean isAutoRangeEnabled() {
@@ -593,7 +601,7 @@ public class ShooterSubsystem extends SubsystemBase {
 
     private boolean isLaunchReadyNow() {
         boolean shooterCommanded = Math.abs(getTargetRPM()) >= MIN_COMMAND_RPM_FOR_FEED;
-        boolean hoodReady = HOOD_DISABLED || isHoodWithinTolerance();
+        boolean hoodReady = AUTO_HOOD_DISABLED || isHoodWithinTolerance();
         boolean driveReady = !Constants.ENABLE_SHOOT_ON_MOVE || launchCalculator.atDriveGoal();
         boolean launchValid = !Constants.ENABLE_SHOOT_ON_MOVE || launchCalculator.getParameters().isValid();
         return shooterCommanded && isVelocityWithinTolerance() && hoodReady && driveReady && launchValid;
@@ -639,9 +647,9 @@ public class ShooterSubsystem extends SubsystemBase {
      */
     @Override
     public void periodic() {
-        if (HOOD_DISABLED) {
-            hood.stopMotor();
-        }
+        // if (HOOD_DISABLED) {
+        //     hood.stopMotor();
+        // }
 
         if (doAutoRange) {
             if (isFirstCycleAuto) {
@@ -669,14 +677,14 @@ public class ShooterSubsystem extends SubsystemBase {
                         .getDistance(AimingUtil.getHubTargetTranslation()) > 1e-4;
             }
 
-            if (!HOOD_DISABLED && !hoodManualOverride) {
-                double fixedHoodPercent = passingMode
-                        ? Constants.PASSING_FIXED_HOOD_PERCENT
-                        : Constants.HUB_SIDE_FIXED_HOOD_PERCENT;
-                hoodTargetPos = hoodPercentToMotorPosition(fixedHoodPercent);
-                hoodAtMax = fixedHoodPercent >= 0.5;
-                updateHoodPos();
-            }
+            // if (!HOOD_DISABLED && !hoodManualOverride) {
+            //     double fixedHoodPercent = passingMode
+            //             ? Constants.PASSING_FIXED_HOOD_PERCENT
+            //             : Constants.HUB_SIDE_FIXED_HOOD_PERCENT;
+            //     hoodTargetPos = hoodPercentToMotorPosition(fixedHoodPercent);
+            //     hoodAtMax = fixedHoodPercent >= 0.5;
+            //     updateHoodPos();
+            // }
 
             targetRPM = shooterRPM + shooterAdjustment;
             targetRPMKicker = kickerRPM;

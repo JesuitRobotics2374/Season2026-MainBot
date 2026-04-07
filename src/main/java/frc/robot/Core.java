@@ -159,7 +159,7 @@ public class Core {
         shooterTab.addDouble("Hood Position", () -> shooter.getHoodPosition());
         shooterTab.addDouble("Hood Target", () -> shooter.getHoodTargetPosition());
         shooterTab.addBoolean("Hood Manual Override", () -> shooter.isHoodManualOverride());
-        shooterTab.addBoolean("Hood Disabled", () -> shooter.isHoodDisabled());
+        shooterTab.addBoolean("Hood Disabled", () -> shooter.isAutoHoodDisabled());
         shooterTab.addBoolean("Auto Range Enabled", () -> shooter.isAutoRangeEnabled());
 
         shooterTab.addBoolean("Hopping", () -> hopper.isRolling());
