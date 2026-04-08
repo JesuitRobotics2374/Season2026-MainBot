@@ -50,9 +50,9 @@ public class Constants {
             { 4.00, 3153 + SHOOTER_RPM_ADJUSTMENT, 0 },
             { 4.50, 3353 + SHOOTER_RPM_ADJUSTMENT, 0 },
             { 5.00, 3723 + SHOOTER_RPM_ADJUSTMENT, 0 },
-            { 5.50, 4400 + SHOOTER_RPM_ADJUSTMENT, 0 },
-            { 6.50, 4800 + SHOOTER_RPM_ADJUSTMENT, 0 },
-            { 9.50, 6000 + SHOOTER_RPM_ADJUSTMENT, 0 } };
+            { 5.50, 3100 + SHOOTER_RPM_ADJUSTMENT, 0 },
+            { 6.50, 3400 + SHOOTER_RPM_ADJUSTMENT, 0 },
+            { 9.50, 4300 + SHOOTER_RPM_ADJUSTMENT, 0 } };
 
         // Shoot-on-the-move (SOTM) constants
         public static final boolean ENABLE_SHOOT_ON_MOVE = true;
@@ -60,7 +60,7 @@ public class Constants {
         public static final double SOTM_VELOCITY_BLEND_SETPOINT_WEIGHT = 0.5;
         public static final int SOTM_LOOKAHEAD_ITERATIONS = 20;
         public static final double SOTM_MIN_DISTANCE_METERS = 1.2;
-        public static final double SOTM_MAX_DISTANCE_METERS = 6.0;
+        public static final double SOTM_MAX_DISTANCE_METERS = 10.0;
         public static final double SOTM_DRIVE_YAW_TOLERANCE_RAD = Math.toRadians(5.0);
         public static final double SOTM_DRIVE_KP = 12.0;
         public static final double SOTM_DRIVE_KD = 2.5;

@@ -581,6 +581,10 @@ public class ShooterSubsystem extends SubsystemBase {
         return hoodTargetPos;
     }
 
+    public boolean isHoodDown() {
+        return hoodDown;
+    }
+
     /**
      * Checks if both shooter motors are within 5% of target RPM.
      *
