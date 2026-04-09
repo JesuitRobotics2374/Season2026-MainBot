@@ -459,6 +459,10 @@ public class ShooterSubsystem extends SubsystemBase {
         setTargetRPM(targetRPM + deltaRPM);
     }
 
+    public void changeShooterAdjustment(double deltaRPM) {
+        setShooterAdjustment(getShooterAdjustment() + deltaRPM);
+    }
+
     public void changeKickerTargetRPM(double deltaRPM) {
         setTargetRPMKicker(getTargetRPMKicker() + deltaRPM);
     }
@@ -642,6 +646,10 @@ public class ShooterSubsystem extends SubsystemBase {
         shooterAdjustment = adjustment;
     }
 
+    public double getShooterAdjustment() {
+        return shooterAdjustment;
+    }
+
     double storedRPM;
     boolean isFirstCycleAuto = true;
 
@@ -690,7 +698,8 @@ public class ShooterSubsystem extends SubsystemBase {
             //     updateHoodPos();
             // }
 
-            targetRPM = shooterRPM + shooterAdjustment;
+            double hoodCompensation = isHoodDown() ? 0 : -1000;
+            targetRPM = shooterRPM + shooterAdjustment + hoodCompensation;
             targetRPMKicker = kickerRPM;
 
         } else {

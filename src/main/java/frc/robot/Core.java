@@ -319,14 +319,18 @@ public class Core {
         // operatorController.povUp().onTrue(intake.setPositionCommand(0));
         operatorController.povUp().whileTrue(intake.lowerManual()).onFalse(intake.stopPivot());
         operatorController.povRight().onTrue(intake.changeTargetRPMCommand(100));
+
         // operatorController.povDown().onTrue(intake.setPositionCommand(-24));
         operatorController.povDown().whileTrue(intake.raiseManual()).onFalse(intake.stopPivot());
         operatorController.povLeft().onTrue(intake.changeTargetRPMCommand(-100));
 
         operatorController.rightBumper().onTrue(new InstantCommand(() -> shooter.changeKickerTargetRPM(100)));
-        operatorController.rightTrigger().onTrue(new InstantCommand(() -> shooter.changeTargetRPM(100)));
+        // operatorController.rightTrigger().onTrue(new InstantCommand(() -> shooter.changeTargetRPM(100)));
+        operatorController.rightTrigger().onTrue(new InstantCommand(() -> shooter.changeShooterAdjustment(100)));
+
         operatorController.leftBumper().onTrue(new InstantCommand(() -> shooter.changeKickerTargetRPM(-100)));
-        operatorController.leftTrigger().onTrue(new InstantCommand(() -> shooter.changeTargetRPM(-100)));
+        // operatorController.leftTrigger().onTrue(new InstantCommand(() -> shooter.changeTargetRPM(-100)));
+        operatorController.leftTrigger().onTrue(new InstantCommand(() -> shooter.changeShooterAdjustment(-100)));
 
         operatorController.start().onTrue
         (powerManager.toggleDriveBoost());
