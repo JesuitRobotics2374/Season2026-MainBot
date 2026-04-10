@@ -182,9 +182,9 @@ public class ShooterSubsystem extends SubsystemBase {
         hoodConfigs.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
         hoodConfigs.MotorOutput.NeutralMode = NeutralModeValue.Brake;
 
-        motionMagicConfigs.MotionMagicCruiseVelocity = 0.8; // Target velocity in rps
-        motionMagicConfigs.MotionMagicAcceleration = 2.0; // Target acceleration in rps/s
-        motionMagicConfigs.MotionMagicJerk = 20.0; // Target jerk in rps/s/s
+        motionMagicConfigs.MotionMagicCruiseVelocity = 30; // Target velocity in rps
+        motionMagicConfigs.MotionMagicAcceleration = 50; // Target acceleration in rps/s
+        motionMagicConfigs.MotionMagicJerk = 200; // Target jerk in rps/s/s
 
         // Push one full config object so Slot0 + MotionMagic are guaranteed to match this request.
         hood.getConfigurator().apply(hoodConfigs);

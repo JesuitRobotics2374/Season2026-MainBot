@@ -433,7 +433,7 @@
             "x": 1024.0,
             "y": 0.0,
             "width": 256.0,
-            "height": 384.0,
+            "height": 256.0,
             "type": "Boolean Box",
             "properties": {
               "topic": "/Shuffleboard/Shooter/Hood Down",
@@ -443,6 +443,19 @@
               "false_color": 4294198070,
               "true_icon": "None",
               "false_icon": "None"
+            }
+          },
+          {
+            "title": "Shooter Adjustment",
+            "x": 1024.0,
+            "y": 256.0,
+            "width": 256.0,
+            "height": 128.0,
+            "type": "Large Text Display",
+            "properties": {
+              "topic": "/Shuffleboard/Shooter/Shooter Adjustment",
+              "period": 0.06,
+              "data_type": "double"
             }
           }
         ]

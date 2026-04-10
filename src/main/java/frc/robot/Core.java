@@ -160,6 +160,7 @@ public class Core {
         shooterTab.addDouble("Hood Target", () -> shooter.getHoodTargetPosition());
         shooterTab.addBoolean("Hood Down", () -> shooter.isHoodDown());
         shooterTab.addBoolean("Hood Manual Override", () -> shooter.isHoodManualOverride());
+        shooterTab.addDouble("Shooter Adjustment", () -> shooter.getShooterAdjustment());
 
         shooterTab.addBoolean("Hood Disabled", () -> shooter.isAutoHoodDisabled());
         shooterTab.addBoolean("Auto Range Enabled", () -> shooter.isAutoRangeEnabled());

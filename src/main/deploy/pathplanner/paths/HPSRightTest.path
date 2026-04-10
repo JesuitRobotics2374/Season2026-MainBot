@@ -8,20 +8,20 @@
       },
       "prevControl": null,
       "nextControl": {
-        "x": 1.5171000000000023,
-        "y": 0.5952111111111105
+        "x": 0.8155000000000001,
+        "y": 0.7121444444444445
       },
       "isLocked": false,
       "linkedName": "End To Blue Human Station"
     },
     {
       "anchor": {
-        "x": 2.2479333333333336,
-        "y": 1.7742888888888877
+        "x": 0.9909000000000001,
+        "y": 0.858311111111111
       },
       "prevControl": {
-        "x": 1.8776444444444444,
-        "y": 0.887544444444444
+        "x": 0.7775795415870101,
+        "y": 0.7279486087476177
       },
       "nextControl": null,
       "isLocked": false,
@@ -53,7 +53,7 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": 37.48042967481053
+    "rotation": 36.0
   },
   "reversed": false,
   "folder": null,
