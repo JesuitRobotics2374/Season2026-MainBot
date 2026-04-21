@@ -49,6 +49,7 @@ public class HopperSubsystem extends SubsystemBase {
   }
 
   public void spinForwards() {
+    rolling = true;
     rollerMotor.setControl(velocityRequest.withVelocity(targetRPM * RPM_TO_RPS));
   }
 

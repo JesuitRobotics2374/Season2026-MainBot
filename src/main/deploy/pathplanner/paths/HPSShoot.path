@@ -3,13 +3,13 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 0.47444444444819345,
-        "y": 0.6634222222222217
+        "x": 0.4452111111111111,
+        "y": 0.575722222222222
       },
       "prevControl": null,
       "nextControl": {
-        "x": 0.7242277127212745,
-        "y": 0.6738298584004334
+        "x": 0.6949943793841922,
+        "y": 0.5861298584004337
       },
       "isLocked": false,
       "linkedName": "End To Blue Human Station"
@@ -53,7 +53,7 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": 39.635402957287894
+    "rotation": 39.6354029572879
   },
   "reversed": false,
   "folder": null,

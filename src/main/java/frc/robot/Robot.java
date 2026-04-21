@@ -81,6 +81,8 @@ public class Robot extends TimedRobot {
     CommandScheduler.getInstance().schedule(new InstantCommand(() -> m_core.intake.stop()));
     CommandScheduler.getInstance().schedule(m_core.intake.stopPivot());
     CommandScheduler.getInstance().schedule(new InstantCommand(() -> m_core.shooter.stopAll()));
+
+    m_core.intake.fluctuatingIntakeOff();
   }
 
   @Override

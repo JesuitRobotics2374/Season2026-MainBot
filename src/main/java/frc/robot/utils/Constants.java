@@ -16,11 +16,12 @@ public class Constants {
     public static final double HUB_BLUE_X = 4.625594;
     public static final double HUB_Y = 4.034536;
 
-    // Corner targets for "beyond hub" passing feature.
-    public static final Translation2d BLUE_SIDE_CORNER_NEAR = new Translation2d(1.00, 1.00);
-    public static final Translation2d BLUE_SIDE_CORNER_FAR = new Translation2d(1.00, 7.00);
-    public static final Translation2d RED_SIDE_CORNER_NEAR = new Translation2d(15.54, 1.00);
-    public static final Translation2d RED_SIDE_CORNER_FAR = new Translation2d(15.54, 7.00);
+    // Placeholder corner targets for "beyond hub" shooting fallback.
+    // Replace with tuned/scouted values once tested on-field.
+    public static final Translation2d BLUE_SIDE_CORNER_NEAR = new Translation2d(1.00, 2.00);
+    public static final Translation2d BLUE_SIDE_CORNER_FAR = new Translation2d(1.00, 6.00);
+    public static final Translation2d RED_SIDE_CORNER_NEAR = new Translation2d(15.54, 2.00);
+    public static final Translation2d RED_SIDE_CORNER_FAR = new Translation2d(15.54, 6.00);
 
     // Real world release angles
     public static final double HOOD_ZERO_ANGLE = Math.toRadians(63.7);
@@ -28,18 +29,30 @@ public class Constants {
 
     // Motor-recognized values
     public static final double HOOD_MIN_SETPOINT = 0.0;
-    public static final double HOOD_MAX_SETPOINT = 0.20;
+    public static final double HOOD_MAX_SETPOINT = 0.822;
+
+    // Fixed hood presets (percent in [0, 1]).
+    // HUB_SIDE: used while still targeting hub on our side.
+    // PASSING: used once we cross the hub and target passing corners.
+    public static final double HUB_SIDE_FIXED_HOOD_PERCENT = 0.0;
+    public static final double PASSING_FIXED_HOOD_PERCENT = 0.35;
 
     // Shooter constants
     public static final double DEFAULT_KICKER_RPM = 2500.0;
+    // COLE NOTE (DECREASED BY 100 RPM)
+    public static final double SHOOTER_RPM_ADJUSTMENT = 550;
         public static final double[][] SHOOTER_LOOKUP_TABLE = {
-            { 1.40, 2300, 0 },
-            { 1.75, 2500, 0 },
-            { 2.00, 2600, 0 },
-            { 2.50, 2800, 0 },
-            { 3.00, 3100, 0 },
-            { 3.50, 3300, 0 },
-            { 4.00, 3500, 0 } };
+            { 1.90, 1953 + SHOOTER_RPM_ADJUSTMENT, 0 },
+            { 2.25, 2253 + SHOOTER_RPM_ADJUSTMENT, 0 },
+            { 2.50, 2453 + SHOOTER_RPM_ADJUSTMENT, 0 },
+            { 3.00, 2653 + SHOOTER_RPM_ADJUSTMENT, 0 },
+            { 3.50, 2853 + SHOOTER_RPM_ADJUSTMENT, 0 },
+            { 4.00, 3153 + SHOOTER_RPM_ADJUSTMENT, 0 },
+            { 4.50, 3353 + SHOOTER_RPM_ADJUSTMENT, 0 },
+            { 5.00, 3723 + SHOOTER_RPM_ADJUSTMENT, 0 },
+            { 5.50, 4100 + SHOOTER_RPM_ADJUSTMENT, 0 },
+            { 6.50, 4400 + SHOOTER_RPM_ADJUSTMENT, 0 },
+            { 9.50, 5300 + SHOOTER_RPM_ADJUSTMENT, 0 } };
 
         // Shoot-on-the-move (SOTM) constants
         public static final boolean ENABLE_SHOOT_ON_MOVE = true;
@@ -47,7 +60,7 @@ public class Constants {
         public static final double SOTM_VELOCITY_BLEND_SETPOINT_WEIGHT = 0.5;
         public static final int SOTM_LOOKAHEAD_ITERATIONS = 20;
         public static final double SOTM_MIN_DISTANCE_METERS = 1.2;
-        public static final double SOTM_MAX_DISTANCE_METERS = 6.0;
+        public static final double SOTM_MAX_DISTANCE_METERS = 10.0;
         public static final double SOTM_DRIVE_YAW_TOLERANCE_RAD = Math.toRadians(5.0);
         public static final double SOTM_DRIVE_KP = 12.0;
         public static final double SOTM_DRIVE_KD = 2.5;
@@ -64,6 +77,9 @@ public class Constants {
     public static final double AUTO_Z_OFFSET = 0;
     public static final double AUTO_YAW_OFFSET = 0;
 
-    public static final double DEFAULT_DRIVE_CURRENT = 100;
+    public static final double DEFAULT_DRIVE_CURRENT = 50;
     public static final double DEFAULT_STEER_CURRENT = 30;
+
+    public static final double BOOSTED_DRIVE_CURRENT = 75;
+    public static final double BOOSTED_STEER_CURRENT = 45;
 }

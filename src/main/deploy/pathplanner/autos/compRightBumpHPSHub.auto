@@ -11,20 +11,13 @@
               {
                 "type": "path",
                 "data": {
-                  "pathName": "RightStartHPS"
+                  "pathName": "RightBumpHPS"
                 }
               },
               {
-                "type": "sequential",
+                "type": "named",
                 "data": {
-                  "commands": [
-                    {
-                      "type": "named",
-                      "data": {
-                        "name": "Deploy Intake"
-                      }
-                    }
-                  ]
+                  "name": "Deploy Intake Full"
                 }
               }
             ]
@@ -33,13 +26,13 @@
         {
           "type": "wait",
           "data": {
-            "waitTime": 3.0
+            "waitTime": 4.0
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "HPSRight"
+            "pathName": "HPSRightTest"
           }
         },
         {
@@ -49,7 +42,7 @@
               {
                 "type": "named",
                 "data": {
-                  "name": "Shoot"
+                  "name": "Force Shoot"
                 }
               },
               {
@@ -71,6 +64,6 @@
     }
   },
   "resetOdom": true,
-  "folder": null,
+  "folder": "compAuto(please start the names with ''comp'')",
   "choreoAuto": false
 }

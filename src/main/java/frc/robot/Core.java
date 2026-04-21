@@ -41,6 +41,7 @@ import frc.robot.subsystems.PowerManagement;
 import frc.robot.subsystems.ShooterSubsystem;
 import frc.robot.subsystems.drivetrain.DriveSubsystem;
 import frc.robot.subsystems.vision.VisionSubsystem;
+import frc.robot.utils.Constants;
 import frc.robot.utils.Telemetry;
 import frc.robot.utils.aiming.LaunchCalculator;
 import frc.robot.utils.aiming.SotmTelemetry;
@@ -52,10 +53,13 @@ import com.pathplanner.lib.auto.NamedCommands;
 import com.pathplanner.lib.commands.PathPlannerAuto;
 
 public class Core {
-    //Swerve Stuff
-    private double MaxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond) * 0.7; // kSpeedAt12Volts desired top speed
-    private double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond) * 0.65; // 3/4 of a rotation per second
-                                                                                      // max angular velocity
+    // Swerve Stuff
+    private double MaxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond) * 0.7; // kSpeedAt12Volts desired top
+                                                                                        // speed
+    private double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond); // 3/4 of a rotation per
+                                                                                      // second
+
+    // max angular velocity
     private Command pathfindingCommand;
 
     /* Setting up bindings for necessary control of the swerve drive platform */
@@ -66,13 +70,13 @@ public class Core {
     private final Telemetry logger = new Telemetry(MaxSpeed);
     private final SotmTelemetry sotmTelemetry = new SotmTelemetry();
 
-    //Controllers
+    // Controllers
 
     private final CommandXboxController driveController = new CommandXboxController(0);
     private final CommandXboxController operatorController = new CommandXboxController(1);
     private final CommandXboxController customController = new CommandXboxController(2);
 
-    //Subsystems
+    // Subsystems
 
     public final DriveSubsystem drivetrain = TunerConstants.createDrivetrain();
 
@@ -88,17 +92,18 @@ public class Core {
 
     public final PowerManagement powerManager = new PowerManagement(drivetrain, hopper, intake, shooter);
 
-    //Auto
+    // Auto
 
-     private final SendableChooser<Command> autoChooser;
+    private final SendableChooser<Command> autoChooser;
 
-    //Driver assist
-    
+    // Driver assist
+
     private final FixYawToHub fixYawToHub = new FixYawToHub(drivetrain, launchCalculator);
 
     private final Target testTarget = new Target(31, new Transform3d(1.575, 0.0, 0, new Rotation3d(0, 0, 0)));
 
     private boolean hubYawAlign = false;
+    private boolean fastMode = false;
 
     private static final double TranslationalAccelerationLimit = 10; // meters per second^2
     private static final double RotationalAccelerationLimit = Math.PI * 7.5; // radians per second^2
@@ -119,16 +124,21 @@ public class Core {
     }
 
     public void configureAutoCommands() {
-        NamedCommands.registerCommand("Shoot", new InstantCommand(() -> shooter.autoShoot())); //WILL WORK WHEN EHTAN'S CODE IS PUSHED IN
-        NamedCommands.registerCommand("Stop Shoot", new InstantCommand(() -> shooter.stopAll())); //^^
-        
-        NamedCommands.registerCommand("Start Intake", new InstantCommand(() -> intake.rotate(0))); //4000
+        NamedCommands.registerCommand("Shoot", new InstantCommand(() -> shooter.autoShoot()));
+        NamedCommands.registerCommand("Force Shoot", new InstantCommand(() -> shooter.manualShoot()));
+        NamedCommands.registerCommand("Stop Shoot", new InstantCommand(() -> shooter.stopAll()));
+
+        NamedCommands.registerCommand("Start Intake", new InstantCommand(() -> intake.rotate(4000))); // 4000
         NamedCommands.registerCommand("Stop Intake", intake.stopCommand());
 
-        NamedCommands.registerCommand("Deploy Intake", intake.lowerManual());
-        NamedCommands.registerCommand("Stop Deploy", intake.stopPivot());
-        
+        NamedCommands.registerCommand("Deploy Intake", new InstantCommand(() -> intake.setPivotNormalized(0.5)));
+        NamedCommands.registerCommand("Deploy Intake Full", new InstantCommand(() -> intake.setPivotNormalized(0)));
+        NamedCommands.registerCommand("Stop Deploy", new InstantCommand(() -> intake.stopPivot()));
+
         NamedCommands.registerCommand("Fluctuate Intake", intake.fluctuatingIntakeCommand());
+
+        NamedCommands.registerCommand("Compat Fluc On", new InstantCommand(() -> intake.fluctuatingIntakeOn()));
+        NamedCommands.registerCommand("Compat Fluc Off", new InstantCommand(() -> intake.fluctuatingIntakeOff()));
     }
 
     public void configureShuffleBoard() {
@@ -146,16 +156,27 @@ public class Core {
         shooterTab.addDouble("Target Speed Kicker", () -> shooter.getTargetRPMKicker());
         shooterTab.addBoolean("Shooting", () -> shooter.isRunning());
         shooterTab.addBoolean("Kicking", () -> shooter.isKicking());
-    
+        shooterTab.addDouble("Hood Position", () -> shooter.getHoodPosition());
+        shooterTab.addDouble("Hood Target", () -> shooter.getHoodTargetPosition());
+        shooterTab.addBoolean("Hood Down", () -> shooter.isHoodDown());
+        shooterTab.addBoolean("Hood Manual Override", () -> shooter.isHoodManualOverride());
+        shooterTab.addDouble("Shooter Adjustment", () -> shooter.getShooterAdjustment());
+
+        shooterTab.addBoolean("Hood Disabled", () -> shooter.isAutoHoodDisabled());
+        shooterTab.addBoolean("Auto Range Enabled", () -> shooter.isAutoRangeEnabled());
+
+        shooterTab.addBoolean("Hopping", () -> hopper.isRolling());
+
         Tab.addDouble("Drivetrain X", () -> drivetrain.getEstimator().getX());
         Tab.addDouble("Drivetrain Y", () -> drivetrain.getEstimator().getY());
-        Tab.addDouble("Dist To Hub", () -> Math.round((double)shooter.getDistToHub()*100.0)/100.0);
-        Tab.addDouble("Time", () -> DriverStation.getMatchTime());
 
-        Tab.addBoolean("Our Hub Active", () -> getIsOurHubActive());
+        Tab.addDouble("Dist To Hub", () -> Math.round((double) shooter.getDistToHub() * 100.0) / 100.0);
+        Tab.addDouble("Time", () -> getPhaseInfo().phaseTime);
+
+        Tab.addBoolean("Our Hub Active", () -> getPhaseInfo().phaseActive);
         Tab.addString("Hub Warnings", () -> getHubActivityStatus());
-        
-        Tab.addBoolean("Is Passing", () -> shooter.getIsBeyondHub());
+
+        // Tab.addBoolean("Is Passing", () -> shooter.getIsBeyondHub());
 
         SmartDashboard.putData("Auto Chooser", autoChooser);
     }
@@ -191,94 +212,146 @@ public class Core {
                 return false;
         }
     }
-    
+
     public String getHubActivityStatus() {
         return hubActivityStatus;
+    }
+
+    public class PhaseInfo {
+        public int phaseTime;
+        public boolean phaseActive;
+
+        public PhaseInfo(int phaseTime, boolean phaseActive) {
+            this.phaseTime = phaseTime;
+            this.phaseActive = phaseActive;
+        }
+    }
+
+    public PhaseInfo getPhaseInfo() {
+        int matchTime = (int) DriverStation.getMatchTime();
+        boolean isAutonomous = DriverStation.isAutonomous();
+        if (isAutonomous) {
+            return new PhaseInfo(matchTime, true);
+        } else {
+            if (matchTime > 130) {
+                return new PhaseInfo(matchTime - 130, true);
+            } else if (matchTime > 105) {
+                return new PhaseInfo(matchTime - 105, getIsOurHubActive());
+            } else if (matchTime > 80) {
+                return new PhaseInfo(matchTime - 80, getIsOurHubActive());
+            } else if (matchTime > 55) {
+                return new PhaseInfo(matchTime - 55, getIsOurHubActive());
+            } else if (matchTime > 30) {
+                return new PhaseInfo(matchTime - 30, getIsOurHubActive());
+            } else {
+                return new PhaseInfo(matchTime, true);
+            }
+        }
     }
 
     private void configureBindings() {
         // Note that X is defined as forward according to WPILib convention,
         // and Y is defined as to the left according to WPILib convention.
         drivetrain.setDefaultCommand(
-            // Drivetrain will execute this command periodically
-            drivetrain.applyRequest(() -> {
-                double axisScale = 1;
+                // Drivetrain will execute this command periodically
+                drivetrain.applyRequest(() -> {
+                    double axisScale = 1;
 
-                if (getBumpAxisMovementScale()) {
-                    axisScale = 0.7;
-                }
+                    double triggerScale = getTriggerAxisMovementScale();
 
-                double triggerScale = getTriggerAxisMovementScale();
+                    if (triggerScale != 1) {
+                        axisScale = triggerScale;
+                    }
 
-                if (triggerScale != 1) {
-                    axisScale = triggerScale;
-                }
+                    double driverVelocityX = driveController.getLeftY() * MaxSpeed * axisScale;
+                    double driverVelocityY = driveController.getLeftX() * MaxSpeed * axisScale;
+                    double driverRotationalRate = -driveController.getRightX() * MaxAngularRate * axisScale;
 
-                double driverVelocityX = driveController.getLeftY() * MaxSpeed * axisScale;
-                double driverVelocityY = driveController.getLeftX() * MaxSpeed * axisScale;
-                double driverRotationalRate = -driveController.getRightX() * MaxAngularRate * axisScale;
+                    // Determine which controller is active
+                    // boolean driverActive =
+                    // Math.abs(driverVelocityX) > 0.05 ||
+                    // Math.abs(driverVelocityY) > 0.05 ||
+                    // Math.abs(driverRotationalRate) > 0.05;
+                    boolean driverActive = Math.abs(driveController.getRightX()) > 0.1 || !hubYawAlign;
 
-                // Determine which controller is active
-                // boolean driverActive =
-                //     Math.abs(driverVelocityX) > 0.05 ||
-                //     Math.abs(driverVelocityY) > 0.05 ||
-                //     Math.abs(driverRotationalRate) > 0.05;
-                boolean driverActive = Math.abs(driveController.getRightX()) > 0.1 || !hubYawAlign;
+                    double desiredRotationalRate = driverActive ? driverRotationalRate : calculateRotationalRate();
 
-                double desiredRotationalRate = driverActive ? driverRotationalRate : calculateRotationalRate();
+                    if (Math.abs(driveController.getLeftY()) < 0.1 && Math.abs(driveController.getLeftX()) < 0.1
+                            && Math.abs(driveController.getRightX()) < 0.1 && !hubYawAlign) {
+                        xRateLimiter.reset(0);
+                        yRateLimiter.reset(0);
+                        omegaRateLimiter.reset(0);
 
-                drivetrain.setCommandedRobotChassisSpeeds(new ChassisSpeeds(
-                        -driverVelocityX,
-                        -driverVelocityY,
-                        desiredRotationalRate));
+                        drivetrain.setCommandedRobotChassisSpeeds(new ChassisSpeeds(0, 0, 0));
+
+                        return brake;
+                    }
+
+                    driverVelocityX = xRateLimiter.calculate(driverVelocityX);
+                    driverVelocityY = yRateLimiter.calculate(driverVelocityY);
+                    desiredRotationalRate = omegaRateLimiter.calculate(desiredRotationalRate);
+
+                    drivetrain.setCommandedRobotChassisSpeeds(new ChassisSpeeds(
+                            -driverVelocityX,
+                            -driverVelocityY,
+                            desiredRotationalRate));
 
                     return drive
-                        .withVelocityX(-driverVelocityX) // Limit translational acceleration forward/backward
-                        .withVelocityY(-driverVelocityY) // Limit translational acceleration left/right
-                        .withRotationalRate(desiredRotationalRate);
-            })
-        );
+                            .withVelocityX(-driverVelocityX) // Limit translational acceleration forward/backward
+                            .withVelocityY(-driverVelocityY) // Limit translational acceleration left/right
+                            .withRotationalRate(desiredRotationalRate);
+                }));
 
         // DRIVER BINDINGS
 
         // reset the field-centric heading on left bumper press
         driveController.back().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
 
-         driveController.a().whileTrue(drivetrain.applyRequest(() -> brake));
+        driveController.a().whileTrue(drivetrain.applyRequest(() -> brake));
 
         driveController.leftTrigger().onTrue(new InstantCommand(() -> {
             CommandScheduler.getInstance().schedule(fixYawToHub);
-            hubYawAlign = true;}));
+            hubYawAlign = true;
+        }));
 
         driveController.leftTrigger().onFalse(new InstantCommand(() -> {
             CommandScheduler.getInstance().cancel(fixYawToHub);
-            hubYawAlign = false;}));
+            hubYawAlign = false;
+        }));
 
         // OPERATOR BINDINGS
 
-        driveController.b().onTrue(new InstantCommand(() -> {intake.setPivotZero();}));
-        
+        driveController.b().onTrue(new InstantCommand(() -> {
+            intake.setPivotZero();
+        }));
+
+        driveController.rightBumper().onTrue(new InstantCommand(() -> toggleFastMode()));
+
         operatorController.a().toggleOnTrue(intake.intakeCommand());
-        operatorController.b().onTrue(hopper.changeRPMCommand(100));
+        operatorController.b().onTrue(shooter.manualToggleHoodMinMaxCommand());
         operatorController.x().toggleOnTrue(intake.purgeCommand());
         operatorController.y().onTrue(new InstantCommand(() -> shooter.autoShoot()));
 
-        
-        operatorController.povUp().onTrue(intake.addPositionCommand(1));
-        //operatorController.povUp().whileTrue(intake.raiseManual()).onFalse(intake.stopPivot());
+        // operatorController.povUp().onTrue(intake.setPositionCommand(0));
+        operatorController.povUp().whileTrue(intake.lowerManual()).onFalse(intake.stopPivot());
         operatorController.povRight().onTrue(intake.changeTargetRPMCommand(100));
-        operatorController.povDown().onTrue(intake.addPositionCommand(-1));
-        //operatorController.povDown().whileTrue(intake.lowerManual()).onFalse(intake.stopPivot());
+
+        // operatorController.povDown().onTrue(intake.setPositionCommand(-24));
+        operatorController.povDown().whileTrue(intake.raiseManual()).onFalse(intake.stopPivot());
         operatorController.povLeft().onTrue(intake.changeTargetRPMCommand(-100));
 
         operatorController.rightBumper().onTrue(new InstantCommand(() -> shooter.changeKickerTargetRPM(100)));
-        operatorController.rightTrigger().onTrue(new InstantCommand(() -> shooter.changeTargetRPM(100)));
+        // operatorController.rightTrigger().onTrue(new InstantCommand(() ->
+        // shooter.changeTargetRPM(100)));
+        operatorController.rightTrigger().onTrue(new InstantCommand(() -> shooter.changeShooterAdjustment(100)));
+
         operatorController.leftBumper().onTrue(new InstantCommand(() -> shooter.changeKickerTargetRPM(-100)));
-        operatorController.leftTrigger().onTrue(new InstantCommand(() -> shooter.changeTargetRPM(-100)));
+        // operatorController.leftTrigger().onTrue(new InstantCommand(() ->
+        // shooter.changeTargetRPM(-100)));
+        operatorController.leftTrigger().onTrue(new InstantCommand(() -> shooter.changeShooterAdjustment(-100)));
 
-        operatorController.start().onTrue(hopper.pulseCommand());
+        operatorController.start().onTrue(powerManager.toggleDriveBoost());
         operatorController.back().onTrue(new InstantCommand(() -> shooter.toggleAutoRange()));
-
 
         drivetrain.registerTelemetry(logger::telemeterize);
     }
@@ -289,6 +362,16 @@ public class Core {
 
     public boolean getBumpAxisMovementScale() {
         return driveController.rightBumper().getAsBoolean();
+    }
+
+    public void toggleFastMode() {
+        if (fastMode) {
+            MaxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond) * 0.7;
+        } else {
+            MaxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond) * 0.85;
+        }
+
+        fastMode = !fastMode;
     }
 
     private double calculateRotationalRate() {
@@ -323,7 +406,7 @@ public class Core {
         System.out.println("PATHFIND TO " + target.toString() + " STARTED");
     }
 
-       public Command getPath(String id) {
+    public Command getPath(String id) {
         try {
             // Load the path you want to follow using its name in the GUI
             PathPlannerPath path = PathPlannerPath.fromPathFile(id);
@@ -339,15 +422,22 @@ public class Core {
     }
 
     public void periodic() {
-        // Set the intake pivot based on the X axis of the custom controller. 1 = fully raised, 0 = fully lowered.
+        // Set the intake pivot based on the X axis of the custom controller. 1 = fully
+        // raised, 0 = fully lowered.
         // Note that the X axis is a fixed slider not a joystick.
-        double rawPivotInput = customController.getLeftX();
+        // double rawPivotInput = customController.getLeftX();
 
         // Support either a 0..1 slider signal or a -1..1 axis signal.
-        double normalizedPivot = (rawPivotInput + 1.0) * 0.5;
+        // double normalizedPivot = (rawPivotInput + 1.0) * 0.5;
 
-        intake.setPivotNormalized(MathUtil.clamp(normalizedPivot, 0.0, 1.0));
+        // intake.setPivotNormalized(MathUtil.clamp(normalizedPivot, 0.0, 1.0));
+
+        // NOTE THIS MAY NEED TO BE CHANGED AS I DONT KNOW THE VARIABLES FOR THE INTAKE
+        // CUSTOM CONTROLLER
+
+        // double shooterAdjustment = customController.getLeftX() * 200; // Scale the
+        // adjustment factor as needed
+        // shooter.setShooterAdjustment(shooterAdjustment);
     }
-
 
 }

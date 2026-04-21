@@ -1,8 +1,5 @@
 package frc.robot.subsystems;
 
-import org.apache.commons.math4.legacy.fitting.PolynomialCurveFitter;
-import org.apache.commons.math4.legacy.fitting.WeightedObservedPoints;
-
 import com.ctre.phoenix6.configs.MotionMagicConfigs;
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
@@ -10,14 +7,13 @@ import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.GravityTypeValue;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
@@ -25,7 +21,6 @@ import edu.wpi.first.wpilibj2.command.FunctionalCommand;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.subsystems.drivetrain.DriveSubsystem;
-import frc.robot.utils.Ballistics;
 import frc.robot.utils.Constants;
 import frc.robot.utils.aiming.AimingUtil;
 import frc.robot.utils.aiming.LaunchCalculator;
@@ -63,7 +58,7 @@ public class ShooterSubsystem extends SubsystemBase {
     private final TalonFX hood;
 
     // Safety lock: when true, hood will never be commanded to move.
-    private static final boolean HOOD_DISABLED = true;
+    private static final boolean AUTO_HOOD_DISABLED = true;
 
     // References to other subsystems
     private HopperSubsystem m_hopper;
@@ -86,28 +81,21 @@ public class ShooterSubsystem extends SubsystemBase {
     private static final double MIN_COMMAND_RPM_FOR_FEED = 300.0;
 
     private double hoodTargetPos;
+    private boolean hoodAtMax = false;
+    private boolean hoodManualOverride = false;
+
+    private double shooterAdjustment = 0;
 
     private final MotionMagicVoltage hoodMotionMagicRequest = new MotionMagicVoltage(0).withSlot(0);
 
     // Auto-shoot state flags
     private boolean doAutoRange = true;
     private boolean autoShooting = false;
-    private final boolean useTable = true;
-    private final boolean useVelBased = false;
+    private boolean manualShooting = false;
+    private boolean hoodDown = true;
 
     // Polynomial shooter curve storage
 
-        // Distance (from shooter), RPM Shooter, Hood Percent
-        private final double[][] shooterValues = {
-            { 1.40, 2300, 0 },
-            { 1.75, 2500, 0 },
-            { 2.00, 2600, 0 },
-            { 2.50, 2800, 0 },
-            { 3.00, 3100, 0 },
-            { 3.50, 3300, 0 },
-            { 4.00, 3500, 0 } };
-    private double[] shooterCoeffs = {};
-    private double[] velCoeffs = {};
     private final ShooterLookupTable shooterLookupTable;
     private final LaunchCalculator launchCalculator;
 
@@ -117,7 +105,7 @@ public class ShooterSubsystem extends SubsystemBase {
     private boolean isShooting = false;
     private boolean isKicking = false;
 
-    private static final double comp_dist_offset = 0.6; // meters
+    private static final double comp_dist_offset = 0.0; // meters
 
     /**
      * ShooterSubsystem Constructor
@@ -178,60 +166,36 @@ public class ShooterSubsystem extends SubsystemBase {
 
         kicker.getConfigurator().apply(controlCfgKicker);
 
-        TalonFXConfiguration talonFXConfigs = new TalonFXConfiguration();
-        Slot0Configs slot0Configs = talonFXConfigs.Slot0;
-        MotionMagicConfigs motionMagicConfigs = talonFXConfigs.MotionMagic;
+        TalonFXConfiguration hoodConfigs = new TalonFXConfiguration();
+        Slot0Configs slot0Configs = hoodConfigs.Slot0;
+        MotionMagicConfigs motionMagicConfigs = hoodConfigs.MotionMagic;
 
-        slot0Configs.kG = 0.001; // Output of voltage to overcome gravity
-        slot0Configs.kV = 0; // Output per unit target velocity, perhaps not needed
-        slot0Configs.kA = 0.0; // Output per unit target acceleration, perhaps not needed
-        slot0Configs.kP = 0.01; // Controls the response to position error—how much the motor reacts to the
-                                // difference between the current position and the target position.
-        slot0Configs.kI = 0.01; // Addresses steady-state error, which occurs when the motor doesn’t quite reach
-        // the target position due to forces like gravity or friction.
-        slot0Configs.kD = 0.01; // Responds to the rate of change of the error, damping the motion as the motor
-                                // approaches the target. This reduces overshooting and oscillations.
+        // Hood Motion Magic gains (voltage output mode).
+        slot0Configs.kG = 0.22;
+        slot0Configs.kV = 0.0;
+        slot0Configs.kA = 0.0;
+        slot0Configs.kP = 8.0;
+        slot0Configs.kI = 0.0;
+        slot0Configs.kD = 0.15;
+        slot0Configs.GravityType = GravityTypeValue.Arm_Cosine;
 
-        talonFXConfigs.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
-        talonFXConfigs.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+        hoodConfigs.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
+        hoodConfigs.MotorOutput.NeutralMode = NeutralModeValue.Brake;
 
-        motionMagicConfigs.MotionMagicCruiseVelocity = 1; // Target velocity in rps
-        motionMagicConfigs.MotionMagicAcceleration = 5; // Target acceleration in rps/s
-        motionMagicConfigs.MotionMagicJerk = 50; // Target jerk in rps/s/s
+        motionMagicConfigs.MotionMagicCruiseVelocity = 30; // Target velocity in rps
+        motionMagicConfigs.MotionMagicAcceleration = 50; // Target acceleration in rps/s
+        motionMagicConfigs.MotionMagicJerk = 200; // Target jerk in rps/s/s
 
-        hood.getConfigurator().apply(talonFXConfigs);
-        hood.getConfigurator().apply(slot0Configs);
-        hood.getConfigurator().apply(motionMagicConfigs);
+        // Push one full config object so Slot0 + MotionMagic are guaranteed to match this request.
+        hood.getConfigurator().apply(hoodConfigs);
 
-        if (!useTable) {
-            calculateShooterCurves();
-        }
+        // Assumes the hood starts at the mechanical minimum at startup.
+        hood.setPosition(Constants.HOOD_MIN_SETPOINT);
+        hoodTargetPos = Constants.HOOD_MIN_SETPOINT;
+        hoodAtMax = false;
 
-        shooterLookupTable = new ShooterLookupTable(shooterValues);
-
-    }
-
-    /**
-     * Fits a 3rd degree polynomial to shooterValues dataset.
-     * Used for velocity-based RPM interpolation.
-     */
-    private void calculateShooterCurves() {
-
-        WeightedObservedPoints shooterPoints = new WeightedObservedPoints();
-        WeightedObservedPoints velPoints = new WeightedObservedPoints();
-
-        for (int i = 0; i < shooterValues.length; i++) {
-            double[] values = shooterValues[i];
-            shooterPoints.add(values[0], values[1]);
-            velPoints.add(Ballistics.CalculateNeededShooterSpeed(values[0], 0, 0, Constants.HOOD_ZERO_ANGLE),
-                    values[1]);
-        }
-
-        PolynomialCurveFitter fitterShooter = PolynomialCurveFitter.create(3);
-        shooterCoeffs = fitterShooter.fit(shooterPoints.toList());
-
-        PolynomialCurveFitter fitterVel = PolynomialCurveFitter.create(3);
-        velCoeffs = fitterVel.fit(velPoints.toList());
+        zeroHood();
+        shooterLookupTable = new ShooterLookupTable(Constants.SHOOTER_LOOKUP_TABLE);
     }
 
     /**
@@ -263,11 +227,16 @@ public class ShooterSubsystem extends SubsystemBase {
     }
 
     private void updateHoodPos() {
-        if (HOOD_DISABLED) {
+        if (AUTO_HOOD_DISABLED) {
             hood.stopMotor();
             return;
         }
         hood.setControl(hoodMotionMagicRequest.withPosition(hoodTargetPos));
+    }
+
+    private void zeroHood() {
+        hood.setPosition(0.0);
+        hoodTargetPos = 0.0; // or Constants.HOOD_MIN_SETPOINT
     }
 
     private double hoodPercentToMotorPosition(double hoodPercent) {
@@ -291,12 +260,51 @@ public class ShooterSubsystem extends SubsystemBase {
     }
 
     public void setHoodPositionPercent(double hoodPercent) {
-        if (HOOD_DISABLED) {
+        if (AUTO_HOOD_DISABLED) {
             hood.stopMotor();
             return;
         }
+        hoodManualOverride = true;
         hoodTargetPos = hoodPercentToMotorPosition(hoodPercent);
+        hoodAtMax = hoodPercent >= 0.5;
+        System.out.printf("[HOOD] Manual percent request: %.3f -> target %.3f rot%n", hoodPercent, hoodTargetPos);
         updateHoodPos();
+    }
+
+    public void toggleHoodMinMax() {
+        if (AUTO_HOOD_DISABLED) {
+            hood.stopMotor();
+            return;
+        }
+
+        hoodManualOverride = true;
+        hoodAtMax = !hoodAtMax;
+        hoodTargetPos = hoodAtMax ? Constants.HOOD_MAX_SETPOINT : Constants.HOOD_MIN_SETPOINT;
+        System.out.printf("[HOOD] B toggle -> %s (target %.3f rot)%n", hoodAtMax ? "MAX" : "MIN", hoodTargetPos);
+        updateHoodPos();
+    }
+    
+    public void manualToggleHoodMinMax() {
+        double newPosition = 0;
+
+        if (hoodDown) {
+            newPosition = Constants.HOOD_MAX_SETPOINT;
+        }
+        else {
+            newPosition = Constants.HOOD_MIN_SETPOINT;
+        }
+
+        hoodDown = !hoodDown;
+        
+        hood.setControl(hoodMotionMagicRequest.withPosition(newPosition));
+    }
+
+    public Command toggleHoodMinMaxCommand() {
+        return new InstantCommand(this::toggleHoodMinMax, this);
+    }
+
+    public Command manualToggleHoodMinMaxCommand() {
+        return new InstantCommand(this::manualToggleHoodMinMax, this);
     }
 
     /**
@@ -363,6 +371,8 @@ public class ShooterSubsystem extends SubsystemBase {
         kicker.stopMotor();
         m_hopper.stopMotor();
         autoShooting = false;
+
+        peripheralManualCommand.cancel();
     }
 
     /**
@@ -394,6 +404,26 @@ public class ShooterSubsystem extends SubsystemBase {
             () -> false,
             this);
 
+    private Command peripheralManualCommand = new FunctionalCommand(
+        () -> {
+            rotate(getTargetRPM());
+            setKickerControl();
+            launchReadyTimer.stop();
+            launchReadyTimer.reset();
+        },
+        () -> {
+            rotate(getTargetRPM());
+            setKickerControl();
+            m_hopper.spinForwards();
+        },
+        interrupted -> {
+            stopAll();
+            launchReadyTimer.stop();
+            launchReadyTimer.reset();
+        },
+        () -> false,
+        this);
+
     /**
      * Toggles auto shooting command scheduling.
      */
@@ -408,6 +438,14 @@ public class ShooterSubsystem extends SubsystemBase {
         }
     }
 
+    /**
+     * Toggles auto shooting command scheduling.
+     */
+    public void manualShoot() {
+        System.out.println("MANUAL");
+        CommandScheduler.getInstance().schedule(peripheralManualCommand);
+    }
+
     public Command hoodPosCommand(double pos) {
         return new InstantCommand(() -> setHoodPositionPercent(pos), this);
     }
@@ -419,6 +457,10 @@ public class ShooterSubsystem extends SubsystemBase {
      */
     public void changeTargetRPM(double deltaRPM) {
         setTargetRPM(targetRPM + deltaRPM);
+    }
+
+    public void changeShooterAdjustment(double deltaRPM) {
+        setShooterAdjustment(getShooterAdjustment() + deltaRPM);
     }
 
     public void changeKickerTargetRPM(double deltaRPM) {
@@ -446,6 +488,10 @@ public class ShooterSubsystem extends SubsystemBase {
      */
     public void toggleAutoRange() {
         doAutoRange = !doAutoRange;
+        if (doAutoRange) {
+            hoodManualOverride = false;
+            System.out.println("[HOOD] Auto-range enabled; releasing manual hood override.");
+        }
 
         if (doAutoRange == false) {
             autoShooting = false;
@@ -523,6 +569,26 @@ public class ShooterSubsystem extends SubsystemBase {
         return autoShooting;
     }
 
+    public boolean isHoodManualOverride() {
+        return hoodManualOverride;
+    }
+
+    public boolean isAutoHoodDisabled() {
+        return AUTO_HOOD_DISABLED;
+    }
+
+    public boolean isAutoRangeEnabled() {
+        return doAutoRange;
+    }
+
+    public double getHoodTargetPosition() {
+        return hoodTargetPos;
+    }
+
+    public boolean isHoodDown() {
+        return hoodDown;
+    }
+
     /**
      * Checks if both shooter motors are within 5% of target RPM.
      *
@@ -543,7 +609,7 @@ public class ShooterSubsystem extends SubsystemBase {
 
     private boolean isLaunchReadyNow() {
         boolean shooterCommanded = Math.abs(getTargetRPM()) >= MIN_COMMAND_RPM_FOR_FEED;
-        boolean hoodReady = HOOD_DISABLED || isHoodWithinTolerance();
+        boolean hoodReady = AUTO_HOOD_DISABLED || isHoodWithinTolerance();
         boolean driveReady = !Constants.ENABLE_SHOOT_ON_MOVE || launchCalculator.atDriveGoal();
         boolean launchValid = !Constants.ENABLE_SHOOT_ON_MOVE || launchCalculator.getParameters().isValid();
         return shooterCommanded && isVelocityWithinTolerance() && hoodReady && driveReady && launchValid;
@@ -571,6 +637,19 @@ public class ShooterSubsystem extends SubsystemBase {
                 follower.getSupplyCurrent().getValueAsDouble();
     }
 
+    /**
+     * Sets the shooter adjustment factor.
+     *
+     * @param adjustment The adjustment factor, in RPM.
+     */
+    public void setShooterAdjustment(double adjustment) {
+        shooterAdjustment = adjustment;
+    }
+
+    public double getShooterAdjustment() {
+        return shooterAdjustment;
+    }
+
     double storedRPM;
     boolean isFirstCycleAuto = true;
 
@@ -580,9 +659,9 @@ public class ShooterSubsystem extends SubsystemBase {
      */
     @Override
     public void periodic() {
-        if (HOOD_DISABLED) {
-            hood.stopMotor();
-        }
+        // if (HOOD_DISABLED) {
+        //     hood.stopMotor();
+        // }
 
         if (doAutoRange) {
             if (isFirstCycleAuto) {
@@ -594,39 +673,33 @@ public class ShooterSubsystem extends SubsystemBase {
 
             double shooterRPM = 0;
             double kickerRPM = Constants.DEFAULT_KICKER_RPM;
+            boolean passingMode = false;
 
-            ChassisSpeeds robotSpeeds = m_drivetrain.getCurrentRobotChassisSpeeds();
-
-            if (useTable) {
-                if (Constants.ENABLE_SHOOT_ON_MOVE) {
-                    LaunchingParameters parameters = launchCalculator.getParameters();
-                    shooterRPM = parameters.flywheelSpeed();
-                    if (!HOOD_DISABLED) {
-                        double hoodPercent = (parameters.hoodAngle() - Constants.HOOD_ZERO_ANGLE)
-                                / (Constants.HOOD_LOWEST_ANGLE - Constants.HOOD_ZERO_ANGLE);
-                        setHoodPositionPercent(hoodPercent);
-                    }
-                } else {
-                    ShooterLookupTable.ShotSetpoint setpoint = shooterLookupTable.sample(distToHub);
-
-                    shooterRPM = setpoint.shooterRPM();
-
-                    if (!HOOD_DISABLED) {
-                        setHoodPositionPercent(setpoint.hoodPercent());
-                    }
-                }
+            if (Constants.ENABLE_SHOOT_ON_MOVE) {
+                LaunchingParameters parameters = launchCalculator.getParameters();
+                shooterRPM = parameters.flywheelSpeed();
+                passingMode = parameters.passing();
             } else {
-                if (useVelBased) {
-                    shooterRPM = getValueFromCurve(
-                            Ballistics.CalculateNeededShooterSpeed(distToHub, robotSpeeds.vxMetersPerSecond,
-                                    robotSpeeds.vyMetersPerSecond, getCurrentHoodReleaseAngleRadians()),
-                            velCoeffs);
-                } else {
-                    shooterRPM = getValueFromCurve(distToHub, shooterCoeffs);
-                }
+                ShooterLookupTable.ShotSetpoint setpoint = shooterLookupTable.sample(distToHub);
+
+                shooterRPM = setpoint.shooterRPM();
+
+                Pose2d robotPose = m_drivetrain.getEstimator();
+                passingMode = AimingUtil.getTargetTranslation(robotPose)
+                        .getDistance(AimingUtil.getHubTargetTranslation()) > 1e-4;
             }
 
-            targetRPM = shooterRPM;
+            // if (!HOOD_DISABLED && !hoodManualOverride) {
+            //     double fixedHoodPercent = passingMode
+            //             ? Constants.PASSING_FIXED_HOOD_PERCENT
+            //             : Constants.HUB_SIDE_FIXED_HOOD_PERCENT;
+            //     hoodTargetPos = hoodPercentToMotorPosition(fixedHoodPercent);
+            //     hoodAtMax = fixedHoodPercent >= 0.5;
+            //     updateHoodPos();
+            // }
+
+            double hoodCompensation = isHoodDown() ? 0 : -1000;
+            targetRPM = shooterRPM + shooterAdjustment + hoodCompensation;
             targetRPMKicker = kickerRPM;
 
         } else {

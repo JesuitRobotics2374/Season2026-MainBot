@@ -1,0 +1,50 @@
+{
+  "version": "2025.0",
+  "command": {
+    "type": "sequential",
+    "data": {
+      "commands": [
+        {
+          "type": "path",
+          "data": {
+            "pathName": "CenterShoot"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "Deploy Intake Full"
+          }
+        },
+        {
+          "type": "parallel",
+          "data": {
+            "commands": [
+              {
+                "type": "named",
+                "data": {
+                  "name": "Start Intake"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "Fluctuate Intake"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "Force Shoot"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  "resetOdom": true,
+  "folder": "compAuto(please start the names with ''comp'')",
+  "choreoAuto": false
+}

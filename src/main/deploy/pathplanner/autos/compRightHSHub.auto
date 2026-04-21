@@ -11,7 +11,7 @@
               {
                 "type": "path",
                 "data": {
-                  "pathName": "RightStartHPS"
+                  "pathName": "RightStartHPSTest"
                 }
               },
               {
@@ -39,7 +39,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "HPSRight"
+            "pathName": "HPSRightTest"
           }
         },
         {
@@ -71,6 +71,6 @@
     }
   },
   "resetOdom": true,
-  "folder": null,
+  "folder": "compAuto(please start the names with ''comp'')",
   "choreoAuto": false
 }
