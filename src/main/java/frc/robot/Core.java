@@ -57,7 +57,7 @@ public class Core {
     private double MaxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond) * 0.7; // kSpeedAt12Volts desired top
                                                                                         // speed
     private double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond); // 3/4 of a rotation per
-                                                                                             // second
+                                                                                      // second
 
     // max angular velocity
     private Command pathfindingCommand;
@@ -176,7 +176,7 @@ public class Core {
         Tab.addBoolean("Our Hub Active", () -> getPhaseInfo().phaseActive);
         Tab.addString("Hub Warnings", () -> getHubActivityStatus());
 
-        //Tab.addBoolean("Is Passing", () -> shooter.getIsBeyondHub());
+        // Tab.addBoolean("Is Passing", () -> shooter.getIsBeyondHub());
 
         SmartDashboard.putData("Auto Chooser", autoChooser);
     }
@@ -276,6 +276,21 @@ public class Core {
 
                     double desiredRotationalRate = driverActive ? driverRotationalRate : calculateRotationalRate();
 
+                    if (Math.abs(driveController.getLeftY()) < 0.1 && Math.abs(driveController.getLeftX()) < 0.1
+                            && Math.abs(driveController.getRightX()) < 0.1 && !hubYawAlign) {
+                        xRateLimiter.reset(0);
+                        yRateLimiter.reset(0);
+                        omegaRateLimiter.reset(0);
+
+                        drivetrain.setCommandedRobotChassisSpeeds(new ChassisSpeeds(0, 0, 0));
+
+                        return brake;
+                    }
+
+                    driverVelocityX = xRateLimiter.calculate(driverVelocityX);
+                    driverVelocityY = yRateLimiter.calculate(driverVelocityY);
+                    desiredRotationalRate = omegaRateLimiter.calculate(desiredRotationalRate);
+
                     drivetrain.setCommandedRobotChassisSpeeds(new ChassisSpeeds(
                             -driverVelocityX,
                             -driverVelocityY,
@@ -316,7 +331,7 @@ public class Core {
         operatorController.b().onTrue(shooter.manualToggleHoodMinMaxCommand());
         operatorController.x().toggleOnTrue(intake.purgeCommand());
         operatorController.y().onTrue(new InstantCommand(() -> shooter.autoShoot()));
-        
+
         // operatorController.povUp().onTrue(intake.setPositionCommand(0));
         operatorController.povUp().whileTrue(intake.lowerManual()).onFalse(intake.stopPivot());
         operatorController.povRight().onTrue(intake.changeTargetRPMCommand(100));
@@ -326,15 +341,16 @@ public class Core {
         operatorController.povLeft().onTrue(intake.changeTargetRPMCommand(-100));
 
         operatorController.rightBumper().onTrue(new InstantCommand(() -> shooter.changeKickerTargetRPM(100)));
-        // operatorController.rightTrigger().onTrue(new InstantCommand(() -> shooter.changeTargetRPM(100)));
+        // operatorController.rightTrigger().onTrue(new InstantCommand(() ->
+        // shooter.changeTargetRPM(100)));
         operatorController.rightTrigger().onTrue(new InstantCommand(() -> shooter.changeShooterAdjustment(100)));
 
         operatorController.leftBumper().onTrue(new InstantCommand(() -> shooter.changeKickerTargetRPM(-100)));
-        // operatorController.leftTrigger().onTrue(new InstantCommand(() -> shooter.changeTargetRPM(-100)));
+        // operatorController.leftTrigger().onTrue(new InstantCommand(() ->
+        // shooter.changeTargetRPM(-100)));
         operatorController.leftTrigger().onTrue(new InstantCommand(() -> shooter.changeShooterAdjustment(-100)));
 
-        operatorController.start().onTrue
-        (powerManager.toggleDriveBoost());
+        operatorController.start().onTrue(powerManager.toggleDriveBoost());
         operatorController.back().onTrue(new InstantCommand(() -> shooter.toggleAutoRange()));
 
         drivetrain.registerTelemetry(logger::telemeterize);
@@ -351,8 +367,7 @@ public class Core {
     public void toggleFastMode() {
         if (fastMode) {
             MaxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond) * 0.7;
-        }
-        else {
+        } else {
             MaxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond) * 0.85;
         }
 
@@ -417,11 +432,11 @@ public class Core {
 
         // intake.setPivotNormalized(MathUtil.clamp(normalizedPivot, 0.0, 1.0));
 
+        // NOTE THIS MAY NEED TO BE CHANGED AS I DONT KNOW THE VARIABLES FOR THE INTAKE
+        // CUSTOM CONTROLLER
 
-
-        //NOTE THIS MAY NEED TO BE CHANGED AS I DONT KNOW THE VARIABLES FOR THE INTAKE CUSTOM CONTROLLER
-
-        // double shooterAdjustment = customController.getLeftX() * 200; // Scale the adjustment factor as needed
+        // double shooterAdjustment = customController.getLeftX() * 200; // Scale the
+        // adjustment factor as needed
         // shooter.setShooterAdjustment(shooterAdjustment);
     }
 

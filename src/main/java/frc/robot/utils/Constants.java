@@ -40,7 +40,7 @@ public class Constants {
     // Shooter constants
     public static final double DEFAULT_KICKER_RPM = 2500.0;
     // COLE NOTE (DECREASED BY 100 RPM)
-    public static final double SHOOTER_RPM_ADJUSTMENT = 350;
+    public static final double SHOOTER_RPM_ADJUSTMENT = 550;
         public static final double[][] SHOOTER_LOOKUP_TABLE = {
             { 1.90, 1953 + SHOOTER_RPM_ADJUSTMENT, 0 },
             { 2.25, 2253 + SHOOTER_RPM_ADJUSTMENT, 0 },
