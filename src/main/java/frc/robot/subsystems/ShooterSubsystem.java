@@ -186,7 +186,8 @@ public class ShooterSubsystem extends SubsystemBase {
         motionMagicConfigs.MotionMagicAcceleration = 50; // Target acceleration in rps/s
         motionMagicConfigs.MotionMagicJerk = 200; // Target jerk in rps/s/s
 
-        // Push one full config object so Slot0 + MotionMagic are guaranteed to match this request.
+        // Push one full config object so Slot0 + MotionMagic are guaranteed to match
+        // this request.
         hood.getConfigurator().apply(hoodConfigs);
 
         // Assumes the hood starts at the mechanical minimum at startup.
@@ -226,6 +227,9 @@ public class ShooterSubsystem extends SubsystemBase {
         targetRPMKicker = RPM;
     }
 
+    /**
+     * Commands hood to move to target position using Motion Magic control.
+     */
     private void updateHoodPos() {
         if (AUTO_HOOD_DISABLED) {
             hood.stopMotor();
@@ -234,31 +238,61 @@ public class ShooterSubsystem extends SubsystemBase {
         hood.setControl(hoodMotionMagicRequest.withPosition(hoodTargetPos));
     }
 
+    /**
+     * Resets hood encoder position to zero (or mechanical minimum) for consistent
+     * starting point.
+     */
     private void zeroHood() {
         hood.setPosition(0.0);
         hoodTargetPos = 0.0; // or Constants.HOOD_MIN_SETPOINT
     }
 
+    /**
+     * Converts a hood position percentage (0.0 to 1.0) to a motor position in
+     * rotations, based on defined min/max setpoints.
+     * 
+     * @param hoodPercent, the percent of the hood's range, where 0.0 is fully
+     *                     retracted and 1.0 is fully extended.
+     * @return The corresponding motor position in rotations for the hood.
+     */
     private double hoodPercentToMotorPosition(double hoodPercent) {
         double clampedPercent = MathUtil.clamp(hoodPercent, 0.0, 1.0);
         return MathUtil.interpolate(Constants.HOOD_MIN_SETPOINT, Constants.HOOD_MAX_SETPOINT, clampedPercent);
     }
 
+    /**
+     * Converts a motor position in rotations to a hood position percentage (0.0 to
+     * 1.0) based on defined min/max setpoints.
+     * 
+     * @param motorPosition, the current motor position in rotations for the hood.
+     * @return The corresponding hood position percentage.
+     */
     private double hoodMotorPositionToPercent(double motorPosition) {
         double percent = (motorPosition - Constants.HOOD_MIN_SETPOINT)
                 / (Constants.HOOD_MAX_SETPOINT - Constants.HOOD_MIN_SETPOINT);
         return MathUtil.clamp(percent, 0.0, 1.0);
     }
 
+    /**
+     * Converts a hood position percentage to a release angle in radians, based on
+     * defined min/max angles.
+     * 
+     * @param hoodPercent, the percent of the hood's range, where 0.0 is fully
+     *                     retracted and 1.0 is fully extended.
+     * @return The corresponding release angle in radians.
+     */
     private double hoodPercentToReleaseAngleRadians(double hoodPercent) {
         double clampedPercent = MathUtil.clamp(hoodPercent, 0.0, 1.0);
         return MathUtil.interpolate(Constants.HOOD_ZERO_ANGLE, Constants.HOOD_LOWEST_ANGLE, clampedPercent);
     }
 
-    private double getCurrentHoodReleaseAngleRadians() {
-        return hoodPercentToReleaseAngleRadians(hoodMotorPositionToPercent(getHoodPosition()));
-    }
-
+    /**
+     * Public method to set hood position based on percentage input, with internal
+     * conversion to motor rotations and Motion Magic control.
+     * 
+     * @param hoodPercent, the desired hood position as a percentage of its range
+     *                     (0.0 to 1.0).
+     */
     public void setHoodPositionPercent(double hoodPercent) {
         if (AUTO_HOOD_DISABLED) {
             hood.stopMotor();
@@ -271,6 +305,11 @@ public class ShooterSubsystem extends SubsystemBase {
         updateHoodPos();
     }
 
+    /**
+     * Toggles hood between predefined minimum and maximum positions. If
+     * AUTO_HOOD_DISABLED is true, this method will stop the hood motor instead of
+     * moving it.
+     */
     public void toggleHoodMinMax() {
         if (AUTO_HOOD_DISABLED) {
             hood.stopMotor();
@@ -283,26 +322,46 @@ public class ShooterSubsystem extends SubsystemBase {
         System.out.printf("[HOOD] B toggle -> %s (target %.3f rot)%n", hoodAtMax ? "MAX" : "MIN", hoodTargetPos);
         updateHoodPos();
     }
-    
+
+    /**
+     * Manually toggles hood between minimum and maximum positions, ignoring any
+     * auto-range logic. This is intended for use with a dedicated manual override
+     * button.
+     * If AUTO_HOOD_DISABLED is true, this method will stop the hood motor instead
+     * of moving it.
+     */
     public void manualToggleHoodMinMax() {
         double newPosition = 0;
 
         if (hoodDown) {
             newPosition = Constants.HOOD_MAX_SETPOINT;
-        }
-        else {
+        } else {
             newPosition = Constants.HOOD_MIN_SETPOINT;
         }
 
         hoodDown = !hoodDown;
-        
+
         hood.setControl(hoodMotionMagicRequest.withPosition(newPosition));
     }
 
+    /**
+     * Prebuilt command to toggle hood between min and max positions. If
+     * AUTO_HOOD_DISABLED is true, this will return a command that stops the hood
+     * motor instead.
+     * 
+     * @return The prebuilt command.
+     */
     public Command toggleHoodMinMaxCommand() {
         return new InstantCommand(this::toggleHoodMinMax, this);
     }
 
+    /**
+     * Prebuilt command to manually toggle hood between min and max positions,
+     * ignoring auto-range logic. If AUTO_HOOD_DISABLED is true, this will return a
+     * command that stops the hood motor instead.
+     * 
+     * @return The prebuilt command.
+     */
     public Command manualToggleHoodMinMaxCommand() {
         return new InstantCommand(this::manualToggleHoodMinMax, this);
     }
@@ -404,25 +463,30 @@ public class ShooterSubsystem extends SubsystemBase {
             () -> false,
             this);
 
+    /**
+     * Prebuilt FunctionalCommand for manual shooting sequence. Continuously runs
+     * shooter and kicker at target RPM while held, with no auto-range or launch
+     * readiness checks. Feeds note whenever command is active.
+     */
     private Command peripheralManualCommand = new FunctionalCommand(
-        () -> {
-            rotate(getTargetRPM());
-            setKickerControl();
-            launchReadyTimer.stop();
-            launchReadyTimer.reset();
-        },
-        () -> {
-            rotate(getTargetRPM());
-            setKickerControl();
-            m_hopper.spinForwards();
-        },
-        interrupted -> {
-            stopAll();
-            launchReadyTimer.stop();
-            launchReadyTimer.reset();
-        },
-        () -> false,
-        this);
+            () -> {
+                rotate(getTargetRPM());
+                setKickerControl();
+                launchReadyTimer.stop();
+                launchReadyTimer.reset();
+            },
+            () -> {
+                rotate(getTargetRPM());
+                setKickerControl();
+                m_hopper.spinForwards();
+            },
+            interrupted -> {
+                stopAll();
+                launchReadyTimer.stop();
+                launchReadyTimer.reset();
+            },
+            () -> false,
+            this);
 
     /**
      * Toggles auto shooting command scheduling.
@@ -459,26 +523,60 @@ public class ShooterSubsystem extends SubsystemBase {
         setTargetRPM(targetRPM + deltaRPM);
     }
 
+    /**
+     * Adjusts shooter RPM adjustment factor by delta amount, which is added on top
+     * of the target RPM.
+     *
+     * @param deltaRPM Change in RPM
+     */
     public void changeShooterAdjustment(double deltaRPM) {
         setShooterAdjustment(getShooterAdjustment() + deltaRPM);
     }
 
+    /**
+     * Adjusts kicker RPM by delta amount.
+     *
+     * @param deltaRPM Change in RPM
+     */
     public void changeKickerTargetRPM(double deltaRPM) {
         setTargetRPMKicker(getTargetRPMKicker() + deltaRPM);
     }
 
+    /**
+     * Prebuilt command to toggle kicker on/off at cached target RPM.
+     * 
+     * @return The prebuilt command.
+     */
     public Command setKickerControlCommand() {
         return new InstantCommand(() -> setKickerControl(), this);
     }
 
+    /**
+     * Prebuilt command to toggle kicker on/off using cached target RPM. If
+     * currently
+     * running, stops the kicker; otherwise, starts it.
+     * 
+     * @return The prebuilt command.
+     */
     public Command rotateKickerCommand() {
         return new InstantCommand(() -> rotateKicker(), this);
     }
 
+    /**
+     * Prebuilt command to toggle shooter on/off at cached target RPM. If currently
+     * running, stops the shooter; otherwise, starts it.
+     * 
+     * @return The prebuilt command.
+     */
     public Command stopShooterCommand() {
         return new InstantCommand(() -> stop(), this);
     }
 
+    /**
+     * Prebuilt command to stop kicker motor.
+     * 
+     * @return The prebuilt command.
+     */
     public Command stopKickerCommand() {
         return new InstantCommand(() -> stopKicker(), this);
     }
@@ -569,22 +667,51 @@ public class ShooterSubsystem extends SubsystemBase {
         return autoShooting;
     }
 
+    /**
+     * @return True if hood is in manual override mode (i.e. auto-range logic will
+     *         not command hood movement)
+     */
     public boolean isHoodManualOverride() {
         return hoodManualOverride;
     }
 
+    /**
+     * @return True if auto hood control is disabled
+     */
     public boolean isAutoHoodDisabled() {
         return AUTO_HOOD_DISABLED;
     }
 
+    /**
+     * Returns whether auto-range mode is enabled. When enabled, periodic() will
+     * calculate target RPM based on distance to target and command hood position
+     * based on predefined settings; when disabled, these features are turned off
+     * and the shooter can be controlled manually without interference from
+     * auto-range logic.
+     * 
+     * @return True if auto-range mode is enabled
+     */
     public boolean isAutoRangeEnabled() {
         return doAutoRange;
     }
 
+    /**
+     * Returns the target position for the hood.
+     * 
+     * @return The target hood position
+     */
     public double getHoodTargetPosition() {
         return hoodTargetPos;
     }
 
+    /**
+     * Returns whether the hood is currently toggled down (i.e. at minimum
+     * position). This is used for auto-range compensation, where the shooter RPM is
+     * adjusted based on whether the hood is up or down to account for changes in
+     * release angle.
+     * 
+     * @return True if the hood is down, false if it is up
+     */
     public boolean isHoodDown() {
         return hoodDown;
     }
@@ -603,10 +730,25 @@ public class ShooterSubsystem extends SubsystemBase {
         return controlReady && followerReady;
     }
 
+    /**
+     * Checks if hood is within position tolerance of target. Only relevant when
+     * AUTO_HOOD_DISABLED is false; if AUTO_HOOD_DISABLED is true, this will return
+     * true regardless.
+     * 
+     * @return True if hood is within tolerance or auto hood control is disabled,
+     *         false otherwise.
+     */
     private boolean isHoodWithinTolerance() {
         return Math.abs(getHoodPosition() - hoodTargetPos) <= HOOD_POSITION_TOLERANCE;
     }
 
+    /**
+     * Checks all conditions for a valid launch: shooter RPM within tolerance, hood
+     * in position, drive at goal, and valid launch parameters. Only relevant when
+     * auto-range mode is enabled.
+     * 
+     * @return True if all conditions are met, false otherwise.
+     */
     private boolean isLaunchReadyNow() {
         boolean shooterCommanded = Math.abs(getTargetRPM()) >= MIN_COMMAND_RPM_FOR_FEED;
         boolean hoodReady = AUTO_HOOD_DISABLED || isHoodWithinTolerance();
@@ -615,6 +757,12 @@ public class ShooterSubsystem extends SubsystemBase {
         return shooterCommanded && isVelocityWithinTolerance() && hoodReady && driveReady && launchValid;
     }
 
+    /**
+     * Checks if launch conditions have been met for a minimum amount of time to ensure stable feeding conditions, rather than just a brief momentary state. Only
+     * relevant when auto-range mode is enabled.
+     * 
+     * @return True if conditions are stable, false otherwise.
+     */
     private boolean isLaunchReadyStable() {
         if (!isLaunchReadyNow()) {
             launchReadyTimer.stop();
@@ -646,6 +794,10 @@ public class ShooterSubsystem extends SubsystemBase {
         shooterAdjustment = adjustment;
     }
 
+    /**
+     * Returns the current shooter adjustment factor, which is added on top of the target RPM calculated by auto-range logic. This allows for fine-tuning adjustments to shooter speed without affecting the underlying distance-based calculations.
+     * @return The shooter adjustment factor in RPM.
+     */
     public double getShooterAdjustment() {
         return shooterAdjustment;
     }
@@ -660,7 +812,7 @@ public class ShooterSubsystem extends SubsystemBase {
     @Override
     public void periodic() {
         // if (HOOD_DISABLED) {
-        //     hood.stopMotor();
+        // hood.stopMotor();
         // }
 
         if (doAutoRange) {
@@ -690,12 +842,12 @@ public class ShooterSubsystem extends SubsystemBase {
             }
 
             // if (!HOOD_DISABLED && !hoodManualOverride) {
-            //     double fixedHoodPercent = passingMode
-            //             ? Constants.PASSING_FIXED_HOOD_PERCENT
-            //             : Constants.HUB_SIDE_FIXED_HOOD_PERCENT;
-            //     hoodTargetPos = hoodPercentToMotorPosition(fixedHoodPercent);
-            //     hoodAtMax = fixedHoodPercent >= 0.5;
-            //     updateHoodPos();
+            // double fixedHoodPercent = passingMode
+            // ? Constants.PASSING_FIXED_HOOD_PERCENT
+            // : Constants.HUB_SIDE_FIXED_HOOD_PERCENT;
+            // hoodTargetPos = hoodPercentToMotorPosition(fixedHoodPercent);
+            // hoodAtMax = fixedHoodPercent >= 0.5;
+            // updateHoodPos();
             // }
 
             double hoodCompensation = isHoodDown() ? 0 : -1000;

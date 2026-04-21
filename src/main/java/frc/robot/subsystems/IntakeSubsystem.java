@@ -30,8 +30,6 @@ public class IntakeSubsystem extends SubsystemBase {
 
   private final VelocityVoltage velocityRequest = new VelocityVoltage(0).withSlot(0);
   private final MotionMagicVoltage pivotRequest = new MotionMagicVoltage(0).withSlot(0);
-  private boolean raised;
-  private boolean lowered;
 
   // Pivot motion limits in mechanism rotations (motor sensor rotations).
   // Tune these based on your zeroing process and physical hard stops.
@@ -104,8 +102,6 @@ public class IntakeSubsystem extends SubsystemBase {
     setPivotZero();
     pivotMotor.setControl(pivotRequest.withPosition(targetPos));
 
-    raised = true;
-    lowered = false;
   }
 
   private void updateIntakePos() {
@@ -190,9 +186,6 @@ public class IntakeSubsystem extends SubsystemBase {
 
     targetPos = clamped;
     pivotMotor.setControl(pivotRequest.withPosition(targetPos));
-
-    lowered = targetPos <= (PIVOT_MIN_ROT + 0.01);
-    raised = targetPos >= (PIVOT_MAX_ROT - 0.01);
   }
 
   /**
