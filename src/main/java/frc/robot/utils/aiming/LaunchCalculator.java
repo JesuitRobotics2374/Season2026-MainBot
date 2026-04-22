@@ -40,7 +40,7 @@ public class LaunchCalculator {
             return cachedParameters;
         }
 
-        Pose2d estimatedPose = drivetrain.getEstimator();
+        Pose2d estimatedPose = drivetrain.getEstimatedPose();
         ChassisSpeeds measuredRobotRelativeVelocity = drivetrain.getCurrentRobotChassisSpeeds();
 
         ChassisSpeeds setpointRobotRelativeVelocity = drivetrain.getCommandedRobotChassisSpeeds();
@@ -166,7 +166,7 @@ public class LaunchCalculator {
 
     public boolean atDriveGoal() {
         LaunchingParameters parameters = getParameters();
-        double yawError = drivetrain.getEstimator().getRotation().minus(parameters.driveAngle()).getRadians();
+        double yawError = drivetrain.getEstimatedPose().getRotation().minus(parameters.driveAngle()).getRadians();
         return Math.abs(yawError) <= Constants.SOTM_DRIVE_YAW_TOLERANCE_RAD;
     }
 

@@ -21,7 +21,9 @@ import edu.wpi.first.wpilibj2.command.FunctionalCommand;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.subsystems.drivetrain.DriveSubsystem;
+import frc.robot.utils.Configs;
 import frc.robot.utils.Constants;
+import frc.robot.utils.Devices;
 import frc.robot.utils.aiming.AimingUtil;
 import frc.robot.utils.aiming.LaunchCalculator;
 import frc.robot.utils.aiming.LaunchingParameters;
@@ -74,8 +76,6 @@ public class ShooterSubsystem extends SubsystemBase {
     // Shooter limits and constants
     private static final double MAX_RPM = 5400.0;
     private static final double RPM_TO_RPS = 1.0 / 60.0; // CTRE uses rotations per second
-    private static final double CURRENT_LIMIT = 60.0; // Amps
-    private static final double KICKER_CURRENT_LIMIT = 60; // Amps
     private static final double HOOD_POSITION_TOLERANCE = 0.02;
     private static final double MIN_LAUNCH_READY_TIME_SECS = 0.15;
     private static final double MIN_COMMAND_RPM_FOR_FEED = 300.0;
@@ -114,77 +114,30 @@ public class ShooterSubsystem extends SubsystemBase {
      * @param m_drivetrain Drivetrain subsystem reference
      */
     public ShooterSubsystem(HopperSubsystem m_hopper, DriveSubsystem m_drivetrain, LaunchCalculator launchCalculator) {
-
         this.m_hopper = m_hopper;
         this.m_drivetrain = m_drivetrain;
         this.launchCalculator = launchCalculator;
 
         // CAN IDs
-        kicker = new TalonFX(33);
-        hood = new TalonFX(34);
-        control = new TalonFX(35);
-        follower = new TalonFX(36);
+        kicker = Devices.kickerControl;
+        hood = Devices.hoodControl;
+        control = Devices.shooterControl;
+        follower = Devices.shooterFollower;
 
-        // Shooter motor configuration
-        TalonFXConfiguration controlCfg = new TalonFXConfiguration();
-        controlCfg.MotorOutput.NeutralMode = NeutralModeValue.Coast;
-        controlCfg.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
-
-        // Current limiting
-        controlCfg.CurrentLimits.SupplyCurrentLimitEnable = true;
-        controlCfg.CurrentLimits.SupplyCurrentLimit = CURRENT_LIMIT;
-        controlCfg.CurrentLimits.StatorCurrentLimitEnable = true;
-        controlCfg.CurrentLimits.StatorCurrentLimit = CURRENT_LIMIT / 0.75;
-
-        // PID + Feedforward tuning
-        controlCfg.Slot0.kP = 0.18;
-        controlCfg.Slot0.kI = 0.001;
-        controlCfg.Slot0.kD = 0.002;
-        controlCfg.Slot0.kV = 0.12; // ~12V feedforward
-
-        // Kicker configuration
-        TalonFXConfiguration controlCfgKicker = new TalonFXConfiguration();
-        controlCfgKicker.MotorOutput.NeutralMode = NeutralModeValue.Brake;
-        controlCfgKicker.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
-
-        controlCfgKicker.CurrentLimits.SupplyCurrentLimitEnable = true;
-        controlCfgKicker.CurrentLimits.SupplyCurrentLimit = KICKER_CURRENT_LIMIT;
-        controlCfgKicker.CurrentLimits.StatorCurrentLimitEnable = true;
-        controlCfgKicker.CurrentLimits.StatorCurrentLimit = KICKER_CURRENT_LIMIT / 0.5;
-
-        controlCfgKicker.Slot0.kP = 0.18;
-        controlCfgKicker.Slot0.kI = 0.001;
-        controlCfgKicker.Slot0.kD = 0.002;
-        controlCfgKicker.Slot0.kV = 0.12;
+        TalonFXConfiguration shooterConfigs = Configs.getShooterConfigs();
 
         // Apply configurations
-        control.getConfigurator().apply(controlCfg);
-        follower.getConfigurator().apply(controlCfg);
+        control.getConfigurator().apply(shooterConfigs);
+        follower.getConfigurator().apply(shooterConfigs);
 
         // Follower motor mirrors primary (opposed direction)
         follower.setControl(new Follower(control.getDeviceID(), MotorAlignmentValue.Opposed));
 
+        TalonFXConfiguration controlCfgKicker = Configs.getkickerConfigs();
+
         kicker.getConfigurator().apply(controlCfgKicker);
 
-        TalonFXConfiguration hoodConfigs = new TalonFXConfiguration();
-        Slot0Configs slot0Configs = hoodConfigs.Slot0;
-        MotionMagicConfigs motionMagicConfigs = hoodConfigs.MotionMagic;
-
-        // Hood Motion Magic gains (voltage output mode).
-        slot0Configs.kG = 0.22;
-        slot0Configs.kV = 0.0;
-        slot0Configs.kA = 0.0;
-        slot0Configs.kP = 8.0;
-        slot0Configs.kI = 0.0;
-        slot0Configs.kD = 0.15;
-        slot0Configs.GravityType = GravityTypeValue.Arm_Cosine;
-
-        hoodConfigs.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
-        hoodConfigs.MotorOutput.NeutralMode = NeutralModeValue.Brake;
-
-        motionMagicConfigs.MotionMagicCruiseVelocity = 30; // Target velocity in rps
-        motionMagicConfigs.MotionMagicAcceleration = 50; // Target acceleration in rps/s
-        motionMagicConfigs.MotionMagicJerk = 200; // Target jerk in rps/s/s
+        TalonFXConfiguration hoodConfigs = Configs.getHoodConfigs();
 
         // Push one full config object so Slot0 + MotionMagic are guaranteed to match
         // this request.
@@ -758,7 +711,9 @@ public class ShooterSubsystem extends SubsystemBase {
     }
 
     /**
-     * Checks if launch conditions have been met for a minimum amount of time to ensure stable feeding conditions, rather than just a brief momentary state. Only
+     * Checks if launch conditions have been met for a minimum amount of time to
+     * ensure stable feeding conditions, rather than just a brief momentary state.
+     * Only
      * relevant when auto-range mode is enabled.
      * 
      * @return True if conditions are stable, false otherwise.
@@ -795,7 +750,11 @@ public class ShooterSubsystem extends SubsystemBase {
     }
 
     /**
-     * Returns the current shooter adjustment factor, which is added on top of the target RPM calculated by auto-range logic. This allows for fine-tuning adjustments to shooter speed without affecting the underlying distance-based calculations.
+     * Returns the current shooter adjustment factor, which is added on top of the
+     * target RPM calculated by auto-range logic. This allows for fine-tuning
+     * adjustments to shooter speed without affecting the underlying distance-based
+     * calculations.
+     * 
      * @return The shooter adjustment factor in RPM.
      */
     public double getShooterAdjustment() {
@@ -836,7 +795,7 @@ public class ShooterSubsystem extends SubsystemBase {
 
                 shooterRPM = setpoint.shooterRPM();
 
-                Pose2d robotPose = m_drivetrain.getEstimator();
+                Pose2d robotPose = m_drivetrain.getEstimatedPose();
                 passingMode = AimingUtil.getTargetTranslation(robotPose)
                         .getDistance(AimingUtil.getHubTargetTranslation()) > 1e-4;
             }
@@ -865,7 +824,7 @@ public class ShooterSubsystem extends SubsystemBase {
      * @return Distance in meters
      */
     public double getDistToHub() {
-        Pose2d robotPose = m_drivetrain.getEstimator();
+        Pose2d robotPose = m_drivetrain.getEstimatedPose();
         return AimingUtil.getShooterDistanceToTarget(robotPose);
     }
 

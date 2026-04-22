@@ -90,7 +90,7 @@ public class DriveSubsystem extends TunerSwerveDrivetrain implements Subsystem {
         }
 
         AutoBuilder.configure(
-                this::getEstimator, // Robot pose supplier
+                this::getEstimatedPose, // Robot pose supplier
                 this::resetPose, // Method to reset odometry (will be called if your auto has a starting pose)
                 this::getCurrentRobotChassisSpeeds, // ChassisSpeeds supplier. MUST BE ROBOT RELATIVE
                 (speeds, feedforwards) -> this.setControl(autoRequest.withSpeeds(speeds)), // Method that will drive the
@@ -168,7 +168,7 @@ public class DriveSubsystem extends TunerSwerveDrivetrain implements Subsystem {
             if (estimate == null) {
                 continue;
             }
-            
+
             Matrix<N3, N1> s = estimate.standardDeviations;
 
             double score = s.get(0, 0) * s.get(0, 0) + // x
@@ -186,15 +186,9 @@ public class DriveSubsystem extends TunerSwerveDrivetrain implements Subsystem {
                     bestEstimate.estimatedPose.toPose2d(),
                     bestEstimate.timestampSeconds,
                     bestEstimate.standardDeviations);
-            estimator.addVisionMeasurement(
-                    bestEstimate.estimatedPose.toPose2d(),
-                    bestEstimate.timestampSeconds,
-                    bestEstimate.standardDeviations);
-
-            timeSinceLastEstimatorUpdate = Utils.getCurrentTimeSeconds();
         }
 
-        field.setRobotPose(getState().Pose);
+        field.setRobotPose(estimator.getEstimatedPosition());
     }
 
     /**
@@ -210,6 +204,7 @@ public class DriveSubsystem extends TunerSwerveDrivetrain implements Subsystem {
     @Override
     public void addVisionMeasurement(Pose2d visionRobotPoseMeters, double timestampSeconds) {
         super.addVisionMeasurement(visionRobotPoseMeters, Utils.fpgaToCurrentTime(timestampSeconds));
+        estimator.addVisionMeasurement(visionRobotPoseMeters, timestampSeconds);
 
         timeSinceLastEstimatorUpdate = Utils.getCurrentTimeSeconds();
     }
@@ -239,20 +234,9 @@ public class DriveSubsystem extends TunerSwerveDrivetrain implements Subsystem {
             Matrix<N3, N1> visionMeasurementStdDevs) {
         super.addVisionMeasurement(visionRobotPoseMeters, Utils.fpgaToCurrentTime(timestampSeconds),
                 visionMeasurementStdDevs);
+        estimator.addVisionMeasurement(visionRobotPoseMeters, timestampSeconds, visionMeasurementStdDevs);
 
         timeSinceLastEstimatorUpdate = Utils.getCurrentTimeSeconds();
-    }
-
-    public ChassisSpeeds getCurrentRobotChassisSpeeds() {
-        return getKinematics().toChassisSpeeds(getState().ModuleStates);
-    }
-
-    public void setCommandedRobotChassisSpeeds(ChassisSpeeds speeds) {
-        commandedRobotChassisSpeeds = speeds;
-    }
-
-    public ChassisSpeeds getCommandedRobotChassisSpeeds() {
-        return commandedRobotChassisSpeeds;
     }
 
     private Rotation2d getGyroscopeRotation() {
@@ -273,28 +257,28 @@ public class DriveSubsystem extends TunerSwerveDrivetrain implements Subsystem {
         estimator.resetPose(pose);
     }
 
-    public Field2d getField() {
-        return field;
-    }
-
-    public double getRobotX() {
-        return estimator.getEstimatedPosition().getX();
-    }
-
-    public double getRobotY() {
-        return estimator.getEstimatedPosition().getY();
-    }
-
-    public double getRobotR() {
-        return estimator.getEstimatedPosition().getRotation().getDegrees();
-    }
-
-    public Pose2d getEstimator() {
+    public Pose2d getEstimatedPose() {
         return estimator.getEstimatedPosition();
     }
 
     public void setLabel(Pose2d pose2d, String label) {
         field.getObject(label).setPose(pose2d);
+    }
+
+    public Field2d getField() {
+        return field;
+    }
+
+    public ChassisSpeeds getCurrentRobotChassisSpeeds() {
+        return getKinematics().toChassisSpeeds(getState().ModuleStates);
+    }
+
+    public void setCommandedRobotChassisSpeeds(ChassisSpeeds speeds) {
+        commandedRobotChassisSpeeds = speeds;
+    }
+
+    public ChassisSpeeds getCommandedRobotChassisSpeeds() {
+        return commandedRobotChassisSpeeds;
     }
 
     public void passGlobalEstimates(List<PoseEstimateValues> estimates) {
@@ -305,7 +289,7 @@ public class DriveSubsystem extends TunerSwerveDrivetrain implements Subsystem {
         return timeSinceLastEstimatorUpdate;
     }
 
-            /**
+    /**
      * @return The total current supplied to the drivetrain
      */
     public double getTotalDriveSupplyCurrent() {
@@ -323,6 +307,7 @@ public class DriveSubsystem extends TunerSwerveDrivetrain implements Subsystem {
 
     /**
      * Sets a current limit for the drive motors
+     * 
      * @param current In amps to supply to each drive motor. -1 for default
      */
     public void setDriveCurrentLimit(double supply, double stator) {
@@ -351,6 +336,7 @@ public class DriveSubsystem extends TunerSwerveDrivetrain implements Subsystem {
 
     /**
      * Sets a current limit for the steer motors
+     * 
      * @param current In amps to supply to each steer motor. -1 for default
      */
     public void setSteerCurrentLimit(double supply, double stator) {
@@ -362,7 +348,7 @@ public class DriveSubsystem extends TunerSwerveDrivetrain implements Subsystem {
         CurrentLimitsConfigs currentConfigs = new CurrentLimitsConfigs();
 
         for (int i = 0; i < 4; i++) {
-            
+
             this.getModule(i).getSteerMotor().getConfigurator().refresh(currentConfigs);
 
             // 2. Modify only the specific fields you need

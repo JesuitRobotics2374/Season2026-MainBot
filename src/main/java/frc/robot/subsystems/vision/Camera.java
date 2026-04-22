@@ -39,10 +39,9 @@ public class Camera {
     private PhotonPipelineResult latestResult; // The latest result from the camera
 
     // Global field estimate constants
-    private static final Matrix<N3, N1> kSingleTagStdDevs = VecBuilder.fill(0.9, 0.9, 12);
-    private static final Matrix<N3, N1> kMultiTagStdDevs = VecBuilder.fill(0.25, 0.25, 4);
-    private static final double GLOBAL_DISTANCE_SCALAR = 25.0;
     private static final double MAX_ACCEPTED_POSE_AMBIGUITY = 0.2;
+    private static final double XY_STD_DEV_COEFFICIENT = 0.01; // Tunable coefficient for XY standard deviation
+    private static final double THETA_STD_DEV_COEFFICIENT = 0.03; // Tunable coefficient for theta standard deviation
 
     // Camera constants - FOR THE COLOR CAM ONLY
     private static final double IMAGE_WIDTH = 640.0;
@@ -143,7 +142,8 @@ public class Camera {
         if (unreadResults.size() == 0) { // If there are no unread results, ignore changing anything
             return;
         } else {
-            latestResult = unreadResults.get(unreadResults.size() - 1); // Update latestResult to the most recent unread result
+            latestResult = unreadResults.get(unreadResults.size() - 1); // Update latestResult to the most recent unread
+                                                                        // result
         }
     }
 
@@ -178,13 +178,15 @@ public class Camera {
             return null;
         }
 
-        Optional<EstimatedRobotPose> estimatedRobotPose = poseEstimator.estimateAverageBestTargetsPose(latestResult); // Estimate
-                                                                                                                      // the
-                                                                                                                      // robot's
-        // pose using the latest
-        // result
+        Optional<EstimatedRobotPose> estimatedRobotPose = latestResult.targets.size() > 1 // Prefer multi-tag estimation
+                                                                                          // when multiple tags are
+                                                                                          // present, otherwise use the
+                                                                                          // best single-tag estimate
+                ? poseEstimator.estimateCoprocMultiTagPose(latestResult)
+                : poseEstimator.estimateLowestAmbiguityPose(latestResult);
 
-        if (Math.abs(robotToCameraTransform.getRotation().getZ()) > Math.PI / 2.0) { // do not consider backwards facing cameras
+        if (Math.abs(robotToCameraTransform.getRotation().getZ()) > Math.PI / 2.0) { // do not consider backwards facing
+                                                                                     // cameras
             return null;
         }
 
@@ -209,17 +211,14 @@ public class Camera {
     private Matrix<N3, N1> calculateStdDevs(EstimatedRobotPose e) {
         List<PhotonTrackedTarget> targets = e.targetsUsed;
 
-        Matrix<N3, N1> estStdDevs = kSingleTagStdDevs;
+        Matrix<N3, N1> estStdDevs = VecBuilder.fill(Double.MAX_VALUE, Double.MAX_VALUE, Double.MAX_VALUE);
         int numTags = 0;
         double avgDist = 0.0;
 
         // Count valid tags and compute average distance
         for (var tgt : targets) {
             if (tgt.getPoseAmbiguity() > MAX_ACCEPTED_POSE_AMBIGUITY) {
-                return VecBuilder.fill(
-                        Double.MAX_VALUE,
-                        Double.MAX_VALUE,
-                        Double.MAX_VALUE);
+                continue;
             }
 
             var tagPose = poseEstimator.getFieldTags().getTagPose(tgt.getFiducialId());
@@ -236,29 +235,28 @@ public class Camera {
 
         // No valid tags → fall back to single-tag trust
         if (numTags == 0) {
-            return VecBuilder.fill(
-                    Double.MAX_VALUE,
-                    Double.MAX_VALUE,
-                    Double.MAX_VALUE);
+            return estStdDevs;
         }
 
         avgDist /= numTags;
 
-        // Prefer multi-tag baseline when available
-        if (numTags > 1) {
-            estStdDevs = kMultiTagStdDevs;
-        }
-
         // Hard reject bad single-tag solves far away
         if (numTags == 1 && avgDist > 4.0) {
-            return VecBuilder.fill(
-                    Double.MAX_VALUE,
-                    Double.MAX_VALUE,
-                    Double.MAX_VALUE);
+            return estStdDevs;
         }
 
-        // Distance-based scaling
-        return estStdDevs.times(1.0 + (avgDist * avgDist / GLOBAL_DISTANCE_SCALAR));
+        double xyStdDev =
+            XY_STD_DEV_COEFFICIENT
+                * Math.pow(avgDist, 2.0)
+                / Math.pow(numTags, 2.0);
+        double thetaStdDev =
+            THETA_STD_DEV_COEFFICIENT
+                    * Math.pow(avgDist, 2.0)
+                    / Math.pow(numTags, 2.0);
+
+        estStdDevs = VecBuilder.fill(xyStdDev, xyStdDev, thetaStdDev);
+
+        return estStdDevs;
     }
 
     /*

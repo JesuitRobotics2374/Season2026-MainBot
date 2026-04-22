@@ -10,17 +10,15 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.FunctionalCommand;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.utils.Configs;
+import frc.robot.utils.Devices;
 
-import com.ctre.phoenix6.configs.MotionMagicConfigs;
-import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
-import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.MotorAlignmentValue;
-import com.ctre.phoenix6.signals.NeutralModeValue;
 
 public class IntakeSubsystem extends SubsystemBase {
 
@@ -51,57 +49,24 @@ public class IntakeSubsystem extends SubsystemBase {
 
   /** Creates a new Intake. */
   public IntakeSubsystem() {
-    pivotMotor = new TalonFX(30);
-    intakeControl = new TalonFX(31);
-    intakeFollower = new TalonFX(37);
+    pivotMotor = Devices.intakePivot;
+    intakeControl = Devices.intakeControl;
+    intakeFollower = Devices.intakeFollower;
 
-    TalonFXConfiguration controlCfg = new TalonFXConfiguration();
+    TalonFXConfiguration intakeControlConfigs = Configs.getIntakeControlConfigs();
 
-    controlCfg.Slot0.kP = 0.2;
-    controlCfg.Slot0.kI = 0.001;
-    controlCfg.Slot0.kD = 0.01;
-    controlCfg.Slot0.kV = 0.12;
-    controlCfg.Slot0.kS = 0.01;
-
-    controlCfg.CurrentLimits.SupplyCurrentLimitEnable = true;
-    controlCfg.CurrentLimits.SupplyCurrentLimit = CURRENT_LIMIT;
-    controlCfg.CurrentLimits.StatorCurrentLimitEnable = true;
-    controlCfg.CurrentLimits.StatorCurrentLimit = CURRENT_LIMIT / 0.75;
-
-    intakeControl.getConfigurator().apply(controlCfg);
+    intakeControl.getConfigurator().apply(intakeControlConfigs);
 
     intakeFollower.setControl(new Follower(intakeControl.getDeviceID(), MotorAlignmentValue.Opposed));
 
-    TalonFXConfiguration talonFXConfigs = new TalonFXConfiguration();
-    Slot0Configs slot0Configs = talonFXConfigs.Slot0;
-    MotionMagicConfigs motionMagicConfigs = talonFXConfigs.MotionMagic;
+    TalonFXConfiguration intakePivotConfigs = Configs.getIntakePivotConfigs();
 
-    slot0Configs.kG = 0.1; // Output of voltage to overcome gravity
-    slot0Configs.kV = 2; // Output per unit target velocity, perhaps not needed
-    slot0Configs.kA = 0.3; // Output per unit target acceleration, perhaps not needed
-    slot0Configs.kP = 15; // Controls the response to position error—how much the motor reacts to the
-                          // difference between the current position and the target position.
-    slot0Configs.kI = 0.01; // Addresses steady-state error, which occurs when the motor doesn’t quite reach
-    // the target position due to forces like gravity or friction.
-    slot0Configs.kD = 0.1; // Responds to the rate of change of the error, damping the motion as the motor
-                           // approaches the target. This reduces overshooting and oscillations.
-
-    talonFXConfigs.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
-    talonFXConfigs.MotorOutput.NeutralMode = NeutralModeValue.Brake;
-
-    motionMagicConfigs.MotionMagicCruiseVelocity = 50; // Target velocity in rps
-    motionMagicConfigs.MotionMagicAcceleration = 70; // Target acceleration in rps/s
-    motionMagicConfigs.MotionMagicJerk = 100; // Target jerk in rps/s/s
-
-    pivotMotor.getConfigurator().apply(talonFXConfigs);
-    pivotMotor.getConfigurator().apply(slot0Configs);
-    pivotMotor.getConfigurator().apply(motionMagicConfigs);
+    pivotMotor.getConfigurator().apply(intakePivotConfigs);
 
     targetPos = PIVOT_MAX_ROT;
 
     setPivotZero();
     pivotMotor.setControl(pivotRequest.withPosition(targetPos));
-
   }
 
   private void updateIntakePos() {

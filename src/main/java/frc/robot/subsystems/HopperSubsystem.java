@@ -9,6 +9,8 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.FunctionalCommand;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.utils.Configs;
+import frc.robot.utils.Devices;
 
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.VelocityVoltage;
@@ -31,15 +33,9 @@ public class HopperSubsystem extends SubsystemBase {
   public HopperSubsystem() {
     rolling = false;
     pulsing = false;
-    rollerMotor = new TalonFX(32);
+    rollerMotor = Devices.hopperRoller;
 
-    TalonFXConfiguration controlCfg = new TalonFXConfiguration();
-    controlCfg.MotorOutput.NeutralMode = NeutralModeValue.Coast;
-    
-    controlCfg.Slot0.kP = 0.18;
-    controlCfg.Slot0.kI = 0.001;
-    controlCfg.Slot0.kD = 0.002;
-    controlCfg.Slot0.kV = 0.12;
+    TalonFXConfiguration controlCfg = Configs.getHopperConfigs();
 
     rollerMotor.getConfigurator().apply(controlCfg);
   }

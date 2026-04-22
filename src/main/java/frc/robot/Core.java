@@ -167,8 +167,8 @@ public class Core {
 
         shooterTab.addBoolean("Hopping", () -> hopper.isRolling());
 
-        Tab.addDouble("Drivetrain X", () -> drivetrain.getEstimator().getX());
-        Tab.addDouble("Drivetrain Y", () -> drivetrain.getEstimator().getY());
+        Tab.addDouble("Drivetrain X", () -> drivetrain.getEstimatedPose().getX());
+        Tab.addDouble("Drivetrain Y", () -> drivetrain.getEstimatedPose().getY());
 
         Tab.addDouble("Dist To Hub", () -> Math.round((double) shooter.getDistToHub() * 100.0) / 100.0);
         Tab.addDouble("Time", () -> getPhaseInfo().phaseTime);

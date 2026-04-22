@@ -82,4 +82,10 @@ public class Constants {
 
     public static final double BOOSTED_DRIVE_CURRENT = 75;
     public static final double BOOSTED_STEER_CURRENT = 45;
+
+    public static final double INTAKE_CURRENT_LIMIT = 60;
+
+    public static final double KICKER_CURRENT_LIMIT = 60;
+
+    public static final double SHOOTER_CURRENT_LIMIT = 60;
 }
