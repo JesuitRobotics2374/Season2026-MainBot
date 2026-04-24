@@ -7,17 +7,12 @@ package frc.robot;
 import static edu.wpi.first.units.Units.*;
 
 import java.util.Optional;
-import java.util.jar.Attributes.Name;
-
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation3d;
-import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
-import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
@@ -29,19 +24,17 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
-import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
-import frc.robot.align.alignUtils.Target;
 import frc.robot.align.driverAssist.FixYawToHub;
-import frc.robot.align.preciseAligning.ClimbAlign;
 import frc.robot.subsystems.drivetrain.TunerConstants;
+import frc.robot.subsystems.shooter.HoodSubsystem;
+import frc.robot.subsystems.shooter.KickerSubsystem;
+import frc.robot.subsystems.shooter.ShooterSubsystem;
 import frc.robot.subsystems.HopperSubsystem;
 import frc.robot.subsystems.IntakeSubsystem;
 import frc.robot.subsystems.PowerManagement;
-import frc.robot.subsystems.ShooterSubsystem;
 import frc.robot.subsystems.drivetrain.DriveSubsystem;
 import frc.robot.subsystems.vision.VisionSubsystem;
-import frc.robot.utils.Constants;
 import frc.robot.utils.Telemetry;
 import frc.robot.utils.aiming.LaunchCalculator;
 import frc.robot.utils.aiming.SotmTelemetry;
@@ -50,7 +43,6 @@ import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.path.PathConstraints;
 import com.pathplanner.lib.path.PathPlannerPath;
 import com.pathplanner.lib.auto.NamedCommands;
-import com.pathplanner.lib.commands.PathPlannerAuto;
 
 public class Core {
     // Swerve Stuff
@@ -86,7 +78,11 @@ public class Core {
 
     public final HopperSubsystem hopper = new HopperSubsystem();
 
-    public final ShooterSubsystem shooter = new ShooterSubsystem(hopper, drivetrain, launchCalculator);
+    public final KickerSubsystem kicker = new KickerSubsystem();
+
+    public final HoodSubsystem hood = new HoodSubsystem();
+
+    public final ShooterSubsystem shooter = new ShooterSubsystem(hopper, kicker, hood, drivetrain, launchCalculator);
 
     public final IntakeSubsystem intake = new IntakeSubsystem();
 
@@ -99,8 +95,6 @@ public class Core {
     // Driver assist
 
     private final FixYawToHub fixYawToHub = new FixYawToHub(drivetrain, launchCalculator);
-
-    private final Target testTarget = new Target(31, new Transform3d(1.575, 0.0, 0, new Rotation3d(0, 0, 0)));
 
     private boolean hubYawAlign = false;
     private boolean fastMode = false;
@@ -143,29 +137,32 @@ public class Core {
 
     public void configureShuffleBoard() {
         ShuffleboardTab intakeTab = Shuffleboard.getTab("Intake");
+        ShuffleboardTab hopperTab = Shuffleboard.getTab("Hopper");
+        ShuffleboardTab kickerTab = Shuffleboard.getTab("Kicker");
         ShuffleboardTab shooterTab = Shuffleboard.getTab("Shooter");
+        ShuffleboardTab hoodTab = Shuffleboard.getTab("Hood");
         ShuffleboardTab Tab = Shuffleboard.getTab("Tab");
 
         intakeTab.addDouble("Speed Intake", () -> intake.getSpeedRPM());
         intakeTab.addDouble("Target Speed Intake", () -> intake.getTargetRPM());
         intakeTab.addBoolean("Intaking", () -> intake.isIntaking());
 
+        hopperTab.addBoolean("Hopping", () -> hopper.isRolling());
+
+        kickerTab.addDouble("Speed Kicker", () -> kicker.getSpeedRPMKicker());
+        kickerTab.addDouble("Target Speed Kicker", () -> kicker.getTargetRPMKicker());
+        kickerTab.addBoolean("Kicking", () -> kicker.isKicking());
+
         shooterTab.addDouble("Speed Shooter", () -> shooter.getSpeedRPM());
         shooterTab.addDouble("Target Speed Shooter", () -> shooter.getTargetRPM());
-        shooterTab.addDouble("Speed Kicker", () -> shooter.getSpeedRPMKicker());
-        shooterTab.addDouble("Target Speed Kicker", () -> shooter.getTargetRPMKicker());
         shooterTab.addBoolean("Shooting", () -> shooter.isRunning());
-        shooterTab.addBoolean("Kicking", () -> shooter.isKicking());
-        shooterTab.addDouble("Hood Position", () -> shooter.getHoodPosition());
-        shooterTab.addDouble("Hood Target", () -> shooter.getHoodTargetPosition());
-        shooterTab.addBoolean("Hood Down", () -> shooter.isHoodDown());
-        shooterTab.addBoolean("Hood Manual Override", () -> shooter.isHoodManualOverride());
         shooterTab.addDouble("Shooter Adjustment", () -> shooter.getShooterAdjustment());
-
-        shooterTab.addBoolean("Hood Disabled", () -> shooter.isAutoHoodDisabled());
+    
         shooterTab.addBoolean("Auto Range Enabled", () -> shooter.isAutoRangeEnabled());
 
-        shooterTab.addBoolean("Hopping", () -> hopper.isRolling());
+        hoodTab.addDouble("Hood Position", () -> hood.getHoodPosition());
+        hoodTab.addDouble("Hood Target", () -> hood.getHoodTargetPosition());
+        hoodTab.addBoolean("Hood Down", () -> hood.isHoodDown()); 
 
         Tab.addDouble("Drivetrain X", () -> drivetrain.getEstimatedPose().getX());
         Tab.addDouble("Drivetrain Y", () -> drivetrain.getEstimatedPose().getY());
@@ -175,8 +172,6 @@ public class Core {
 
         Tab.addBoolean("Our Hub Active", () -> getPhaseInfo().phaseActive);
         Tab.addString("Hub Warnings", () -> getHubActivityStatus());
-
-        // Tab.addBoolean("Is Passing", () -> shooter.getIsBeyondHub());
 
         SmartDashboard.putData("Auto Chooser", autoChooser);
     }
@@ -321,37 +316,29 @@ public class Core {
 
         // OPERATOR BINDINGS
 
-        driveController.b().onTrue(new InstantCommand(() -> {
-            intake.setPivotZero();
-        }));
+        driveController.b().onTrue(intake.setPivotZeroCommand());
 
         driveController.rightBumper().onTrue(new InstantCommand(() -> toggleFastMode()));
 
         operatorController.a().toggleOnTrue(intake.intakeCommand());
-        operatorController.b().onTrue(shooter.manualToggleHoodMinMaxCommand());
+        operatorController.b().onTrue(hood.manualToggleHoodMinMaxCommand());
         operatorController.x().toggleOnTrue(intake.purgeCommand());
-        operatorController.y().onTrue(new InstantCommand(() -> shooter.autoShoot()));
+        operatorController.y().onTrue(shooter.autoShoot());
 
-        // operatorController.povUp().onTrue(intake.setPositionCommand(0));
         operatorController.povUp().whileTrue(intake.lowerManual()).onFalse(intake.stopPivot());
         operatorController.povRight().onTrue(intake.changeTargetRPMCommand(100));
 
-        // operatorController.povDown().onTrue(intake.setPositionCommand(-24));
         operatorController.povDown().whileTrue(intake.raiseManual()).onFalse(intake.stopPivot());
         operatorController.povLeft().onTrue(intake.changeTargetRPMCommand(-100));
 
-        operatorController.rightBumper().onTrue(new InstantCommand(() -> shooter.changeKickerTargetRPM(100)));
-        // operatorController.rightTrigger().onTrue(new InstantCommand(() ->
-        // shooter.changeTargetRPM(100)));
-        operatorController.rightTrigger().onTrue(new InstantCommand(() -> shooter.changeShooterAdjustment(100)));
+        operatorController.rightBumper().onTrue(kicker.changeKickerTargetRPMCommand(100));
+        operatorController.rightTrigger().onTrue(shooter.changeShooterAdjustmentCommand(100));
 
-        operatorController.leftBumper().onTrue(new InstantCommand(() -> shooter.changeKickerTargetRPM(-100)));
-        // operatorController.leftTrigger().onTrue(new InstantCommand(() ->
-        // shooter.changeTargetRPM(-100)));
-        operatorController.leftTrigger().onTrue(new InstantCommand(() -> shooter.changeShooterAdjustment(-100)));
+        operatorController.leftBumper().onTrue(kicker.changeKickerTargetRPMCommand(-100));
+        operatorController.leftTrigger().onTrue(shooter.changeShooterAdjustmentCommand(-100));
 
         operatorController.start().onTrue(powerManager.toggleDriveBoost());
-        operatorController.back().onTrue(new InstantCommand(() -> shooter.toggleAutoRange()));
+        operatorController.back().onTrue(shooter.toggleAutoRangeCommand());
 
         drivetrain.registerTelemetry(logger::telemeterize);
     }

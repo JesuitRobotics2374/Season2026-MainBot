@@ -1,7 +1,5 @@
 package frc.robot.utils;
 
-import org.apache.commons.math4.legacy.fitting.WeightedObservedPoints;
-import org.apache.commons.math4.legacy.fitting.PolynomialCurveFitter;
 
 public class Ballistics {
     // Solving constants

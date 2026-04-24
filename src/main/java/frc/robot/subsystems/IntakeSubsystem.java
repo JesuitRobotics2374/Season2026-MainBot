@@ -41,7 +41,6 @@ public class IntakeSubsystem extends SubsystemBase {
   private double purgeRPM = -2000;
 
   private final double RPM_TO_RPS = 1.0 / 60.0;
-  private static final double CURRENT_LIMIT = 60.0; // Amps
 
   private double targetPos; // target position of the pivot motor in rotations
 
@@ -242,6 +241,10 @@ public class IntakeSubsystem extends SubsystemBase {
     }, this);
   }
 
+  public Command setPivotZeroCommand() {
+    return new InstantCommand(() -> setPivotZero());
+  }
+
   public Command setRPMCommand(double RPM) {
     return new InstantCommand(() -> setTargetRPM(RPM));
   }
@@ -282,14 +285,4 @@ public class IntakeSubsystem extends SubsystemBase {
       }
     }
   }
-
-  // private void rotateAtCached() {
-  // if (isIntaking) {
-  // isIntaking = false;
-  // stop();
-  // } else {
-  // isIntaking = true;
-  // rotate(targetRPM);
-  // }
-  // }
 }

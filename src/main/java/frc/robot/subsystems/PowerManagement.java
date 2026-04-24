@@ -9,12 +9,10 @@ import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.utils.Constants;
 import frc.robot.subsystems.drivetrain.DriveSubsystem;
+import frc.robot.subsystems.shooter.ShooterSubsystem;
 
 public class PowerManagement extends SubsystemBase {
 
-  private HopperSubsystem hopper;
-  private IntakeSubsystem intake;
-  private ShooterSubsystem shooter;
   private DriveSubsystem drivetrain;
 
   private double driveLimit;
@@ -25,9 +23,6 @@ public class PowerManagement extends SubsystemBase {
   /** Creates a new PowerManagementSubsystem. */
   public PowerManagement(DriveSubsystem drivetrain, HopperSubsystem hopper,
       IntakeSubsystem intake, ShooterSubsystem shooter) {
-    this.hopper = hopper;
-    this.intake = intake;
-    this.shooter = shooter;
     this.drivetrain = drivetrain;
 
     driveLimit = Constants.DEFAULT_DRIVE_CURRENT;
