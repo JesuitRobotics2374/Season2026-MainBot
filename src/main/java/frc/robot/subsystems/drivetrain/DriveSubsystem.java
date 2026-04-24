@@ -158,7 +158,6 @@ public class DriveSubsystem extends TunerSwerveDrivetrain implements Subsystem {
         }
 
         estimator.update(getGyroscopeRotation(), getSwerveModulePositions());
-
         timeSinceLastEstimatorUpdate = Utils.getCurrentTimeSeconds();
 
         PoseEstimateValues bestEstimate = null;
@@ -253,8 +252,10 @@ public class DriveSubsystem extends TunerSwerveDrivetrain implements Subsystem {
         return smp;
     }
 
-    public void setRobotPose(Pose2d pose) {
+    @Override
+    public void resetPose(Pose2d pose) {
         estimator.resetPose(pose);
+        super.resetPose(pose);
     }
 
     public Pose2d getEstimatedPose() {
