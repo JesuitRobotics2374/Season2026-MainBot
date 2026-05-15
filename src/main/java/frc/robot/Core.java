@@ -282,9 +282,9 @@ public class Core {
                         return brake;
                     }
 
-                    driverVelocityX = xRateLimiter.calculate(driverVelocityX);
-                    driverVelocityY = yRateLimiter.calculate(driverVelocityY);
-                    desiredRotationalRate = omegaRateLimiter.calculate(desiredRotationalRate);
+                    driverVelocityX = xRateLimiter.calculate(driverVelocityX * 0.5);
+                    driverVelocityY = yRateLimiter.calculate(driverVelocityY * 0.5);
+                    desiredRotationalRate = omegaRateLimiter.calculate(desiredRotationalRate * 0.75);
 
                     drivetrain.setCommandedRobotChassisSpeeds(new ChassisSpeeds(
                             -driverVelocityX,
@@ -323,7 +323,7 @@ public class Core {
         operatorController.a().toggleOnTrue(intake.intakeCommand());
         operatorController.b().onTrue(hood.manualToggleHoodMinMaxCommand());
         operatorController.x().toggleOnTrue(intake.purgeCommand());
-        operatorController.y().onTrue(shooter.autoShoot());
+        operatorController.y().toggleOnTrue(shooter.autoShoot());
 
         operatorController.povUp().whileTrue(intake.lowerManual()).onFalse(intake.stopPivot());
         operatorController.povRight().onTrue(intake.changeTargetRPMCommand(100));
