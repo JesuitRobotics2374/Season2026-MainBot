@@ -12,6 +12,7 @@ import com.ctre.phoenix6.swerve.SwerveRequest;
 
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -320,6 +321,10 @@ public class Core {
 
         driveController.rightBumper().onTrue(new InstantCommand(() -> toggleFastMode()));
 
+        Pose2d targetPose2d = new Pose2d(15.540988, 7.069326, new Rotation2d());
+
+        driveController.start().onTrue(createPathfindingCommand(targetPose2d));
+
         operatorController.a().toggleOnTrue(intake.intakeCommand());
         operatorController.b().onTrue(hood.manualToggleHoodMinMaxCommand());
         operatorController.x().toggleOnTrue(intake.purgeCommand());
@@ -374,9 +379,9 @@ public class Core {
         launchCalculator.clearCachedParameters();
     }
 
-    public void doPathfind(Pose2d target) {
+    public Command createPathfindingCommand(Pose2d target) {
         PathConstraints constraints = new PathConstraints(
-                3, 4, // 3 - 4
+                .5, 2, // 3 - 4
                 Units.degreesToRadians(540),
                 Units.degreesToRadians(720));
 
@@ -388,9 +393,7 @@ public class Core {
                 constraints,
                 0);
 
-        pathfindingCommand.schedule();
-
-        System.out.println("PATHFIND TO " + target.toString() + " STARTED");
+        return pathfindingCommand;
     }
 
     public Command getPath(String id) {
@@ -409,22 +412,7 @@ public class Core {
     }
 
     public void periodic() {
-        // Set the intake pivot based on the X axis of the custom controller. 1 = fully
-        // raised, 0 = fully lowered.
-        // Note that the X axis is a fixed slider not a joystick.
-        // double rawPivotInput = customController.getLeftX();
-
-        // Support either a 0..1 slider signal or a -1..1 axis signal.
-        // double normalizedPivot = (rawPivotInput + 1.0) * 0.5;
-
-        // intake.setPivotNormalized(MathUtil.clamp(normalizedPivot, 0.0, 1.0));
-
-        // NOTE THIS MAY NEED TO BE CHANGED AS I DONT KNOW THE VARIABLES FOR THE INTAKE
-        // CUSTOM CONTROLLER
-
-        // double shooterAdjustment = customController.getLeftX() * 200; // Scale the
-        // adjustment factor as needed
-        // shooter.setShooterAdjustment(shooterAdjustment);
+        
     }
 
 }
