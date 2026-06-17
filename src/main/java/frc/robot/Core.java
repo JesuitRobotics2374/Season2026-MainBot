@@ -78,7 +78,7 @@ public class Core {
 
     // Subsystems
 
-    public final DriveSubsystem drivetrain = TunerConstants.createDrivetrain();
+    public final Drive drivetrain = TunerConstants.createDrivetrain();
 
     public final VisionSubsystem vision = new VisionSubsystem();
 

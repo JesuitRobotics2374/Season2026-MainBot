@@ -2,6 +2,7 @@ package frc.robot.utils;
 
 import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.wpilibj.RobotBase;
 
 public class Constants {
     // Vision constants
@@ -82,4 +83,18 @@ public class Constants {
 
     public static final double BOOSTED_DRIVE_CURRENT = 75;
     public static final double BOOSTED_STEER_CURRENT = 45;
+
+    public static final Mode simMode = Mode.SIM;
+    public static final Mode currentMode = RobotBase.isReal() ? Mode.REAL : simMode;
+
+    public static enum Mode {
+        /** Running on a real robot. */
+        REAL,
+
+        /** Running a physics simulator. */
+        SIM,
+
+        /** Replaying from a log file. */
+        REPLAY
+    }
 }
