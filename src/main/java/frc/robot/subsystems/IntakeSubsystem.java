@@ -38,7 +38,7 @@ public class IntakeSubsystem extends SubsystemBase {
   private double MAX_RPM = 6300;
   private double targetRPM = 5000;
 
-  private double purgeRPM = -2000;
+  private double purgeRPM = -5000;
 
   private final double RPM_TO_RPS = 1.0 / 60.0;
 
@@ -246,7 +246,7 @@ public class IntakeSubsystem extends SubsystemBase {
   }
 
   public Command setRPMCommand(double RPM) {
-    return new InstantCommand(() -> setTargetRPM(RPM));
+    return new InstantCommand(() -> setTargetRPM(-RPM));
   }
 
   public Command changeTargetRPMCommand(double deltaRPM) {
