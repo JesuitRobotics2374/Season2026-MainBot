@@ -18,13 +18,22 @@ import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Pose3d;
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Rotation3d;
+import edu.wpi.first.math.geometry.Pose3d;
+import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
+import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.networktables.StructArrayPublisher;
+import edu.wpi.first.networktables.StructPublisher;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
+import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -57,6 +66,11 @@ public class DriveSubsystem extends TunerSwerveDrivetrain implements Subsystem {
     private ChassisSpeeds commandedRobotChassisSpeeds = new ChassisSpeeds();
 
     private double timeSinceLastEstimatorUpdate;
+
+    StructPublisher<Pose3d> publisher = NetworkTableInstance.getDefault()
+            .getStructTopic("MyPose", Pose3d.struct).publish();
+    StructArrayPublisher<Pose3d> arrayPublisher = NetworkTableInstance.getDefault()
+            .getStructArrayTopic("MyPoseArray", Pose3d.struct).publish();
 
     /**
      * Constructs a CTRE SwerveDrivetrain using the specified constants.
@@ -186,9 +200,26 @@ public class DriveSubsystem extends TunerSwerveDrivetrain implements Subsystem {
                     bestEstimate.timestampSeconds,
                     bestEstimate.standardDeviations);
         }
+        Pose2d estimatedPose = estimator.getEstimatedPosition();
+        field.setRobotPose(estimatedPose);
 
-        field.setRobotPose(estimator.getEstimatedPosition());
+        Pose3d robotPose = new Pose3d(
+                estimatedPose.getX(),
+                estimatedPose.getY(),
+                0.0,
+                new Rotation3d(
+                        0.0,
+                        0.0,
+                        estimatedPose.getRotation().getRadians()));
+
+        publisher.set(robotPose);
+
     }
+    @Override
+    public void simulationPeriodic() {
+        updateSimState(0.020, RobotController.getBatteryVoltage());
+    }
+
 
     /**
      * Adds a vision measurement to the Kalman Filter. This will correct the
