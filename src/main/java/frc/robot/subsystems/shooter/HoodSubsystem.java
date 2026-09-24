@@ -55,6 +55,7 @@ public class HoodSubsystem extends SubsystemBase {
     hood.setPosition(0.0);
     hoodTargetPos = 0.0; // or Constants.HOOD_MIN_SETPOINT
   }
+  // here to show chib how git works
 
   /**
    * Commands hood to move to target position using Motion Magic control.
