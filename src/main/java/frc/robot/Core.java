@@ -325,9 +325,9 @@ public class Core {
 
         driveController.start().onTrue(createPathfindingCommand(targetPose2d));
 
-        operatorController.a().toggleOnTrue(intake.intakeCommand());
+        operatorController.x().toggleOnTrue(intake.intakeCommand());
         operatorController.b().onTrue(hood.manualToggleHoodMinMaxCommand());
-        operatorController.x().toggleOnTrue(intake.purgeCommand());
+        operatorController.a().toggleOnTrue(intake.purgeCommand());
         operatorController.y().toggleOnTrue(shooter.autoShoot());
 
         operatorController.povUp().whileTrue(intake.lowerManual()).onFalse(intake.stopPivot());
