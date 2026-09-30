@@ -22,6 +22,8 @@ public class Configs {
         controlCfg.CurrentLimits.StatorCurrentLimitEnable = true;
         controlCfg.CurrentLimits.StatorCurrentLimit = Constants.INTAKE_CURRENT_LIMIT / 0.75;
 
+        controlCfg.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+
         return controlCfg;
     }
 
