@@ -24,6 +24,12 @@
           }
         },
         {
+          "type": "named",
+          "data": {
+            "name": "Stop Deploy"
+          }
+        },
+        {
           "type": "wait",
           "data": {
             "waitTime": 3.0
