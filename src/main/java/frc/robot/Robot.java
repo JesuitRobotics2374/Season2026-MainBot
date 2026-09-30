@@ -48,7 +48,16 @@ public class Robot extends TimedRobot {
   public void disabledInit() {}
 
   @Override
-  public void disabledPeriodic() {}
+  public void disabledPeriodic() {
+    m_autonomousCommand = m_core.getAutonomousCommand();
+
+    if (m_autonomousCommand != null) {
+      //CommandScheduler.getInstance().schedule(new SequentialCommandGroup(m_autonomousCommand, climbAlign));
+      if (m_autonomousCommand instanceof PathPlannerAuto) {
+        m_core.drivetrain.resetPose(((PathPlannerAuto) m_autonomousCommand).getStartingPose());
+      }
+    }
+  }
 
   @Override
   public void disabledExit() {}

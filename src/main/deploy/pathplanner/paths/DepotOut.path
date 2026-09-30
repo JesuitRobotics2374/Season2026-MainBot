@@ -3,37 +3,42 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 1.1760444444444444,
-        "y": 6.013122222222222
+        "x": 0.3903566333808839,
+        "y": 6.022866666666666
       },
       "prevControl": null,
       "nextControl": {
-        "x": 1.6340333333333337,
-        "y": 6.100822222222223
+        "x": 1.212503897507205,
+        "y": 6.025928750568998
       },
       "isLocked": false,
-      "linkedName": "blue depot"
+      "linkedName": "Depot Intake"
     },
     {
       "anchor": {
-        "x": 2.257677777777778,
-        "y": 3.8985777777777777
+        "x": 1.1760444444444444,
+        "y": 6.013122222222222
       },
       "prevControl": {
-        "x": 2.0433000000000003,
-        "y": 4.190911111111111
+        "x": 0.9260448873316716,
+        "y": 6.01359279997072
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": "CenterShoot"
+      "linkedName": "blue depot"
     }
   ],
-  "rotationTargets": [],
+  "rotationTargets": [
+    {
+      "waypointRelativePos": 0.2388059701492532,
+      "rotationDegrees": -90.67902649042388
+    }
+  ],
   "constraintZones": [],
   "pointTowardsZones": [],
   "eventMarkers": [],
   "globalConstraints": {
-    "maxVelocity": 3.0,
+    "maxVelocity": 0.8,
     "maxAcceleration": 3.0,
     "maxAngularVelocity": 540.0,
     "maxAngularAcceleration": 720.0,
@@ -42,13 +47,13 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": 0.47155955407617717
+    "rotation": -90.0
   },
   "reversed": false,
   "folder": null,
   "idealStartingState": {
     "velocity": 0,
-    "rotation": -90.0
+    "rotation": -90.33408239174854
   },
-  "useDefaultConstraints": true
+  "useDefaultConstraints": false
 }
