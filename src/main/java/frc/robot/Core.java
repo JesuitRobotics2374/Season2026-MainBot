@@ -113,7 +113,12 @@ public class Core {
         configureBindings();
 
         configureAutoCommands();
-        autoChooser = AutoBuilder.buildAutoChooser();
+        autoChooser = AutoBuilder.buildAutoChooserWithOptionsModifier(stream -> 
+            // Add any additional options to the auto chooser here
+            stream.filter(auto -> {
+                return auto.getName().contains("compTested");
+            })
+        );
 
         configureShuffleBoard();
     }
